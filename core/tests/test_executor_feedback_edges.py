@@ -15,10 +15,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from framework.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
-from framework.graph.executor import GraphExecutor
-from framework.graph.goal import Goal
-from framework.graph.node import NodeContext, NodeProtocol, NodeResult, NodeSpec
+from engine.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
+from engine.graph.executor import GraphExecutor
+from engine.graph.goal import Goal
+from engine.graph.node import NodeContext, NodeProtocol, NodeResult, NodeSpec
 
 # ---------------------------------------------------------------------------
 # Mock node implementations
@@ -57,7 +57,7 @@ class StatefulNode(NodeProtocol):
 
 @pytest.fixture
 def runtime():
-    from framework.runtime.core import Runtime
+    from engine.runtime.core import Runtime
 
     rt = MagicMock(spec=Runtime)
     rt.start_run = MagicMock(return_value="run_id")

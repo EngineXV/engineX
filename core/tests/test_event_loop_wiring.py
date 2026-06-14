@@ -12,11 +12,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from framework.graph.edge import GraphSpec
-from framework.graph.executor import GraphExecutor
-from framework.graph.goal import Goal
-from framework.graph.node import NodeContext, NodeProtocol, NodeResult, NodeSpec
-from framework.runtime.core import Runtime
+from engine.graph.edge import GraphSpec
+from engine.graph.executor import GraphExecutor
+from engine.graph.goal import Goal
+from engine.graph.node import NodeContext, NodeProtocol, NodeResult, NodeSpec
+from engine.runtime.core import Runtime
 
 
 class AlwaysFailsNode(NodeProtocol):
@@ -106,7 +106,7 @@ def test_event_loop_node_spec_accepted():
 
 def test_unregistered_event_loop_auto_creates(runtime):
     """An event_loop node not in the registry should be auto-created."""
-    from framework.graph.event_loop_node import EventLoopNode
+    from engine.graph.event_loop_node import EventLoopNode
 
     spec = NodeSpec(
         id="el1",

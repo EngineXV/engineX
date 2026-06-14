@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from .base import CredentialError, CredentialSpec
 
 if TYPE_CHECKING:
-    from framework.credentials import CredentialStore
+    from engine.credentials import CredentialStore
 
 
 class CredentialStoreAdapter:
@@ -46,7 +46,7 @@ class CredentialStoreAdapter:
 
         if account is not None:
             try:
-                from framework.credentials.local.registry import LocalCredentialRegistry
+                from engine.credentials.local.registry import LocalCredentialRegistry
 
                 key = LocalCredentialRegistry.default().get_key(name, account)
                 if key is not None:
@@ -198,7 +198,7 @@ class CredentialStoreAdapter:
     def list_local_accounts(self, credential_id: str | None = None) -> list[dict]:
         """List named local API key accounts from LocalCredentialRegistry"""
         try:
-            from framework.credentials.local.registry import LocalCredentialRegistry
+            from engine.credentials.local.registry import LocalCredentialRegistry
 
             registry = LocalCredentialRegistry.default()
             return [info.to_account_dict() for info in registry.list_accounts(credential_id)]
@@ -210,7 +210,7 @@ class CredentialStoreAdapter:
         import os
 
         try:
-            from framework.credentials.local.registry import LocalCredentialRegistry
+            from engine.credentials.local.registry import LocalCredentialRegistry
 
             key = LocalCredentialRegistry.default().get_key(credential_id, alias)
             if key is None:
@@ -310,8 +310,8 @@ class CredentialStoreAdapter:
         import logging
         import os
 
-        from framework.credentials import CredentialStore
-        from framework.credentials.storage import (
+        from engine.credentials import CredentialStore
+        from engine.credentials.storage import (
             CompositeStorage,
             EncryptedFileStorage,
             EnvVarStorage,
@@ -334,7 +334,7 @@ class CredentialStoreAdapter:
         engine_oauth_api_key = os.environ.get("ENGINE_OAUTH_API_KEY")
         if engine_oauth_api_key:
             try:
-                from framework.credentials.oauth import (
+                from engine.credentials.oauth import (
                     EngineCachedStorage,
                     EngineClientConfig,
                     EngineCredentialClient,
@@ -357,7 +357,7 @@ class CredentialStoreAdapter:
                 # EngineCachedStorage wraps composite, giving Engine priority
                 cached_storage = EngineCachedStorage(
                     local_storage=local_composite,
-                    oauth_host_provider=provider,
+                    engine_sync_provider=provider,
                     cache_ttl_seconds=300,
                 )
 
@@ -400,7 +400,7 @@ class CredentialStoreAdapter:
         specs: dict[str, CredentialSpec] | None = None,
     ) -> CredentialStoreAdapter:
         """Create a CredentialStoreAdapter for testing with mock credentials"""
-        from framework.credentials import CredentialStore
+        from engine.credentials import CredentialStore
 
         # Convert to CredentialStore.for_testing format
         # Simple credentials get a single "api_key" key
@@ -416,7 +416,7 @@ class CredentialStoreAdapter:
         specs: dict[str, CredentialSpec] | None = None,
     ) -> CredentialStoreAdapter:
         """Create adapter with environment variable storage (current behavior)"""
-        from framework.credentials import CredentialStore
+        from engine.credentials import CredentialStore
 
         # Build env mapping from specs if not provided
         if env_mapping is None:

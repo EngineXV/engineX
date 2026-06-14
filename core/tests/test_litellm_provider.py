@@ -18,9 +18,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from framework.llm.anthropic import AnthropicProvider
-from framework.llm.litellm import LiteLLMProvider, _compute_retry_delay
-from framework.llm.provider import LLMProvider, LLMResponse, Tool
+from engine.llm.anthropic import AnthropicProvider
+from engine.llm.litellm import LiteLLMProvider, _compute_retry_delay
+from engine.llm.provider import LLMProvider, LLMResponse, Tool
 
 
 class TestLiteLLMProviderInit:
@@ -586,7 +586,7 @@ class TestAsyncComplete:
     @pytest.mark.asyncio
     async def test_mock_provider_acomplete(self):
         """MockLLMProvider.acomplete() should work without blocking."""
-        from framework.llm.mock import MockLLMProvider
+        from engine.llm.mock import MockLLMProvider
 
         provider = MockLLMProvider()
         result = await provider.acomplete(
@@ -654,7 +654,7 @@ class TestIsLocalModel:
     )
     def test_local_models_return_true(self, model):
         """Local model prefixes should be recognized."""
-        from framework.runner.runner import AgentRunner
+        from engine.runner.runner import AgentRunner
 
         assert AgentRunner._is_local_model(model) is True
 
@@ -675,6 +675,6 @@ class TestIsLocalModel:
     )
     def test_cloud_models_return_false(self, model):
         """Cloud model prefixes should not be treated as local."""
-        from framework.runner.runner import AgentRunner
+        from engine.runner.runner import AgentRunner
 
         assert AgentRunner._is_local_model(model) is False

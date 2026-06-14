@@ -9,7 +9,7 @@ could cause a json.JSONDecodeError and crash execution.
 import textwrap
 from pathlib import Path
 
-from framework.runner.tool_registry import ToolRegistry
+from engine.runner.tool_registry import ToolRegistry
 
 
 def _write_tool_module(tmp_path: Path, content: str) -> Path:
@@ -22,7 +22,7 @@ def _write_tool_module(tmp_path: Path, content: str) -> Path:
 def test_discover_from_module_handles_invalid_json(tmp_path):
     """ToolRegistry should not crash when tool_executor returns invalid JSON."""
     module_src = """
-        from framework.llm.provider import Tool, ToolUse, ToolResult
+        from engine.llm.provider import Tool, ToolUse, ToolResult
 
         TOOLS = {
             "bad_tool": Tool(
@@ -61,7 +61,7 @@ def test_discover_from_module_handles_invalid_json(tmp_path):
 def test_discover_from_module_handles_empty_content(tmp_path):
     """ToolRegistry should handle empty ToolResult.content gracefully."""
     module_src = """
-        from framework.llm.provider import Tool, ToolUse, ToolResult
+        from engine.llm.provider import Tool, ToolUse, ToolResult
 
         TOOLS = {
             "empty_tool": Tool(

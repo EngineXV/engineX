@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from framework.config import RuntimeConfig
+from engine.config import RuntimeConfig
 
 default_config = RuntimeConfig()
 

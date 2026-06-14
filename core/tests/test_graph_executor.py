@@ -5,10 +5,10 @@ Focused on minimal success and failure scenarios.
 
 import pytest
 
-from framework.graph.edge import GraphSpec
-from framework.graph.executor import GraphExecutor
-from framework.graph.goal import Goal
-from framework.graph.node import NodeResult, NodeSpec
+from engine.graph.edge import GraphSpec
+from engine.graph.executor import GraphExecutor
+from engine.graph.goal import Goal
+from engine.graph.node import NodeResult, NodeSpec
 
 
 # ---- Dummy runtime (no real logging) ----

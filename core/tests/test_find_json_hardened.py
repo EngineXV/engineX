@@ -20,7 +20,7 @@ import time
 
 import pytest
 
-from framework.graph.node import find_json_object
+from engine.graph.node import find_json_object
 
 # Hardcoded nesting limit for testing; the original _MAX_NESTING_DEPTH
 # constant was removed alongside the async path simplification.

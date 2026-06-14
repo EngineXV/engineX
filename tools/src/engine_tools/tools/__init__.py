@@ -10,7 +10,7 @@ from fastmcp import FastMCP
 if TYPE_CHECKING:
     from engine_tools.credentials import CredentialStoreAdapter
 
-from .file_system_toolkits.data_tools import register_tools as register_data_tools
+from .data_tools import register_tools as register_data_tools
 from .time_tool import register_tools as register_time
 
 

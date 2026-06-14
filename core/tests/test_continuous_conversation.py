@@ -17,19 +17,19 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from framework.graph.conversation import NodeConversation
-from framework.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
-from framework.graph.executor import GraphExecutor
-from framework.graph.goal import Goal
-from framework.graph.node import NodeResult, NodeSpec, SharedMemory
-from framework.graph.prompt_composer import (
+from engine.graph.conversation import NodeConversation
+from engine.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
+from engine.graph.executor import GraphExecutor
+from engine.graph.goal import Goal
+from engine.graph.node import NodeResult, NodeSpec, SharedMemory
+from engine.graph.prompt_composer import (
     build_narrative,
     build_transition_marker,
     compose_system_prompt,
 )
-from framework.llm.provider import LLMProvider, LLMResponse, Tool
-from framework.llm.stream_events import FinishEvent, TextDeltaEvent, ToolCallEvent
-from framework.runtime.core import Runtime
+from engine.llm.provider import LLMProvider, LLMResponse, Tool
+from engine.llm.stream_events import FinishEvent, TextDeltaEvent, ToolCallEvent
+from engine.runtime.core import Runtime
 
 # ---------------------------------------------------------------------------
 # Mock LLM

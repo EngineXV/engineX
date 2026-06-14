@@ -6,10 +6,10 @@ from typing import Any
 
 import pytest
 
-from framework.graph.context_handoff import ContextHandoff, HandoffContext
-from framework.graph.conversation import NodeConversation
-from framework.llm.mock import MockLLMProvider
-from framework.llm.provider import LLMProvider, LLMResponse
+from engine.graph.context_handoff import ContextHandoff, HandoffContext
+from engine.graph.conversation import NodeConversation
+from engine.llm.mock import MockLLMProvider
+from engine.llm.provider import LLMProvider, LLMResponse
 
 # ---------------------------------------------------------------------------
 # Helpers

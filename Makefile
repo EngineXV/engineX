@@ -5,7 +5,7 @@ help:
 	@echo "  lint   - ruff check + format (auto-fix)"
 	@echo "  format - ruff format only"
 	@echo "  check  - ruff check without modifying files"
-	@echo "  test   - run framework tests"
+	@echo "  test   - run engine tests"
 
 lint:
 	cd core && uv run ruff check --fix .
@@ -24,4 +24,4 @@ check:
 	cd tools && uv run ruff format --check .
 
 test:
-	cd core && uv run python -m pytest tests/ framework/credentials/tests/ framework/runtime/tests/ -q
+	cd core && uv run python -m pytest tests/ -q

@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from framework import Runtime
-from framework.schemas.decision import DecisionType
+from engine import Runtime
+from engine.schemas.decision import DecisionType
 
 
 class TestRuntimeBasics:

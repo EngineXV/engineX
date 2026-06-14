@@ -7,8 +7,8 @@ validating LLM responses against Pydantic models.
 
 from pydantic import BaseModel, Field
 
-from framework.graph.node import NodeResult, NodeSpec
-from framework.graph.validator import OutputValidator, ValidationResult
+from engine.graph.node import NodeResult, NodeSpec
+from engine.graph.validator import OutputValidator, ValidationResult
 
 
 # Test Pydantic models

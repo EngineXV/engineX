@@ -19,9 +19,9 @@ from pathlib import Path
 
 import pytest
 
-from framework.llm.litellm import LiteLLMProvider
-from framework.llm.provider import Tool
-from framework.llm.stream_events import (
+from engine.llm.litellm import LiteLLMProvider
+from engine.llm.provider import Tool
+from engine.llm.stream_events import (
     FinishEvent,
     StreamEvent,
     TextDeltaEvent,

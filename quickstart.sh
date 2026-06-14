@@ -25,7 +25,7 @@ uv sync
 echo -e "${YELLOW}Checking core imports...${NC}"
 uv run python -c "
 import importlib
-for mod in ('framework', 'engine_tools', 'litellm'):
+for mod in ('engine', 'engine_tools', 'litellm'):
     importlib.import_module(mod)
     print(f'  ok: {mod}')
 "

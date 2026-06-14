@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from framework.storage.backend import FileStorage
+from engine.storage.backend import FileStorage
 
 
 class TestPathTraversalProtection:

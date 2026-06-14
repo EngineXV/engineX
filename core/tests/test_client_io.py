@@ -11,13 +11,13 @@ import asyncio
 
 import pytest
 
-from framework.graph.client_io import (
+from engine.graph.client_io import (
     ActiveNodeClientIO,
     ClientIOGateway,
     InertNodeClientIO,
     NodeClientIO,
 )
-from framework.runtime.event_bus import AgentEvent, EventType
+from engine.runtime.event_bus import AgentEvent, EventType
 
 _AGENT_EVENT_FIELDS = {"stream_id", "node_id", "execution_id", "correlation_id"}
 

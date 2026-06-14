@@ -16,30 +16,30 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from framework.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
-from framework.graph.event_loop_node import (
+from engine.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
+from engine.graph.event_loop_node import (
     EventLoopNode,
     JudgeVerdict,
     LoopConfig,
 )
-from framework.graph.executor import GraphExecutor
-from framework.graph.goal import Goal
-from framework.graph.node import (
+from engine.graph.executor import GraphExecutor
+from engine.graph.goal import Goal
+from engine.graph.node import (
     NodeContext,
     NodeProtocol,
     NodeResult,
     NodeSpec,
     SharedMemory,
 )
-from framework.llm.provider import LLMProvider, LLMResponse, Tool, ToolResult, ToolUse
-from framework.llm.stream_events import (
+from engine.llm.provider import LLMProvider, LLMResponse, Tool, ToolResult, ToolUse
+from engine.llm.stream_events import (
     FinishEvent,
     StreamEvent,
     TextDeltaEvent,
     ToolCallEvent,
 )
-from framework.runtime.core import Runtime
-from framework.runtime.event_bus import AgentEvent, EventBus, EventType
+from engine.runtime.core import Runtime
+from engine.runtime.event_bus import AgentEvent, EventBus, EventType
 
 # ---------------------------------------------------------------------------
 # Config: mock / real toggle
@@ -217,7 +217,7 @@ def make_llm(scripts: list[StreamScript] | None = None) -> LLMProvider:
     if USE_MOCK_LLM:
         return ScriptableMockLLMProvider(scripts)
     # Real mode: use LiteLLM
-    from framework.llm.litellm import LiteLLMProvider
+    from engine.llm.litellm import LiteLLMProvider
 
     return LiteLLMProvider(model=LLM_MODEL)
 

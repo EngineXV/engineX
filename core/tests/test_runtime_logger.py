@@ -11,15 +11,15 @@ from pathlib import Path
 
 import pytest
 
-from framework.observability import clear_trace_context, set_trace_context
-from framework.runtime.runtime_log_schemas import (
+from engine.observability import clear_trace_context, set_trace_context
+from engine.runtime.runtime_log_schemas import (
     NodeDetail,
     NodeStepLog,
     RunSummaryLog,
     ToolCallLog,
 )
-from framework.runtime.runtime_log_store import RuntimeLogStore
-from framework.runtime.runtime_logger import RuntimeLogger
+from engine.runtime.runtime_log_store import RuntimeLogStore
+from engine.runtime.runtime_logger import RuntimeLogger
 
 # ---------------------------------------------------------------------------
 # Helpers

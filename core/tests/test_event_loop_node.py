@@ -13,25 +13,25 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from framework.graph.conversation import NodeConversation
-from framework.graph.event_loop_node import (
+from engine.graph.conversation import NodeConversation
+from engine.graph.event_loop_node import (
     EventLoopNode,
     JudgeProtocol,
     JudgeVerdict,
     LoopConfig,
     OutputAccumulator,
 )
-from framework.graph.node import NodeContext, NodeProtocol, NodeSpec, SharedMemory
-from framework.llm.provider import LLMProvider, LLMResponse, Tool, ToolResult, ToolUse
-from framework.llm.stream_events import (
+from engine.graph.node import NodeContext, NodeProtocol, NodeSpec, SharedMemory
+from engine.llm.provider import LLMProvider, LLMResponse, Tool, ToolResult, ToolUse
+from engine.llm.stream_events import (
     FinishEvent,
     StreamErrorEvent,
     TextDeltaEvent,
     ToolCallEvent,
 )
-from framework.runtime.core import Runtime
-from framework.runtime.event_bus import EventBus, EventType
-from framework.storage.conversation_store import FileConversationStore
+from engine.runtime.core import Runtime
+from engine.runtime.event_bus import EventBus, EventType
+from engine.storage.conversation_store import FileConversationStore
 
 # ---------------------------------------------------------------------------
 # Mock LLM that yields pre-programmed stream events
@@ -1994,7 +1994,7 @@ class TestExecutionId:
 
     def test_stream_runtime_adapter_exposes_execution_id(self):
         """StreamRuntimeAdapter.execution_id returns the value passed at construction."""
-        from framework.runtime.stream_runtime import StreamRuntimeAdapter
+        from engine.runtime.stream_runtime import StreamRuntimeAdapter
 
         mock_stream_runtime = MagicMock()
         adapter = StreamRuntimeAdapter(stream_runtime=mock_stream_runtime, execution_id="exec_456")
@@ -2002,8 +2002,8 @@ class TestExecutionId:
 
     def test_build_context_passes_execution_id_from_adapter(self):
         """_build_context picks up execution_id from a StreamRuntimeAdapter runtime."""
-        from framework.graph.executor import GraphExecutor
-        from framework.graph.goal import Goal
+        from engine.graph.executor import GraphExecutor
+        from engine.graph.goal import Goal
 
         runtime = MagicMock()
         runtime.execution_id = "exec_123"
@@ -2020,8 +2020,8 @@ class TestExecutionId:
 
     def test_build_context_defaults_execution_id_for_plain_runtime(self):
         """Plain Runtime.execution_id returns '' by default."""
-        from framework.graph.executor import GraphExecutor
-        from framework.graph.goal import Goal
+        from engine.graph.executor import GraphExecutor
+        from engine.graph.goal import Goal
 
         runtime = MagicMock(spec=Runtime)
         runtime.execution_id = ""

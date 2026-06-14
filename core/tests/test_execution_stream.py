@@ -6,15 +6,15 @@ from typing import Any
 
 import pytest
 
-from framework.graph import Goal, NodeSpec, SuccessCriterion
-from framework.graph.edge import GraphSpec
-from framework.llm.provider import LLMProvider, LLMResponse, Tool
-from framework.llm.stream_events import FinishEvent, StreamEvent, TextDeltaEvent, ToolCallEvent
-from framework.runtime.event_bus import EventBus
-from framework.runtime.execution_stream import EntryPointSpec, ExecutionStream
-from framework.runtime.outcome_aggregator import OutcomeAggregator
-from framework.runtime.shared_state import SharedStateManager
-from framework.storage.concurrent import ConcurrentStorage
+from engine.graph import Goal, NodeSpec, SuccessCriterion
+from engine.graph.edge import GraphSpec
+from engine.llm.provider import LLMProvider, LLMResponse, Tool
+from engine.llm.stream_events import FinishEvent, StreamEvent, TextDeltaEvent, ToolCallEvent
+from engine.runtime.event_bus import EventBus
+from engine.runtime.execution_stream import EntryPointSpec, ExecutionStream
+from engine.runtime.outcome_aggregator import OutcomeAggregator
+from engine.runtime.shared_state import SharedStateManager
+from engine.storage.concurrent import ConcurrentStorage
 
 
 class DummyLLMProvider(LLMProvider):
@@ -195,7 +195,7 @@ async def test_shared_session_reuses_directory_and_memory(tmp_path):
     storage = ConcurrentStorage(tmp_path)
     await storage.start()
 
-    from framework.storage.session_store import SessionStore
+    from engine.storage.session_store import SessionStore
 
     session_store = SessionStore(tmp_path)
 

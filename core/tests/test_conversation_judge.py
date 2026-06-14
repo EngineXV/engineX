@@ -17,18 +17,18 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from framework.graph.conversation import NodeConversation
-from framework.graph.conversation_judge import (
+from engine.graph.conversation import NodeConversation
+from engine.graph.conversation_judge import (
     _parse_verdict,
     evaluate_phase_completion,
 )
-from framework.graph.edge import GraphSpec
-from framework.graph.executor import GraphExecutor
-from framework.graph.goal import Goal
-from framework.graph.node import NodeSpec
-from framework.llm.provider import LLMProvider, LLMResponse, Tool
-from framework.llm.stream_events import FinishEvent, TextDeltaEvent, ToolCallEvent
-from framework.runtime.core import Runtime
+from engine.graph.edge import GraphSpec
+from engine.graph.executor import GraphExecutor
+from engine.graph.goal import Goal
+from engine.graph.node import NodeSpec
+from engine.llm.provider import LLMProvider, LLMResponse, Tool
+from engine.llm.stream_events import FinishEvent, TextDeltaEvent, ToolCallEvent
+from engine.runtime.core import Runtime
 
 # ---------------------------------------------------------------------------
 # Mock LLM

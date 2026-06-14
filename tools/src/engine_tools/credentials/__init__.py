@@ -1,4 +1,4 @@
-"""Centralized credential management for Engine Tools"""
+"""Credential specs for Engine tools."""
 
 from .base import CredentialError, CredentialSpec
 from .health_check import (
@@ -7,7 +7,6 @@ from .health_check import (
     validate_integration_wiring,
 )
 from .llm import LLM_CREDENTIALS
-from .search import SEARCH_CREDENTIALS
 from .shell_config import (
     add_env_var_to_shell_config,
     detect_shell,
@@ -16,10 +15,7 @@ from .shell_config import (
 )
 from .store_adapter import CredentialStoreAdapter
 
-CREDENTIAL_SPECS = {
-    **LLM_CREDENTIALS,
-    **SEARCH_CREDENTIALS,
-}
+CREDENTIAL_SPECS = {**LLM_CREDENTIALS}
 
 __all__ = [
     "CredentialSpec",
@@ -34,5 +30,4 @@ __all__ = [
     "add_env_var_to_shell_config",
     "CREDENTIAL_SPECS",
     "LLM_CREDENTIALS",
-    "SEARCH_CREDENTIALS",
 ]

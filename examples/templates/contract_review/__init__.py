@@ -1,23 +1,19 @@
-"""Contract Review — extract contract fields with human approval"""
+"""Contract review template — HITL workflow for contract field extraction."""
 
-from .agent import (
-    ContractReviewAgent,
-    default_agent,
-    edges,
-    goal,
-    nodes,
-)
-from .config import AgentMetadata, default_config, metadata
+from .agent import edges, entry_node, entry_points, goal, graph, nodes, pause_nodes, terminal_nodes
+from .config import default_config, metadata
 
-__version__ = "1.0.0"
+__version__ = metadata.version
 
 __all__ = [
-    "ContractReviewAgent",
-    "default_agent",
     "goal",
     "nodes",
     "edges",
-    "AgentMetadata",
+    "graph",
+    "entry_node",
+    "entry_points",
+    "pause_nodes",
+    "terminal_nodes",
     "default_config",
     "metadata",
 ]

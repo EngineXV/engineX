@@ -30,4 +30,4 @@ jobs:
         with:
           python-version: "3.11"
       - run: uv sync
-      - run: cd core && uv run python -m pytest tests/ framework/credentials/tests/ framework/runtime/tests/ -q
+      - run: cd core && uv run python -m pytest tests/ -q

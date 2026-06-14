@@ -10,21 +10,25 @@ uv sync
 ./engine run examples/templates/contract_review --tui
 ```
 
-## What's included
+## Layout
 
-| Path | Purpose |
-|------|---------|
-| `core/framework/` | Runtime: goals, graphs, HITL, executor, storage, TUI, CLI |
-| `tools/` | File data tools + credential helpers (`load_data`, `save_data`, …) |
-| `examples/templates/contract_review/` | HITL contract review agent (no external tools) |
+```
+engine/
+├── engine              # CLI wrapper script
+├── core/engine/        # Runtime package (import: engine)
+├── tools/              # MCP data tools (import: engine_tools)
+└── examples/templates/contract_review/
+```
 
 ## Commands
 
 ```bash
-./engine run <agent> --input '{...}'
+./engine run <agent> [--tui] [--input '{...}']
 ./engine validate <agent>
+./engine info <agent>
 ./engine tui
 ./engine shell <agent>
+./engine setup-credentials <agent>
 ```
 
-Config and encrypted credentials: `~/.engine/`
+Config and credentials: `~/.engine/`

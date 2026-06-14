@@ -1,6 +1,6 @@
 """Node definitions for Contract Review"""
 
-from framework.graph import NodeSpec
+from engine.graph import NodeSpec
 
 intake_node = NodeSpec(
     id="intake",

@@ -9,11 +9,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from framework.graph.edge import GraphSpec
-from framework.graph.executor import GraphExecutor
-from framework.graph.goal import Goal
-from framework.graph.node import NodeContext, NodeProtocol, NodeResult, NodeSpec
-from framework.runtime.core import Runtime
+from engine.graph.edge import GraphSpec
+from engine.graph.executor import GraphExecutor
+from engine.graph.goal import Goal
+from engine.graph.node import NodeContext, NodeProtocol, NodeResult, NodeSpec
+from engine.runtime.core import Runtime
 
 
 class FlakyTestNode(NodeProtocol):

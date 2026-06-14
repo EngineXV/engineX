@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from framework.cli import _configure_paths
+from engine.cli import _configure_paths
 
 
 @pytest.fixture
@@ -59,13 +59,13 @@ class TestConfigurePaths:
         _configure_paths()
 
 
-class TestFrameworkModule:
-    """Test ``python -m framework`` invocation (the underlying module)."""
+class TestEngineModule:
+    """Test ``python -m engine`` invocation."""
 
     def test_module_help(self, project_root):
-        """Verify ``python -m framework --help`` prints usage."""
+        """Verify ``python -m engine --help`` prints usage."""
         result = subprocess.run(
-            [sys.executable, "-m", "framework", "--help"],
+            [sys.executable, "-m", "engine", "--help"],
             capture_output=True,
             text=True,
             cwd=str(project_root / "core"),
@@ -74,9 +74,9 @@ class TestFrameworkModule:
         assert "engine" in result.stdout.lower() or "goal" in result.stdout.lower()
 
     def test_module_list_subcommand(self, project_root):
-        """Verify ``python -m framework list --help`` registers the subcommand."""
+        """Verify ``python -m engine list --help`` registers the subcommand."""
         result = subprocess.run(
-            [sys.executable, "-m", "framework", "list", "--help"],
+            [sys.executable, "-m", "engine", "list", "--help"],
             capture_output=True,
             text=True,
             cwd=str(project_root / "core"),

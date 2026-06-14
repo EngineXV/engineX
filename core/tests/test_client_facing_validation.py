@@ -6,8 +6,8 @@ Validates two rules added to GraphSpec.validate():
 2. Parallel event_loop nodes must have disjoint output_keys.
 """
 
-from framework.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
-from framework.graph.node import NodeSpec
+from engine.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
+from engine.graph.node import NodeSpec
 
 # ---------------------------------------------------------------------------
 # Rule 1: client_facing fan-out

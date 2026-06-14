@@ -1,0 +1,38 @@
+"""Engine Tools - Tool library for the Engine agent framework"""
+
+__version__ = "0.1.0"
+
+# Credential management (no external dependencies)
+from .credentials import (
+    CREDENTIAL_SPECS,
+    CredentialError,
+    CredentialSpec,
+    CredentialStoreAdapter,
+)
+
+# Utilities (no external dependencies)
+from .utils import get_env_var
+
+
+def __getattr__(name: str):
+    """Lazy import for tools that require fastmcp"""
+    if name == "register_all_tools":
+        from .tools import register_all_tools
+
+        return register_all_tools
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+__all__ = [
+    # Version
+    "__version__",
+    # Utilities
+    "get_env_var",
+    # Credentials
+    "CredentialStoreAdapter",
+    "CredentialSpec",
+    "CredentialError",
+    "CREDENTIAL_SPECS",
+    # MCP registration (lazy loaded)
+    "register_all_tools",
+]

@@ -1,0 +1,83 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+workdir/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# User configuration
+config.yaml
+docker-compose.override.yml
+
+# IDE / editor / agent tooling (not part of runtime)
+.idea/
+.vscode/
+.cursor/
+.claude/
+.agent/
+.agents/
+.opencode/
+.codex/
+.cursorrules
+.cursorindexingignore
+.specstory/
+.mcp.json
+.dockerignore
+.editorconfig
+.gitattributes
+.pre-commit-config.yaml
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Testing / Python caches
+coverage/
+.nyc_output/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+*.egg
+.mypy_cache/
+.ruff_cache/
+
+# TypeScript
+*.tsbuildinfo
+
+# Virtual environments
+.venv/
+.venv_plots/
+tools/.venv_issue1691/
+
+# Generated runtime data
+core/data/
+
+# Misc
+*.local
+.cache/
+tmp/
+temp/
+exports/*
+agent_logs/
+docs/
+.agent-builder-sessions/*
+screenshots/*

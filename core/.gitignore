@@ -1,0 +1,13 @@
+exports/
+docs/
+.agent-builder-sessions/
+
+# IDE / agent tooling
+.agent/
+.agents/
+.claude/
+.cursor/
+.opencode/
+.codex/
+.pytest_cache/
+**/__pycache__/

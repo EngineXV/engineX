@@ -1,0 +1,38 @@
+[project]
+name = "tools"
+version = "0.1.0"
+description = "Minimal tools for Engine agent runtime"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Engine", email = "team@engine.local" }]
+
+dependencies = [
+    "pydantic>=2.0.0",
+    "httpx>=0.27.0",
+    "fastmcp>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "framework",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0.0", "pytest-asyncio>=0.21.0"]
+
+[tool.uv.sources]
+framework = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/engine_tools"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+lint.select = ["B", "C4", "E", "F", "I", "Q", "UP", "W"]
+lint.isort.known-first-party = ["engine_tools"]
+
+[dependency-groups]
+dev = ["ruff>=0.14.14"]

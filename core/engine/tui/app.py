@@ -742,10 +742,7 @@ class EngineTUI(App):
             et = event.type
 
             # --- Multi-graph filtering ---
-            if (
-                event.graph_id is not None
-                and event.graph_id != self.runtime.active_graph_id
-            ):
+            if event.graph_id is not None and event.graph_id != self.runtime.active_graph_id:
                 if et == EventType.CLIENT_INPUT_REQUESTED:
                     self.notify(
                         f"[bold]{event.graph_id}[/bold] is waiting for input",

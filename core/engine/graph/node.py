@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def _fix_unescaped_newlines_in_json(json_str: str) -> str:
-    '''Fix unescaped newlines inside JSON string values'''
+    """Fix unescaped newlines inside JSON string values"""
     result = []
     in_string = False
     escape_next = False
@@ -68,7 +68,7 @@ def _fix_unescaped_newlines_in_json(json_str: str) -> str:
 
 
 def find_json_object(text: str) -> str | None:
-    '''Find the first valid JSON object in text using balanced brace matching'''
+    """Find the first valid JSON object in text using balanced brace matching"""
     start = text.find("{")
     if start == -1:
         return None

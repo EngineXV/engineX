@@ -12,11 +12,12 @@ def _open_file_uri(file_uri: str) -> tuple[bool, str]:
     import subprocess
     import sys
 
+    devnull = subprocess.DEVNULL
     try:
         if sys.platform == "darwin":
-            subprocess.Popen(["open", file_uri], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.Popen(["open", file_uri], stdout=devnull, stderr=devnull)
         elif sys.platform == "linux":
-            subprocess.Popen(["xdg-open", file_uri], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.Popen(["xdg-open", file_uri], stdout=devnull, stderr=devnull)
         else:
             return False, "Browser open not supported on this platform"
         return True, "Opened in browser"

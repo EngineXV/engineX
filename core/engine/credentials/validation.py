@@ -17,7 +17,7 @@ def ensure_credential_key_env() -> None:
     """Load bootstrap credentials into ``os.environ``"""
     from pathlib import Path
 
-    from .key_storage import load_engine_sync_api_key, load_credential_key
+    from .key_storage import load_credential_key, load_engine_sync_api_key
 
     # Step 0: Load .env (project root or cwd) — does not override existing env vars
     try:

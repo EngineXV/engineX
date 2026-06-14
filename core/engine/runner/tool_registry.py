@@ -52,7 +52,8 @@ class ToolRegistry:
         self._mcp_config_path: Path | None = None  # Path used for initial load
         self._mcp_tool_names: set[str] = set()  # Tool names registered from MCP
         self._mcp_cred_snapshot: set[str] = set()  # Credential filenames at MCP load time
-        self._mcp_engine_sync_key_snapshot: str | None = None  # ENGINE_OAUTH_API_KEY value at MCP load time
+        # ENGINE_OAUTH_API_KEY value at MCP load time
+        self._mcp_engine_sync_key_snapshot: str | None = None
         self._mcp_server_tools: dict[str, set[str]] = {}  # server name -> tool names
 
     def register(

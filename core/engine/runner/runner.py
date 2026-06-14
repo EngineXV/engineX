@@ -904,9 +904,7 @@ class AgentRunner:
 
             # Fail fast if the agent needs an LLM but none was configured
             if self._llm is None:
-                has_llm_nodes = any(
-                    node.node_type == "event_loop" for node in self.graph.nodes
-                )
+                has_llm_nodes = any(node.node_type == "event_loop" for node in self.graph.nodes)
                 if has_llm_nodes:
                     from engine.credentials.models import CredentialError
 
@@ -1436,9 +1434,7 @@ class AgentRunner:
                 warnings.append(warning_msg)
         except ImportError:
             # engine_tools not installed - fall back to direct check
-            has_llm_nodes = any(
-                node.node_type == "event_loop" for node in self.graph.nodes
-            )
+            has_llm_nodes = any(node.node_type == "event_loop" for node in self.graph.nodes)
             if has_llm_nodes:
                 api_key_env = self._get_api_key_env_var(self.model)
                 if api_key_env and not os.environ.get(api_key_env):

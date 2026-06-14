@@ -690,8 +690,6 @@ def cmd_list(args: argparse.Namespace) -> int:
     return 0
 
 
-
-
 def _interactive_approval(request):
     """Interactive approval callback for HITL mode"""
     from engine.graph import ApprovalDecision, ApprovalResult
@@ -1375,7 +1373,6 @@ def _select_agent(agents_dir: Path) -> str | None:
         except (EOFError, KeyboardInterrupt):
             print()
             return None
-
 
 
 def cmd_setup_credentials(args: argparse.Namespace) -> int:

@@ -37,7 +37,10 @@ class OAuthBearerHealthChecker:
                     },
                 )
             if response.status_code == 200:
-                return HealthCheckResult(valid=True, message=f"{self.service_name} credentials valid")
+                return HealthCheckResult(
+                    valid=True,
+                    message=f"{self.service_name} credentials valid",
+                )
             if response.status_code == 401:
                 return HealthCheckResult(
                     valid=False,
@@ -126,7 +129,10 @@ class GoogleSearchHealthChecker:
                     params={"key": api_key, "cx": cse_id, "q": "test", "num": "1"},
                 )
             if response.status_code == 200:
-                return HealthCheckResult(valid=True, message="Google Custom Search credentials valid")
+                return HealthCheckResult(
+                    valid=True,
+                    message="Google Custom Search credentials valid",
+                )
             if response.status_code == 403:
                 return HealthCheckResult(
                     valid=False,

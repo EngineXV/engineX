@@ -210,7 +210,8 @@ class CredentialSetupSession:
         try:
             generate_and_save_credential_key()
             self._print(
-                f"{Colors.GREEN}✓ Encryption key saved to ~/.engine/secrets/credential_key{Colors.NC}"
+                f"{Colors.GREEN}✓ Encryption key saved to "
+                f"~/.engine/secrets/credential_key{Colors.NC}"
             )
             return True
         except Exception as e:
@@ -382,7 +383,8 @@ class CredentialSetupSession:
                 return True
             else:
                 self._print(
-                    f"{Colors.YELLOW}⚠ {cred.credential_name} not found in Engine account.{Colors.NC}"
+                    f"{Colors.YELLOW}⚠ {cred.credential_name} not found in "
+                    f"Engine account.{Colors.NC}"
                 )
                 self._print("Please connect this integration on https://engine.localhost first.")
                 return False

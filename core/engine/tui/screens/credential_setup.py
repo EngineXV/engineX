@@ -97,7 +97,8 @@ class CredentialSetupScreen(ModalScreen[bool | None]):
                     with Vertical(classes="cred-entry"):
                         yield Label("[bold]ENGINE_OAUTH_API_KEY[/bold]")
                         oauth_names = [
-                            self._missing[i].credential_name for i in sorted(self._engine_sync_creds)
+                            self._missing[i].credential_name
+                            for i in sorted(self._engine_sync_creds)
                         ]
                         yield Label(f"[dim]Required for OAuth sync: {', '.join(oauth_names)}[/dim]")
                         yield Label("[cyan]Get key:[/cyan] https://engine.localhost")

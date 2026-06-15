@@ -301,19 +301,81 @@ textarea:focus-visible {
 }
 
 .sidebar-section {
-  padding: 0 0.75rem 1rem 1rem;
-  overflow: auto;
+  padding: 0 0.75rem 0.65rem 1rem;
+}
+
+.sidebar-scroll {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 0.75rem;
+}
+
+.sidebar-section-divider {
+  height: 1px;
+  margin: 0.35rem 1.25rem 0.5rem;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.14) 20%,
+    rgba(255, 255, 255, 0.14) 80%,
+    transparent
+  );
+}
+
+.sidebar-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.65rem 0.85rem 0.5rem;
 }
 
 .sidebar-section-label {
   font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--primary);
+}
+
+.sidebar-section-label--workflows {
+  color: #7dd3fc;
+}
+
+.sidebar-section-hint {
+  font-size: 0.68rem;
   color: var(--muted);
-  padding: 0.75rem 0.85rem 0.45rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  font-weight: 400;
+}
+
+.sidebar-section--workflows {
+  padding-top: 0.15rem;
+}
+
+.sidebar-section--workflows .sidebar-agent {
+  background: rgba(125, 211, 252, 0.04);
+  border-color: rgba(125, 211, 252, 0.08);
+}
+
+.sidebar-section--workflows .sidebar-agent:hover {
+  background: rgba(125, 211, 252, 0.08);
+  border-color: rgba(125, 211, 252, 0.16);
+}
+
+.sidebar-section--workflows .sidebar-agent.active {
+  background: rgba(125, 211, 252, 0.1);
+  border-color: rgba(125, 211, 252, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 20px rgba(125, 211, 252, 0.08);
+}
+
+.sidebar-section--workflows .sidebar-agent.active::before {
+  background: #7dd3fc;
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.45);
 }
 
 .sidebar-empty {
@@ -455,6 +517,30 @@ textarea:focus-visible {
   font-weight: 600;
   flex-shrink: 0;
   transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.workflow-avatar {
+  border-radius: 8px;
+  background: rgba(125, 211, 252, 0.12);
+  color: #7dd3fc;
+  border-color: rgba(125, 211, 252, 0.35);
+}
+
+.workflow-mark-icon {
+  color: #7dd3fc;
+  opacity: 0.55;
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: opacity 0.15s;
+}
+
+.sidebar-agent:hover .workflow-mark-icon {
+  opacity: 0.85;
+}
+
+.sidebar-section--workflows .sidebar-agent.active .workflow-avatar {
+  border-color: rgba(125, 211, 252, 0.55);
+  box-shadow: 0 0 16px rgba(125, 211, 252, 0.2);
 }
 
 .agent-meta { min-width: 0; flex: 1; display: flex; flex-direction: column; }

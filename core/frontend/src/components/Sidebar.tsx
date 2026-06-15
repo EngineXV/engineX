@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useDashboard } from "../context/DashboardContext";
 import {
+  IconAgent,
   IconBook,
   IconChevronLeft,
   IconChevronRight,
@@ -81,73 +82,98 @@ export default function Sidebar() {
         </NavLink>
       </nav>
 
-      <div className="sidebar-section">
-        <div className="sidebar-section-label">Supervisors</div>
-        {loading && <div className="sidebar-empty">Loading…</div>}
-        {!loading && supervisors.length === 0 && (
-          <div className="sidebar-empty">No supervisors found</div>
-        )}
-        {supervisors.map((supervisor) => (
-          <button
-            key={supervisor.path}
-            type="button"
-            className={`sidebar-supervisor${activeAgentPath === supervisor.path ? " active" : ""}`}
-            disabled={starting === supervisor.path}
-            onClick={() => void handleOpenAgent(supervisor.path)}
-          >
-            <span className="supervisor-avatar">
-              <span className="status-dot on" />
-              {(supervisor.supervisor_name || supervisor.name).charAt(0).toUpperCase()}
-            </span>
-            <span className="agent-meta">
-              <span className="agent-name">{supervisor.supervisor_name || supervisor.name}</span>
-              <span className="agent-sub">{supervisor.department}</span>
-            </span>
-            <IconSupervisor size={14} className="supervisor-mark-icon" />
-          </button>
-        ))}
-      </div>
-
-      {agents.length > 0 && (
-        <div className="sidebar-section">
-          <div className="sidebar-section-label">Agents</div>
-          {agents.map((agent) => (
+      <div className="sidebar-scroll">
+        <section className="sidebar-section sidebar-section--supervisors">
+          <div className="sidebar-section-header">
+            <span className="sidebar-section-label">Supervisors</span>
+            <span className="sidebar-section-hint">Department leads</span>
+          </div>
+          {loading && <div className="sidebar-empty">Loading…</div>}
+          {!loading && supervisors.length === 0 && (
+            <div className="sidebar-empty">No supervisors found</div>
+          )}
+          {supervisors.map((supervisor) => (
             <button
-              key={agent.path}
+              key={supervisor.path}
               type="button"
-              className={`sidebar-agent${activeAgentPath === agent.path ? " active" : ""}`}
-              disabled={starting === agent.path}
-              onClick={() => void handleOpenAgent(agent.path)}
+              className={`sidebar-supervisor${activeAgentPath === supervisor.path ? " active" : ""}`}
+              disabled={starting === supervisor.path}
+              onClick={() => void handleOpenAgent(supervisor.path)}
             >
-              <span className="agent-avatar">{agent.name.charAt(0).toUpperCase()}</span>
-              <span className="agent-meta">
-                <span className="agent-name">{agent.name}</span>
-                <span className="agent-sub">{agent.node_count} nodes</span>
+              <span className="supervisor-avatar">
+                <span className="status-dot on" />
+                {(supervisor.supervisor_name || supervisor.name).charAt(0).toUpperCase()}
               </span>
-              {agent.is_loaded && <span className="status-pill">live</span>}
+              <span className="agent-meta">
+                <span className="agent-name">{supervisor.supervisor_name || supervisor.name}</span>
+                <span className="agent-sub">{supervisor.department}</span>
+              </span>
+              <IconSupervisor size={14} className="supervisor-mark-icon" />
             </button>
           ))}
-        </div>
-      )}
+        </section>
 
-      {sessions.length > 0 && (
-        <div className="sidebar-section">
-          <div className="sidebar-section-label">Sessions</div>
-          {sessions.map((session) => (
-            <NavLink
-              key={session.session_id}
-              to={`/session/${session.session_id}`}
-              className={({ isActive }) => `sidebar-session${isActive ? " active" : ""}`}
-            >
-              <span className={`status-dot ${session.current_exec_id ? "on" : "off"}`} />
-              <span className="session-label">
-                {session.supervisor_name || session.name}
-                {session.department ? ` · ${session.department}` : ""}
-              </span>
-            </NavLink>
-          ))}
-        </div>
-      )}
+        {agents.length > 0 && (
+          <>
+            <div className="sidebar-section-divider" role="separator" aria-hidden />
+            <section className="sidebar-section sidebar-section--workflows">
+              <div className="sidebar-section-header">
+                <span className="sidebar-section-label sidebar-section-label--workflows">
+                  Workflow agents
+                </span>
+                <span className="sidebar-section-hint">Automated pipelines</span>
+              </div>
+              {agents.map((agent) => (
+                <button
+                  key={agent.path}
+                  type="button"
+                  className={`sidebar-agent${activeAgentPath === agent.path ? " active" : ""}`}
+                  disabled={starting === agent.path}
+                  onClick={() => void handleOpenAgent(agent.path)}
+                >
+                  <span className="agent-avatar workflow-avatar">
+                    {agent.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="agent-meta">
+                    <span className="agent-name">{agent.name}</span>
+                    <span className="agent-sub">{agent.node_count} nodes</span>
+                  </span>
+                  {agent.is_loaded ? (
+                    <span className="status-pill">live</span>
+                  ) : (
+                    <IconAgent size={14} className="workflow-mark-icon" />
+                  )}
+                </button>
+              ))}
+            </section>
+          </>
+        )}
+
+        {sessions.length > 0 && (
+          <>
+            <div className="sidebar-section-divider" role="separator" aria-hidden />
+            <section className="sidebar-section sidebar-section--sessions">
+              <div className="sidebar-section-header">
+                <span className="sidebar-section-label">Sessions</span>
+                <span className="sidebar-section-hint">Active runs</span>
+              </div>
+              {sessions.map((session) => (
+                <NavLink
+                  key={session.session_id}
+                  to={`/session/${session.session_id}`}
+                  className={({ isActive }) => `sidebar-session${isActive ? " active" : ""}`}
+                >
+                  <span className={`status-dot ${session.current_exec_id ? "on" : "off"}`} />
+                  <span className="session-label">
+                    {session.supervisor_name || session.name}
+                    {session.department ? ` · ${session.department}` : ""}
+                  </span>
+                </NavLink>
+              ))}
+            </section>
+          </>
+        )}
+      </div>
     </aside>
   );
 }

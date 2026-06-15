@@ -35,8 +35,17 @@ def get_preferred_model() -> str:
     """Return the user's preferred LLM model string"""
     llm = get_engine_config().get("llm", {})
     if llm.get("provider") and llm.get("model"):
-        return f"{llm['provider']}/{llm['model']}"
-    return "anthropic/claude-sonnet-4-20250514"
+        provider = llm["provider"]
+        model = llm["model"]
+        if provider == "ollama":
+            provider = "ollama_chat"
+        model_str = f"{provider}/{model}"
+    else:
+        model_str = "anthropic/claude-sonnet-4-20250514"
+    # Local Ollama models need the chat provider for reliable tool calling.
+    if model_str.startswith("ollama/") and not model_str.startswith("ollama_chat/"):
+        model_str = "ollama_chat/" + model_str.split("/", 1)[1]
+    return model_str
 
 
 def get_max_tokens() -> int:
@@ -51,7 +60,7 @@ def get_api_key() -> str | None:
     # Claude Code subscription: read OAuth token directly
     if llm.get("use_claude_code_subscription"):
         try:
-            from engine.runner.runner import get_claude_code_token
+            from engine.runner.subscription_auth import get_claude_code_token
 
             token = get_claude_code_token()
             if token:
@@ -62,7 +71,7 @@ def get_api_key() -> str | None:
     # Codex subscription: read OAuth token from Keychain / auth.json
     if llm.get("use_codex_subscription"):
         try:
-            from engine.runner.runner import get_codex_token
+            from engine.runner.subscription_auth import get_codex_token
 
             token = get_codex_token()
             if token:
@@ -103,7 +112,7 @@ def get_llm_extra_kwargs() -> dict[str, Any]:
                 "User-Agent": "CodexBar",
             }
             try:
-                from engine.runner.runner import get_codex_account_id
+                from engine.runner.subscription_auth import get_codex_account_id
 
                 account_id = get_codex_account_id()
                 if account_id:

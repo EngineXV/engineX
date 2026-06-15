@@ -35,6 +35,6 @@ if [ -z "${ANTHROPIC_API_KEY:-}" ] && [ -z "${OPENAI_API_KEY:-}" ]; then
 fi
 
 echo -e "${YELLOW}Validating example agent...${NC}"
-./engine validate examples/templates/contract_review
+./engine validate examples/templates/agreement_analysis
 
-echo -e "${GREEN}Done. Try: ./engine run examples/templates/contract_review --tui${NC}"
+echo -e "${GREEN}Done. Try: ./engine run examples/templates/agreement_analysis --tui${NC}"

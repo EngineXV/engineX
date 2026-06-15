@@ -108,19 +108,6 @@ def save_engine_sync_api_key(key: str) -> None:
     os.environ[ENGINE_OAUTH_ENV_VAR] = key
 
 
-def delete_engine_sync_api_key() -> None:
-    """Remove ENGINE_OAUTH_API_KEY from the encrypted store and"""
-    try:
-        from .storage import EncryptedFileStorage
-
-        storage = EncryptedFileStorage()
-        storage.delete(ENGINE_OAUTH_CREDENTIAL_ID)
-    except Exception:
-        logger.debug("Could not delete %s from encrypted store", ENGINE_OAUTH_CREDENTIAL_ID)
-
-    os.environ.pop(ENGINE_OAUTH_ENV_VAR, None)
-
-
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------

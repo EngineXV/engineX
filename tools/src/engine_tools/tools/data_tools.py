@@ -2,9 +2,38 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
+
+
+def _resolve_data_dir(data_dir: str) -> tuple[Path | None, str | None]:
+    """Resolve and validate a data directory path.
+
+    Rejects empty paths, ``..`` segments, and paths outside ENGINE_DATA_ROOT
+    when that environment variable is set.
+    """
+    if not data_dir or not str(data_dir).strip():
+        return None, "data_dir is required"
+    if ".." in Path(data_dir).parts:
+        return None, "data_dir must not contain '..'"
+
+    path = Path(data_dir).expanduser()
+    if not path.is_absolute():
+        path = (Path.cwd() / path).resolve()
+    else:
+        path = path.resolve()
+
+    root = os.environ.get("ENGINE_DATA_ROOT")
+    if root:
+        root_path = Path(root).expanduser().resolve()
+        try:
+            path.relative_to(root_path)
+        except ValueError:
+            return None, f"data_dir must be under ENGINE_DATA_ROOT ({root_path})"
+
+    return path, None
 
 
 def _open_file_uri(file_uri: str) -> tuple[bool, str]:
@@ -36,8 +65,11 @@ def register_tools(mcp: FastMCP) -> None:
         if not data_dir:
             return {"error": "data_dir is required"}
 
+        dir_path, err = _resolve_data_dir(data_dir)
+        if err:
+            return {"error": err}
+
         try:
-            dir_path = Path(data_dir)
             dir_path.mkdir(parents=True, exist_ok=True)
             path = dir_path / filename
             path.write_text(data, encoding="utf-8")
@@ -65,10 +97,14 @@ def register_tools(mcp: FastMCP) -> None:
         if not data_dir:
             return {"error": "data_dir is required"}
 
+        dir_path, err = _resolve_data_dir(data_dir)
+        if err:
+            return {"error": err}
+
         try:
             offset_bytes = int(offset_bytes)
             limit_bytes = int(limit_bytes)
-            path = Path(data_dir) / filename
+            path = dir_path / filename
             if not path.exists():
                 return {"error": f"File not found: {filename}"}
 
@@ -137,12 +173,16 @@ def register_tools(mcp: FastMCP) -> None:
         if not data_dir:
             return {"error": "data_dir is required"}
 
+        dir_path, err = _resolve_data_dir(data_dir)
+        if err:
+            return {"error": err}
+
         try:
-            path = Path(data_dir) / filename
+            path = dir_path / filename
             if not path.exists():
                 return {"error": f"File not found: {filename}"}
 
-            full_path = str(path.resolve())
+            full_path = str(path)
             file_uri = f"file://{full_path}"
             result = {
                 "success": True,
@@ -166,8 +206,11 @@ def register_tools(mcp: FastMCP) -> None:
         if not data_dir:
             return {"error": "data_dir is required"}
 
+        dir_path, err = _resolve_data_dir(data_dir)
+        if err:
+            return {"error": err}
+
         try:
-            dir_path = Path(data_dir)
             if not dir_path.exists():
                 return {"files": []}
 
@@ -192,8 +235,11 @@ def register_tools(mcp: FastMCP) -> None:
         if not data_dir:
             return {"error": "data_dir is required"}
 
+        dir_path, err = _resolve_data_dir(data_dir)
+        if err:
+            return {"error": err}
+
         try:
-            dir_path = Path(data_dir)
             dir_path.mkdir(parents=True, exist_ok=True)
             path = dir_path / filename
             with open(path, "a", encoding="utf-8") as f:
@@ -217,8 +263,12 @@ def register_tools(mcp: FastMCP) -> None:
         if not data_dir:
             return {"error": "data_dir is required"}
 
+        dir_path, err = _resolve_data_dir(data_dir)
+        if err:
+            return {"error": err}
+
         try:
-            path = Path(data_dir) / filename
+            path = dir_path / filename
             if not path.exists():
                 return {"error": f"File not found: {filename}"}
 

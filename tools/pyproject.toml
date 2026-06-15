@@ -35,4 +35,4 @@ lint.select = ["B", "C4", "E", "F", "I", "Q", "UP", "W"]
 lint.isort.known-first-party = ["engine_tools"]
 
 [dependency-groups]
-dev = ["ruff>=0.14.14"]
+dev = ["ruff>=0.14.14", "pytest>=8.0", "pytest-asyncio>=0.23"]

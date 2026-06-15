@@ -6,6 +6,8 @@ import json
 import sys
 from pathlib import Path
 
+from engine.runner.server_cli import cmd_open, cmd_serve
+
 
 def register_commands(subparsers: argparse._SubParsersAction) -> None:
     """Register runner commands with the main CLI"""
@@ -187,6 +189,38 @@ def register_commands(subparsers: argparse._SubParsersAction) -> None:
         help="Path to agent folder (optional - runs general setup if not specified)",
     )
     setup_creds_parser.set_defaults(func=cmd_setup_credentials)
+
+    serve_parser = subparsers.add_parser(
+        "serve",
+        help="Start the HTTP API server and dashboard",
+        description="Run the Engine web dashboard (API on port 8787).",
+    )
+    serve_parser.add_argument("--host", type=str, default="127.0.0.1")
+    serve_parser.add_argument("--port", "-p", type=int, default=8787)
+    serve_parser.add_argument(
+        "--agent",
+        "-a",
+        type=str,
+        action="append",
+        default=[],
+        help="Agent path or name to preload (repeatable)",
+    )
+    serve_parser.add_argument("--model", "-m", type=str, default=None)
+    serve_parser.add_argument("--open", action="store_true", help="Open dashboard in browser")
+    serve_parser.add_argument("--debug", action="store_true")
+    serve_parser.set_defaults(func=cmd_serve)
+
+    open_parser = subparsers.add_parser(
+        "open",
+        help="Start the server and open the dashboard",
+        description="Shortcut for 'engine serve --open'.",
+    )
+    open_parser.add_argument("--host", type=str, default="127.0.0.1")
+    open_parser.add_argument("--port", "-p", type=int, default=8787)
+    open_parser.add_argument("--agent", "-a", type=str, action="append", default=[])
+    open_parser.add_argument("--model", "-m", type=str, default=None)
+    open_parser.add_argument("--debug", action="store_true")
+    open_parser.set_defaults(func=cmd_open)
 
 
 def _load_resume_state(
@@ -1390,7 +1424,7 @@ def cmd_setup_credentials(args: argparse.Namespace) -> int:
         print()
         print("Examples:")
         print("  engine setup-credentials exports/my-agent")
-        print("  engine setup-credentials examples/templates/contract_review")
+        print("  engine setup-credentials examples/templates/agreement_analysis")
         return 1
 
     result = session.run_interactive()

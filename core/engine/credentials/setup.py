@@ -529,16 +529,3 @@ def _load_nodes_from_json_agent(agent_json: Path) -> list:
         return nodes
     except Exception:
         return []
-
-
-def run_credential_setup_cli(agent_path: str | Path | None = None) -> int:
-    """Standalone CLI entry point for credential setup"""
-    if agent_path:
-        session = CredentialSetupSession.from_agent_path(agent_path)
-    else:
-        # No agent specified - detect from current context or show error
-        print("Usage: engine setup-credentials <agent_path>")
-        return 1
-
-    result = session.run_interactive()
-    return 0 if result.success else 1

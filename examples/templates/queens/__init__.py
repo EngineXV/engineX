@@ -1,0 +1,1 @@
+"""Department Queen Bee agents."""

@@ -5,6 +5,7 @@
 #
 # Usage:
 #   ./engine run <agent>   - Run an agent
+#   ./engine open          - Open web dashboard
 #   ./engine --help        - Show all commands
 #
 

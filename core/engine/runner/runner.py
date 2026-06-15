@@ -1,13 +1,10 @@
 """Agent Runner - loads and runs exported agents"""
 
-import json
 import logging
 import os
 from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from engine.config import get_engine_config, get_preferred_model
 from engine.credentials.validation import (
@@ -16,494 +13,23 @@ from engine.credentials.validation import (
 from engine.graph import Goal
 from engine.graph.edge import (
     DEFAULT_MAX_TOKENS,
-    AsyncEntryPointSpec,
-    EdgeCondition,
-    EdgeSpec,
     GraphSpec,
 )
 from engine.graph.executor import ExecutionResult
-from engine.graph.node import NodeSpec
 from engine.llm.provider import LLMProvider, Tool
+from engine.runner.loader import AgentInfo, ValidationResult, load_agent_export
 from engine.runner.preload_validation import run_preload_validation
+from engine.runner.subscription_auth import (
+    get_claude_code_token,
+    get_codex_account_id,
+    get_codex_token,
+)
 from engine.runner.tool_registry import ToolRegistry
 from engine.runtime.agent_runtime import AgentRuntime, AgentRuntimeConfig, create_agent_runtime
 from engine.runtime.execution_stream import EntryPointSpec
 from engine.runtime.runtime_log_store import RuntimeLogStore
 
-if TYPE_CHECKING:
-    from engine.runner.protocol import AgentMessage, CapabilityResponse
-
-
 logger = logging.getLogger(__name__)
-
-CLAUDE_CREDENTIALS_FILE = Path.home() / ".claude" / ".credentials.json"
-CLAUDE_OAUTH_TOKEN_URL = "https://console.anthropic.com/v1/oauth/token"
-CLAUDE_OAUTH_CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e"
-
-# Buffer in seconds before token expiry to trigger a proactive refresh
-_TOKEN_REFRESH_BUFFER_SECS = 300  # 5 minutes
-
-# Codex (OpenAI) subscription auth
-CODEX_AUTH_FILE = Path.home() / ".codex" / "auth.json"
-CODEX_OAUTH_TOKEN_URL = "https://auth.openai.com/oauth/token"
-CODEX_OAUTH_CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
-CODEX_KEYCHAIN_SERVICE = "Codex Auth"
-_CODEX_TOKEN_LIFETIME_SECS = 3600  # 1 hour (no explicit expiry field)
-
-
-def _refresh_claude_code_token(refresh_token: str) -> dict | None:
-    """Refresh the Claude Code OAuth token using the refresh token"""
-    import urllib.error
-    import urllib.parse
-    import urllib.request
-
-    data = urllib.parse.urlencode(
-        {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-            "client_id": CLAUDE_OAUTH_CLIENT_ID,
-        }
-    ).encode("utf-8")
-
-    req = urllib.request.Request(
-        CLAUDE_OAUTH_TOKEN_URL,
-        data=data,
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-        method="POST",
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read())
-    except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError) as exc:
-        logger.debug("Claude Code token refresh failed: %s", exc)
-        return None
-
-
-def _save_refreshed_credentials(token_data: dict) -> None:
-    """Write refreshed token data back to ~/.claude/.credentials.json"""
-    import time
-
-    if not CLAUDE_CREDENTIALS_FILE.exists():
-        return
-
-    try:
-        with open(CLAUDE_CREDENTIALS_FILE) as f:
-            creds = json.load(f)
-
-        oauth = creds.get("claudeAiOauth", {})
-        oauth["accessToken"] = token_data["access_token"]
-        if "refresh_token" in token_data:
-            oauth["refreshToken"] = token_data["refresh_token"]
-        if "expires_in" in token_data:
-            oauth["expiresAt"] = int((time.time() + token_data["expires_in"]) * 1000)
-        creds["claudeAiOauth"] = oauth
-
-        with open(CLAUDE_CREDENTIALS_FILE, "w") as f:
-            json.dump(creds, f, indent=2)
-        logger.debug("Claude Code credentials refreshed successfully")
-    except (json.JSONDecodeError, OSError, KeyError) as exc:
-        logger.debug("Failed to save refreshed credentials: %s", exc)
-
-
-def get_claude_code_token() -> str | None:
-    """Get the OAuth token from Claude Code subscription with auto-refresh"""
-    import time
-
-    if not CLAUDE_CREDENTIALS_FILE.exists():
-        return None
-
-    try:
-        with open(CLAUDE_CREDENTIALS_FILE) as f:
-            creds = json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return None
-
-    oauth = creds.get("claudeAiOauth", {})
-    access_token = oauth.get("accessToken")
-    if not access_token:
-        return None
-
-    # Check token expiry (expiresAt is in milliseconds)
-    expires_at_ms = oauth.get("expiresAt", 0)
-    now_ms = int(time.time() * 1000)
-    buffer_ms = _TOKEN_REFRESH_BUFFER_SECS * 1000
-
-    if expires_at_ms > now_ms + buffer_ms:
-        # Token is still valid
-        return access_token
-
-    # Token is expired or near expiry — attempt refresh
-    refresh_token = oauth.get("refreshToken")
-    if not refresh_token:
-        logger.warning("Claude Code token expired and no refresh token available")
-        return access_token  # Return expired token; it may still work briefly
-
-    logger.info("Claude Code token expired or near expiry, refreshing...")
-    token_data = _refresh_claude_code_token(refresh_token)
-
-    if token_data and "access_token" in token_data:
-        _save_refreshed_credentials(token_data)
-        return token_data["access_token"]
-
-    # Refresh failed — return the existing token and warn
-    logger.warning("Claude Code token refresh failed. Run 'claude' to re-authenticate.")
-    return access_token
-
-
-# ---------------------------------------------------------------------------
-# Codex (OpenAI) subscription token helpers
-# ---------------------------------------------------------------------------
-
-
-def _get_codex_keychain_account() -> str:
-    """Compute the macOS Keychain account name used by the Codex CLI"""
-    import hashlib
-
-    codex_dir = str(Path.home() / ".codex")
-    digest = hashlib.sha256(codex_dir.encode()).hexdigest()[:16]
-    return f"cli|{digest}"
-
-
-def _read_codex_keychain() -> dict | None:
-    """Read Codex auth data from macOS Keychain (macOS only)"""
-    import platform
-    import subprocess
-
-    if platform.system() != "Darwin":
-        return None
-
-    try:
-        account = _get_codex_keychain_account()
-        result = subprocess.run(
-            [
-                "security",
-                "find-generic-password",
-                "-s",
-                CODEX_KEYCHAIN_SERVICE,
-                "-a",
-                account,
-                "-w",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        if result.returncode != 0:
-            return None
-        raw = result.stdout.strip()
-        if not raw:
-            return None
-        return json.loads(raw)
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as exc:
-        logger.debug("Codex keychain read failed: %s", exc)
-        return None
-
-
-def _read_codex_auth_file() -> dict | None:
-    """Read Codex auth data from ~/.codex/auth.json (fallback)"""
-    if not CODEX_AUTH_FILE.exists():
-        return None
-    try:
-        with open(CODEX_AUTH_FILE) as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return None
-
-
-def _is_codex_token_expired(auth_data: dict) -> bool:
-    """Check whether the Codex token is expired or close to expiry"""
-    import time
-    from datetime import datetime
-
-    now = time.time()
-    last_refresh = auth_data.get("last_refresh")
-
-    if last_refresh is None:
-        # Fall back to file modification time
-        try:
-            last_refresh = CODEX_AUTH_FILE.stat().st_mtime
-        except OSError:
-            # Cannot determine age — assume expired
-            return True
-    elif isinstance(last_refresh, str):
-        # Codex stores last_refresh as an ISO 8601 timestamp string —
-        # convert to Unix epoch float for arithmetic.
-        try:
-            last_refresh = datetime.fromisoformat(last_refresh.replace("Z", "+00:00")).timestamp()
-        except (ValueError, TypeError):
-            return True
-
-    expires_at = last_refresh + _CODEX_TOKEN_LIFETIME_SECS
-    return now >= (expires_at - _TOKEN_REFRESH_BUFFER_SECS)
-
-
-def _refresh_codex_token(refresh_token: str) -> dict | None:
-    """Refresh the Codex OAuth token using the refresh token"""
-    import urllib.error
-    import urllib.parse
-    import urllib.request
-
-    data = urllib.parse.urlencode(
-        {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-            "client_id": CODEX_OAUTH_CLIENT_ID,
-        }
-    ).encode("utf-8")
-
-    req = urllib.request.Request(
-        CODEX_OAUTH_TOKEN_URL,
-        data=data,
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-        method="POST",
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read())
-    except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError) as exc:
-        logger.debug("Codex token refresh failed: %s", exc)
-        return None
-
-
-def _save_refreshed_codex_credentials(auth_data: dict, token_data: dict) -> None:
-    """Write refreshed tokens back to ~/.codex/auth.json only (not Keychain)"""
-    from datetime import datetime
-
-    try:
-        tokens = auth_data.get("tokens", {})
-        tokens["access_token"] = token_data["access_token"]
-        if "refresh_token" in token_data:
-            tokens["refresh_token"] = token_data["refresh_token"]
-        if "id_token" in token_data:
-            tokens["id_token"] = token_data["id_token"]
-        auth_data["tokens"] = tokens
-        auth_data["last_refresh"] = datetime.now(UTC).isoformat()
-
-        CODEX_AUTH_FILE.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        fd = os.open(CODEX_AUTH_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, "w") as f:
-            json.dump(auth_data, f, indent=2)
-        logger.debug("Codex credentials refreshed successfully")
-    except (OSError, KeyError) as exc:
-        logger.debug("Failed to save refreshed Codex credentials: %s", exc)
-
-
-def get_codex_token() -> str | None:
-    """Get the OAuth token from Codex subscription with auto-refresh"""
-    # Try Keychain first, then file
-    auth_data = _read_codex_keychain() or _read_codex_auth_file()
-    if not auth_data:
-        return None
-
-    tokens = auth_data.get("tokens", {})
-    access_token = tokens.get("access_token")
-    if not access_token:
-        return None
-
-    # Check if token is still valid
-    if not _is_codex_token_expired(auth_data):
-        return access_token
-
-    # Token is expired or near expiry — attempt refresh
-    refresh_token = tokens.get("refresh_token")
-    if not refresh_token:
-        logger.warning("Codex token expired and no refresh token available")
-        return access_token  # Return expired token; it may still work briefly
-
-    logger.info("Codex token expired or near expiry, refreshing...")
-    token_data = _refresh_codex_token(refresh_token)
-
-    if token_data and "access_token" in token_data:
-        _save_refreshed_codex_credentials(auth_data, token_data)
-        return token_data["access_token"]
-
-    # Refresh failed — return the existing token and warn
-    logger.warning("Codex token refresh failed. Run 'codex' to re-authenticate.")
-    return access_token
-
-
-def _get_account_id_from_jwt(access_token: str) -> str | None:
-    """Extract the ChatGPT account_id from the access token JWT"""
-    import base64
-
-    try:
-        parts = access_token.split(".")
-        if len(parts) != 3:
-            return None
-        payload = parts[1]
-        # Add base64 padding
-        padding = 4 - len(payload) % 4
-        if padding != 4:
-            payload += "=" * padding
-        decoded = base64.urlsafe_b64decode(payload)
-        claims = json.loads(decoded)
-        auth = claims.get("https://api.openai.com/auth")
-        if isinstance(auth, dict):
-            account_id = auth.get("chatgpt_account_id")
-            if isinstance(account_id, str) and account_id:
-                return account_id
-    except Exception:
-        pass
-    return None
-
-
-def get_codex_account_id() -> str | None:
-    """Extract the account ID from Codex auth data"""
-    auth_data = _read_codex_keychain() or _read_codex_auth_file()
-    if not auth_data:
-        return None
-    tokens = auth_data.get("tokens", {})
-    account_id = tokens.get("account_id")
-    if account_id:
-        return account_id
-    # Fallback: extract from JWT
-    access_token = tokens.get("access_token")
-    if access_token:
-        return _get_account_id_from_jwt(access_token)
-    return None
-
-
-@dataclass
-class AgentInfo:
-    """Information about an exported agent"""
-
-    name: str
-    description: str
-    goal_name: str
-    goal_description: str
-    node_count: int
-    edge_count: int
-    nodes: list[dict]
-    edges: list[dict]
-    entry_node: str
-    terminal_nodes: list[str]
-    success_criteria: list[dict]
-    constraints: list[dict]
-    required_tools: list[str]
-    has_tools_module: bool
-    # Multi-entry-point support
-    async_entry_points: list[dict] = field(default_factory=list)
-    is_multi_entry_point: bool = False
-
-
-@dataclass
-class ValidationResult:
-    """Result of agent validation"""
-
-    valid: bool
-    errors: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
-    missing_tools: list[str] = field(default_factory=list)
-    missing_credentials: list[str] = field(default_factory=list)
-
-
-def load_agent_export(data: str | dict) -> tuple[GraphSpec, Goal]:
-    """Load GraphSpec and Goal from export_graph() output"""
-    if isinstance(data, str):
-        data = json.loads(data)
-
-    # Extract graph and goal
-    graph_data = data.get("graph", {})
-    goal_data = data.get("goal", {})
-
-    # Build NodeSpec objects
-    nodes = []
-    for node_data in graph_data.get("nodes", []):
-        nodes.append(NodeSpec(**node_data))
-
-    # Build EdgeSpec objects
-    edges = []
-    for edge_data in graph_data.get("edges", []):
-        condition_str = edge_data.get("condition", "on_success")
-        condition_map = {
-            "always": EdgeCondition.ALWAYS,
-            "on_success": EdgeCondition.ON_SUCCESS,
-            "on_failure": EdgeCondition.ON_FAILURE,
-            "conditional": EdgeCondition.CONDITIONAL,
-            "llm_decide": EdgeCondition.LLM_DECIDE,
-        }
-        edge = EdgeSpec(
-            id=edge_data["id"],
-            source=edge_data["source"],
-            target=edge_data["target"],
-            condition=condition_map.get(condition_str, EdgeCondition.ON_SUCCESS),
-            condition_expr=edge_data.get("condition_expr"),
-            priority=edge_data.get("priority", 0),
-            input_mapping=edge_data.get("input_mapping", {}),
-        )
-        edges.append(edge)
-
-    # Build AsyncEntryPointSpec objects for multi-entry-point support
-    async_entry_points = []
-    for aep_data in graph_data.get("async_entry_points", []):
-        async_entry_points.append(
-            AsyncEntryPointSpec(
-                id=aep_data["id"],
-                name=aep_data.get("name", aep_data["id"]),
-                entry_node=aep_data["entry_node"],
-                trigger_type=aep_data.get("trigger_type", "manual"),
-                trigger_config=aep_data.get("trigger_config", {}),
-                isolation_level=aep_data.get("isolation_level", "shared"),
-                priority=aep_data.get("priority", 0),
-                max_concurrent=aep_data.get("max_concurrent", 10),
-            )
-        )
-
-    # Build GraphSpec
-    graph = GraphSpec(
-        id=graph_data.get("id", "agent-graph"),
-        goal_id=graph_data.get("goal_id", ""),
-        version=graph_data.get("version", "1.0.0"),
-        entry_node=graph_data.get("entry_node", ""),
-        entry_points=graph_data.get("entry_points", {}),  # Support pause/resume architecture
-        async_entry_points=async_entry_points,  # Support multi-entry-point agents
-        terminal_nodes=graph_data.get("terminal_nodes", []),
-        pause_nodes=graph_data.get("pause_nodes", []),  # Support pause/resume architecture
-        nodes=nodes,
-        edges=edges,
-        max_steps=graph_data.get("max_steps", 100),
-        max_retries_per_node=graph_data.get("max_retries_per_node", 3),
-        description=graph_data.get("description", ""),
-    )
-
-    # Build Goal
-    from engine.graph.goal import Constraint, SuccessCriterion
-
-    success_criteria = []
-    for sc_data in goal_data.get("success_criteria", []):
-        success_criteria.append(
-            SuccessCriterion(
-                id=sc_data["id"],
-                description=sc_data["description"],
-                metric=sc_data.get("metric", ""),
-                target=sc_data.get("target", ""),
-                weight=sc_data.get("weight", 1.0),
-            )
-        )
-
-    constraints = []
-    for c_data in goal_data.get("constraints", []):
-        constraints.append(
-            Constraint(
-                id=c_data["id"],
-                description=c_data["description"],
-                constraint_type=c_data.get("constraint_type", "hard"),
-                category=c_data.get("category", "safety"),
-                check=c_data.get("check", ""),
-            )
-        )
-
-    goal = Goal(
-        id=goal_data.get("id", ""),
-        name=goal_data.get("name", ""),
-        description=goal_data.get("description", ""),
-        success_criteria=success_criteria,
-        constraints=constraints,
-    )
-
-    return graph, goal
 
 
 class AgentRunner:
@@ -545,6 +71,9 @@ class AgentRunner:
         self._configure_for_account = configure_for_account
         self._list_accounts = list_accounts
         self._credential_store = credential_store
+        self.supervised_worker_path: Path | None = None
+        self._queen_supervisor = None
+        self._metadata: Any | None = None
 
         # Set up storage
         if storage_path:
@@ -711,7 +240,7 @@ class AgentRunner:
             configure_fn = getattr(agent_module, "configure_for_account", None)
             list_accts_fn = getattr(agent_module, "list_connected_accounts", None)
 
-            return cls(
+            runner = cls(
                 agent_path=agent_path,
                 graph=graph,
                 goal=goal,
@@ -727,6 +256,11 @@ class AgentRunner:
                 list_accounts=list_accts_fn,
                 credential_store=credential_store,
             )
+            swp = getattr(agent_module, "supervised_worker_path", None)
+            if swp is not None:
+                runner.supervised_worker_path = Path(swp).resolve()
+            runner._metadata = agent_metadata
+            return runner
 
         # Fallback: load from agent.json (legacy JSON-based agents)
         agent_json_path = agent_path / "agent.json"
@@ -1352,8 +886,8 @@ class AgentRunner:
         ]
 
         return AgentInfo(
-            name=self.graph.id,
-            description=self.graph.description,
+            name=self._display_name(),
+            description=self.goal.description or self.graph.description,
             goal_name=self.goal.name,
             goal_description=self.goal.description,
             node_count=len(self.graph.nodes),
@@ -1379,7 +913,22 @@ class AgentRunner:
             has_tools_module=(self.agent_path / "tools.py").exists(),
             async_entry_points=async_entry_points_info,
             is_multi_entry_point=self._uses_async_entry_points,
+            queen_bee=bool(getattr(self._metadata, "queen_bee", False)),
+            queen_name=getattr(self._metadata, "queen_name", "") or "",
+            department=getattr(self._metadata, "department", "") or "",
+            role_title=getattr(self._metadata, "role_title", "") or "",
         )
+
+    def _display_name(self) -> str:
+        meta = self._metadata
+        if meta is not None:
+            queen_name = getattr(meta, "queen_name", "") or ""
+            if queen_name:
+                return queen_name
+            name = getattr(meta, "name", "") or ""
+            if name:
+                return name
+        return self.goal.name
 
     def validate(self) -> ValidationResult:
         """Check agent is valid and all required tools are registered"""
@@ -1450,185 +999,6 @@ class AgentRunner:
             warnings=warnings,
             missing_tools=missing_tools,
             missing_credentials=missing_credentials,
-        )
-
-    async def can_handle(
-        self, request: dict, llm: LLMProvider | None = None
-    ) -> "CapabilityResponse":
-        """Ask the agent if it can handle this request"""
-        from engine.runner.protocol import CapabilityLevel, CapabilityResponse
-
-        # Use provided LLM or set up our own
-        eval_llm = llm
-        if eval_llm is None:
-            if self._llm is None:
-                self._setup()
-            eval_llm = self._llm
-
-        # If still no LLM (mock mode), do keyword matching
-        if eval_llm is None:
-            return self._keyword_capability_check(request)
-
-        # Build context about this agent
-        info = self.info()
-        agent_context = f"""Agent: {info.name}
-Goal: {info.goal_name}
-Description: {info.goal_description}
-
-What this agent does:
-{info.description}
-
-Nodes in the workflow:
-{chr(10).join(f"- {n['name']}: {n['description']}" for n in info.nodes[:5])}
-{"..." if len(info.nodes) > 5 else ""}
-"""
-
-        # Ask LLM to evaluate
-        prompt = f"""You are evaluating whether an agent can handle a request.
-
-{agent_context}
-
-Request to evaluate:
-{json.dumps(request, indent=2)}
-
-Evaluate how well this agent can handle this request. Consider:
-1. Does the request match what this agent is designed to do?
-2. Does the agent have the required capabilities?
-3. How confident are you in this assessment?
-
-Respond with JSON only:
-{{
-    "level": "best_fit" | "can_handle" | "uncertain" | "cannot_handle",
-    "confidence": 0.0 to 1.0,
-    "reasoning": "Brief explanation",
-    "estimated_steps": number or null
-}}"""
-
-        try:
-            response = await eval_llm.acomplete(
-                messages=[{"role": "user", "content": prompt}],
-                system="You are a capability evaluator. Respond with JSON only.",
-                max_tokens=256,
-            )
-
-            # Parse response
-            import re
-
-            json_match = re.search(r"\{[^{}]*\}", response.content, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-                level_map = {
-                    "best_fit": CapabilityLevel.BEST_FIT,
-                    "can_handle": CapabilityLevel.CAN_HANDLE,
-                    "uncertain": CapabilityLevel.UNCERTAIN,
-                    "cannot_handle": CapabilityLevel.CANNOT_HANDLE,
-                }
-                return CapabilityResponse(
-                    agent_name=info.name,
-                    level=level_map.get(data.get("level", "uncertain"), CapabilityLevel.UNCERTAIN),
-                    confidence=float(data.get("confidence", 0.5)),
-                    reasoning=data.get("reasoning", ""),
-                    estimated_steps=data.get("estimated_steps"),
-                )
-        except Exception:
-            # Fall back to keyword matching on error
-            pass
-
-        return self._keyword_capability_check(request)
-
-    def _keyword_capability_check(self, request: dict) -> "CapabilityResponse":
-        """Simple keyword-based capability check (fallback when no LLM)"""
-        from engine.runner.protocol import CapabilityLevel, CapabilityResponse
-
-        info = self.info()
-        request_str = json.dumps(request).lower()
-        description_lower = info.description.lower()
-        goal_lower = info.goal_description.lower()
-
-        # Check for keyword matches
-        matches = 0
-        keywords = request_str.split()
-        for keyword in keywords:
-            if len(keyword) > 3:  # Skip short words
-                if keyword in description_lower or keyword in goal_lower:
-                    matches += 1
-
-        # Determine level based on matches
-        match_ratio = matches / max(len(keywords), 1)
-        if match_ratio > 0.3:
-            level = CapabilityLevel.CAN_HANDLE
-            confidence = min(0.7, match_ratio + 0.3)
-        elif match_ratio > 0.1:
-            level = CapabilityLevel.UNCERTAIN
-            confidence = 0.4
-        else:
-            level = CapabilityLevel.CANNOT_HANDLE
-            confidence = 0.6
-
-        return CapabilityResponse(
-            agent_name=info.name,
-            level=level,
-            confidence=confidence,
-            reasoning=f"Keyword match ratio: {match_ratio:.2f}",
-            estimated_steps=info.node_count if level != CapabilityLevel.CANNOT_HANDLE else None,
-        )
-
-    async def receive_message(self, message: "AgentMessage") -> "AgentMessage":
-        """Handle a message from the orchestrator or another agent"""
-        from engine.runner.protocol import MessageType
-
-        info = self.info()
-
-        # Handle capability check
-        if message.type == MessageType.CAPABILITY_CHECK:
-            capability = await self.can_handle(message.content)
-            return message.reply(
-                from_agent=info.name,
-                content={
-                    "level": capability.level.value,
-                    "confidence": capability.confidence,
-                    "reasoning": capability.reasoning,
-                    "estimated_steps": capability.estimated_steps,
-                },
-                type=MessageType.CAPABILITY_RESPONSE,
-            )
-
-        # Handle request - run the agent
-        if message.type == MessageType.REQUEST:
-            result = await self.run(message.content)
-            return message.reply(
-                from_agent=info.name,
-                content={
-                    "success": result.success,
-                    "output": result.output,
-                    "path": result.path,
-                    "error": result.error,
-                },
-                type=MessageType.RESPONSE,
-            )
-
-        # Handle handoff - another agent is passing work
-        if message.type == MessageType.HANDOFF:
-            # Extract context from handoff and run
-            context = message.content.get("context", {})
-            context["_handoff_from"] = message.from_agent
-            context["_handoff_reason"] = message.content.get("reason", "")
-            result = await self.run(context)
-            return message.reply(
-                from_agent=info.name,
-                content={
-                    "success": result.success,
-                    "output": result.output,
-                    "handoff_handled": True,
-                },
-                type=MessageType.RESPONSE,
-            )
-
-        # Unknown message type
-        return message.reply(
-            from_agent=info.name,
-            content={"error": f"Unknown message type: {message.type}"},
-            type=MessageType.RESPONSE,
         )
 
     @classmethod

@@ -2,16 +2,12 @@
 
 __version__ = "0.1.0"
 
-# Credential management (no external dependencies)
 from .credentials import (
     CREDENTIAL_SPECS,
     CredentialError,
     CredentialSpec,
     CredentialStoreAdapter,
 )
-
-# Utilities (no external dependencies)
-from .utils import get_env_var
 
 
 def __getattr__(name: str):
@@ -24,15 +20,10 @@ def __getattr__(name: str):
 
 
 __all__ = [
-    # Version
     "__version__",
-    # Utilities
-    "get_env_var",
-    # Credentials
     "CredentialStoreAdapter",
     "CredentialSpec",
     "CredentialError",
     "CREDENTIAL_SPECS",
-    # MCP registration (lazy loaded)
     "register_all_tools",
 ]

@@ -30,4 +30,17 @@ jobs:
         with:
           python-version: "3.11"
       - run: uv sync
-      - run: cd core && uv run python -m pytest tests/ -q
+      - run: cd core && uv run python -m pytest tests/ -q --cov=engine --cov-report=term-missing --cov-fail-under=50
+      - run: cd tools && uv run python -m pytest tests/ -q
+
+  validate:
+    name: Validate example agent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync
+      - run: chmod +x engine && ./engine validate examples/templates/agreement_analysis

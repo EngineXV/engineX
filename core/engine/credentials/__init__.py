@@ -1,7 +1,6 @@
 """Credential storage for Engine."""
 
 from .key_storage import (
-    delete_engine_sync_api_key,
     generate_and_save_credential_key,
     load_credential_key,
     load_engine_sync_api_key,
@@ -21,7 +20,6 @@ from .models import (
     CredentialValidationError,
 )
 from .provider import (
-    BearerTokenProvider,
     CredentialProvider,
     StaticProvider,
 )
@@ -30,7 +28,6 @@ from .setup import (
     MissingCredential,
     SetupResult,
     load_agent_nodes,
-    run_credential_setup_cli,
 )
 from .storage import (
     CompositeStorage,
@@ -80,7 +77,6 @@ __all__ = [
     # Providers
     "CredentialProvider",
     "StaticProvider",
-    "BearerTokenProvider",
     # Storage backends
     "CredentialStorage",
     "EncryptedFileStorage",
@@ -102,7 +98,6 @@ __all__ = [
     "generate_and_save_credential_key",
     "load_engine_sync_api_key",
     "save_engine_sync_api_key",
-    "delete_engine_sync_api_key",
     # Validation
     "ensure_credential_key_env",
     "validate_agent_credentials",
@@ -113,7 +108,6 @@ __all__ = [
     "MissingCredential",
     "SetupResult",
     "load_agent_nodes",
-    "run_credential_setup_cli",
     # Engine sync (optional - requires httpx)
     "EngineSyncProvider",
     "EngineCredentialClient",

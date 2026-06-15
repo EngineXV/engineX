@@ -6,7 +6,6 @@ from engine.graph.client_io import (
     InertNodeClientIO,
     NodeClientIO,
 )
-from engine.graph.context_handoff import ContextHandoff, HandoffContext
 from engine.graph.conversation import ConversationStore, Message, NodeConversation
 from engine.graph.edge import DEFAULT_MAX_TOKENS, EdgeCondition, EdgeSpec, GraphSpec
 from engine.graph.event_loop_node import (
@@ -18,7 +17,7 @@ from engine.graph.event_loop_node import (
 )
 from engine.graph.executor import GraphExecutor
 from engine.graph.goal import Constraint, Goal, GoalStatus, SuccessCriterion
-from engine.graph.hitl import ApprovalDecision, ApprovalResult
+from engine.graph.hitl import ApprovalDecision, ApprovalResult  # noqa: F401
 from engine.graph.node import NodeContext, NodeProtocol, NodeResult, NodeSpec
 
 __all__ = [
@@ -49,9 +48,6 @@ __all__ = [
     "OutputAccumulator",
     "JudgeProtocol",
     "JudgeVerdict",
-    # Context Handoff
-    "ContextHandoff",
-    "HandoffContext",
     # HITL
     "ApprovalDecision",
     "ApprovalResult",

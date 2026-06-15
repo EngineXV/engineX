@@ -270,18 +270,3 @@ def check_credential_health(
     if credential_name == "google_search" and "cse_id" in kwargs:
         return GoogleSearchHealthChecker().check(credential_value, kwargs["cse_id"])
     return checker.check(credential_value)
-
-
-def validate_integration_wiring(credential_name: str) -> list[str]:
-    from . import CREDENTIAL_SPECS
-
-    issues: list[str] = []
-    spec = CREDENTIAL_SPECS.get(credential_name)
-    if spec is None:
-        issues.append(f"No CredentialSpec for '{credential_name}'")
-        return issues
-    if not spec.env_var:
-        issues.append("CredentialSpec.env_var is empty")
-    if spec.health_check_endpoint and credential_name not in HEALTH_CHECKERS:
-        issues.append(f"No dedicated health checker for '{credential_name}'")
-    return issues

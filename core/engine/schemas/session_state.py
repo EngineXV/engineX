@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field, computed_field
 
 if TYPE_CHECKING:
     from engine.graph.executor import ExecutionResult
-    from engine.schemas.run import Run
 
 
 class SessionStatus(StrEnum):
@@ -216,51 +215,6 @@ class SessionState(BaseModel):
             ),
             memory=result.session_state.get("memory", {}) if result.session_state else {},
             input_data=input_data or {},
-        )
-
-    @classmethod
-    def from_legacy_run(cls, run: "Run", session_id: str, stream_id: str = "") -> "SessionState":
-        """Create SessionState from legacy Run object"""
-        from engine.schemas.run import RunStatus
-
-        now = datetime.now().isoformat()
-
-        # Map RunStatus to SessionStatus
-        status_mapping = {
-            RunStatus.RUNNING: SessionStatus.ACTIVE,
-            RunStatus.COMPLETED: SessionStatus.COMPLETED,
-            RunStatus.FAILED: SessionStatus.FAILED,
-            RunStatus.CANCELLED: SessionStatus.CANCELLED,
-            RunStatus.STUCK: SessionStatus.FAILED,
-        }
-        status = status_mapping.get(run.status, SessionStatus.FAILED)
-
-        return cls(
-            schema_version="1.0",
-            session_id=session_id,
-            stream_id=stream_id,
-            goal_id=run.goal_id,
-            status=status,
-            timestamps=SessionTimestamps(
-                started_at=run.started_at.isoformat(),
-                updated_at=now,
-                completed_at=run.completed_at.isoformat() if run.completed_at else None,
-            ),
-            result=SessionResult(
-                success=run.status == RunStatus.COMPLETED,
-                output=run.output_data,
-            ),
-            metrics=SessionMetrics(
-                decision_count=run.metrics.total_decisions,
-                problem_count=len(run.problems),
-                total_input_tokens=run.metrics.total_tokens,  # Approximate
-                total_output_tokens=0,  # Not tracked in old format
-                nodes_executed=run.metrics.nodes_executed,
-                edges_traversed=run.metrics.edges_traversed,
-            ),
-            decisions=[d.model_dump() for d in run.decisions],
-            problems=[p.model_dump() for p in run.problems],
-            input_data=run.input_data,
         )
 
     def to_session_state_dict(self) -> dict[str, Any]:

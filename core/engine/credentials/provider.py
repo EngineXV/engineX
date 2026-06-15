@@ -6,7 +6,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime, timedelta
 
-from .models import CredentialObject, CredentialRefreshError, CredentialType
+from .models import CredentialObject, CredentialType
 
 logger = logging.getLogger(__name__)
 
@@ -91,45 +91,4 @@ class StaticProvider(CredentialProvider):
 
     def should_refresh(self, credential: CredentialObject) -> bool:
         """Static credentials never need refresh"""
-        return False
-
-
-class BearerTokenProvider(CredentialProvider):
-    """Provider for bearer tokens without refresh capability"""
-
-    @property
-    def provider_id(self) -> str:
-        return "bearer_token"
-
-    @property
-    def supported_types(self) -> list[CredentialType]:
-        return [CredentialType.BEARER_TOKEN]
-
-    def refresh(self, credential: CredentialObject) -> CredentialObject:
-        """Bearer tokens without refresh capability cannot be refreshed"""
-        raise CredentialRefreshError(
-            f"Bearer token '{credential.id}' cannot be refreshed. "
-            "Obtain a new token and save it to the credential store."
-        )
-
-    def validate(self, credential: CredentialObject) -> bool:
-        """Validate based on expiration time"""
-        access_key = credential.keys.get("access_token") or credential.keys.get("token")
-        if access_key is None:
-            return False
-
-        # Check if expired
-        return not access_key.is_expired
-
-    def should_refresh(self, credential: CredentialObject) -> bool:
-        """Check if token is expired or near expiration"""
-        buffer = timedelta(minutes=5)
-        now = datetime.now(UTC)
-
-        for key_name in ["access_token", "token"]:
-            key = credential.keys.get(key_name)
-            if key and key.expires_at:
-                if key.expires_at <= now + buffer:
-                    return True
-
         return False

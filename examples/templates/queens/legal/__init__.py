@@ -1,4 +1,4 @@
-"""Queen Bee package."""
+"""Department supervisor package."""
 
 from .agent import (
     edges,

@@ -1,4 +1,4 @@
-"""Supervised Agreement Analysis — Queen + worker."""
+"""Supervised Agreement Analysis — Supervisor + worker."""
 
 from .agent import (
     edges,

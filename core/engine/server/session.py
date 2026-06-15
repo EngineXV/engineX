@@ -61,9 +61,9 @@ class Session:
             "queen_mode": self.queen_mode,
             "input_graph_id": self.input_graph_id,
         }
-        if info.queen_bee:
-            payload["queen_bee"] = True
-            payload["queen_name"] = info.queen_name
+        if info.supervisor:
+            payload["supervisor"] = True
+            payload["supervisor_name"] = info.supervisor_name
             payload["department"] = info.department
             payload["role_title"] = info.role_title
         return payload
@@ -215,7 +215,7 @@ class SessionManager:
             try:
                 session.current_exec_id = await runtime.trigger("default", input_data={})
             except Exception as exc:  # noqa: BLE001
-                logger.warning("Queen auto-start failed for session %s: %s", sid, exc)
+                logger.warning("Supervisor auto-start failed for session %s: %s", sid, exc)
 
         session.attach_event_tracking()
         self._sessions[sid] = session

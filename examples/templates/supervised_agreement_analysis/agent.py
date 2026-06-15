@@ -1,4 +1,4 @@
-"""Queen Bee supervisor — primary interface for supervised worker sessions."""
+"""Supervisor supervisor — primary interface for supervised worker sessions."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ supervised_worker_path = Path(__file__).resolve().parent.parent / "agreement_ana
 
 queen_goal = Goal(
     id="queen-supervisor",
-    name="Queen Supervisor",
+    name="Agreement Supervisor",
     description="Primary operator interface; delegates and monitors the agreement analysis worker.",
     success_criteria=[
         SuccessCriterion(
@@ -43,7 +43,7 @@ queen_goal = Goal(
     ],
 )
 
-# Queen node references lifecycle tools (registered at session setup).
+# Supervisor node references lifecycle tools (registered at session setup).
 nodes = [queen_node]
 
 edges = [

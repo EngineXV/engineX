@@ -32,9 +32,9 @@ class AgentInfo:
     # Multi-entry-point support
     async_entry_points: list[dict] = field(default_factory=list)
     is_multi_entry_point: bool = False
-    # Queen Bee metadata (optional)
-    queen_bee: bool = False
-    queen_name: str = ""
+    # Supervisor metadata (optional)
+    supervisor: bool = False
+    supervisor_name: str = ""
     department: str = ""
     role_title: str = ""
 

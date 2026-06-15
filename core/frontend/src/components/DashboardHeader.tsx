@@ -1,5 +1,5 @@
 import type { SessionDetail } from "../api";
-import { IconCrown } from "./Icons";
+import { IconSupervisor } from "./Icons";
 
 interface DashboardHeaderProps {
   session: SessionDetail | null;
@@ -8,26 +8,26 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({ session, model, connected }: DashboardHeaderProps) {
-  const isQueen = session?.queen_bee || session?.supervised;
-  const title = session?.queen_name || session?.name || "Engine Dashboard";
-  const subtitle = session?.role_title || session?.description || session?.goal || "Pick a Queen or agent to start";
+  const isSupervisor = session?.supervisor || session?.supervised;
+  const title = session?.supervisor_name || session?.name || "Engine Dashboard";
+  const subtitle = session?.role_title || session?.description || session?.goal || "Pick a supervisor or agent to start";
 
   return (
     <header className="dash-header">
       <div className="dash-header-left">
         <div className="dash-title-row">
-          {isQueen && (
-            <span className="dash-crown" aria-hidden>
-              <IconCrown size={20} />
+          {isSupervisor && (
+            <span className="dash-supervisor-mark" aria-hidden>
+              <IconSupervisor size={20} />
             </span>
           )}
           <h1>{title}</h1>
           {session?.role_title && (
-            <span className="role-badge role-badge-queen">{session.role_title}</span>
+            <span className="role-badge role-badge-supervisor">{session.role_title}</span>
           )}
           {session && !session.role_title && (
             <span className="role-badge">
-              {session.supervised ? "Queen" : "Agent"}
+              {session.supervised ? "Supervisor" : "Agent"}
             </span>
           )}
         </div>

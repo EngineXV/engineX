@@ -1,9 +1,9 @@
-# Queen Bees
+# Department Supervisors
 
-Hive-style **department Queen Bees** — each Queen supervises the Agreement Analysis worker with a domain-specific persona.
+Each **supervisor** is a department lead that oversees the Agreement Analysis worker with a domain-specific persona.
 
-| Queen | Department | Role |
-|-------|------------|------|
+| Lead | Department | Role |
+|------|------------|------|
 | Alexandra | Technology | Head of Technology |
 | Rachel | Operations | Head of Operations |
 | Eleanor | Legal | Head of Legal |
@@ -19,8 +19,8 @@ Hive-style **department Queen Bees** — each Queen supervises the Agreement Ana
 ./engine run examples/templates/queens/legal --tui
 ```
 
-Web dashboard: open any Queen from the **Queen Bees** section in the sidebar.
+Web dashboard: open any supervisor from the **Supervisors** section in the sidebar.
 
 ## Architecture
 
-Each queen is a thin config over `queen_factory.py` — same supervisor tools, department-tuned system prompt, shared worker (`../agreement_analysis`).
+Each supervisor is a thin config over `queen_factory.py` — same lifecycle tools, department-tuned system prompt, shared worker (`../agreement_analysis`).

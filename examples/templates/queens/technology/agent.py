@@ -1,4 +1,4 @@
-"""Technology Queen Bee — Alexandra."""
+"""Technology Department supervisor — Alexandra."""
 
 from queen_factory import build_queen_exports
 

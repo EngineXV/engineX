@@ -1,4 +1,4 @@
-"""Department Queen Bee agent module."""
+"""Department Department supervisor agent module."""
 
 from queen_factory import build_queen_exports
 

@@ -1,4 +1,4 @@
-"""Runtime configuration for Victoria — Growth Queen."""
+"""Runtime configuration for Victoria — Growth Supervisor."""
 
 from dataclasses import dataclass
 
@@ -11,12 +11,12 @@ default_config = RuntimeConfig()
 class AgentMetadata:
     name: str = "Victoria"
     version: str = "1.0.0"
-    description: str = "Growth Queen Bee — supervises agreement analysis for partnerships and channel deals."
+    description: str = "Growth department supervisor — supervises agreement analysis for partnerships and channel deals."
     intro_message: str = (
         "Hi, I'm Victoria, Head of Growth. Share a partnership or channel agreement and I'll coordinate the review."
     )
-    queen_bee: bool = True
-    queen_name: str = "Victoria"
+    supervisor: bool = True
+    supervisor_name: str = "Victoria"
     department: str = "Growth"
     role_title: str = "Head of Growth"
     domain_focus: str = "partnership agreements, channel deals, and growth contracts"

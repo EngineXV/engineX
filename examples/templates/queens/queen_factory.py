@@ -1,4 +1,4 @@
-"""Shared Queen Bee graph builder for department supervisors."""
+"""Shared supervisor graph builder for department leads."""
 
 from __future__ import annotations
 
@@ -10,16 +10,14 @@ from engine.graph import Constraint, EdgeCondition, EdgeSpec, Goal, NodeSpec, Su
 from engine.graph.edge import GraphSpec
 
 if TYPE_CHECKING:
-    from dataclasses import dataclass as dc
-
     @dataclass
-    class QueenMetadata:
+    class SupervisorMetadata:
         name: str
         version: str
         description: str
         intro_message: str
-        queen_bee: bool
-        queen_name: str
+        supervisor: bool
+        supervisor_name: str
         department: str
         role_title: str
         domain_focus: str
@@ -29,9 +27,9 @@ def _templates_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def _build_system_prompt(metadata: QueenMetadata) -> str:
+def _build_system_prompt(metadata: SupervisorMetadata) -> str:
     return f"""\
-You are {metadata.queen_name}, Queen Bee and {metadata.role_title} at Engine.
+You are {metadata.supervisor_name}, {metadata.role_title} at Engine.
 
 **Department focus:** {metadata.domain_focus}
 
@@ -46,7 +44,7 @@ You are {metadata.queen_name}, Queen Bee and {metadata.role_title} at Engine.
 - `stop_worker()` — cancel a running worker execution.
 
 **Workflow**
-1. Greet the operator briefly on first contact as {metadata.queen_name}.
+1. Greet the operator briefly on first contact as {metadata.supervisor_name}.
 2. When they describe a task or paste agreement text, call `start_worker` with that content.
 3. After starting, stay quiet unless they ask for status or the worker needs their input.
 4. If the worker is waiting for human review, tell the operator to reply in chat or use \
@@ -56,13 +54,13 @@ Never invent contract terms. Never repeat the same tool call with identical argu
 """
 
 
-def build_queen_exports(metadata: QueenMetadata) -> dict:
-    """Return module-level exports for a department Queen agent."""
+def build_queen_exports(metadata: SupervisorMetadata) -> dict:
+    """Return module-level exports for a department supervisor agent."""
     worker_path = _templates_root() / "agreement_analysis"
 
-    queen_node = NodeSpec(
+    supervisor_node = NodeSpec(
         id="queen",
-        name=metadata.queen_name,
+        name=metadata.supervisor_name,
         description=f"{metadata.role_title} — delegates to the worker and monitors progress.",
         node_type="event_loop",
         client_facing=True,
@@ -72,9 +70,9 @@ def build_queen_exports(metadata: QueenMetadata) -> dict:
         tools=["start_worker", "get_worker_status", "inject_worker_message", "stop_worker"],
     )
 
-    queen_goal = Goal(
-        id=f"queen-{metadata.department.lower().replace(' ', '-').replace('&', 'and')}",
-        name=metadata.queen_name,
+    supervisor_goal = Goal(
+        id=f"supervisor-{metadata.department.lower().replace(' ', '-').replace('&', 'and')}",
+        name=metadata.supervisor_name,
         description=metadata.description,
         success_criteria=[
             SuccessCriterion(
@@ -102,10 +100,10 @@ def build_queen_exports(metadata: QueenMetadata) -> dict:
         ],
     )
 
-    nodes = [queen_node]
+    nodes = [supervisor_node]
     edges = [
         EdgeSpec(
-            id="queen-loop",
+            id="supervisor-loop",
             source="queen",
             target="queen",
             condition=EdgeCondition.ALWAYS,
@@ -114,8 +112,8 @@ def build_queen_exports(metadata: QueenMetadata) -> dict:
     ]
 
     graph = GraphSpec(
-        id=f"queen-{metadata.queen_name.lower()}-graph",
-        goal_id=queen_goal.id,
+        id=f"supervisor-{metadata.supervisor_name.lower()}-graph",
+        goal_id=supervisor_goal.id,
         version=metadata.version,
         entry_node="queen",
         entry_points={"queen": "queen"},
@@ -133,8 +131,8 @@ def build_queen_exports(metadata: QueenMetadata) -> dict:
     return {
         "metadata": metadata,
         "supervised_worker_path": worker_path,
-        "goal": queen_goal,
-        "queen_goal": queen_goal,
+        "goal": supervisor_goal,
+        "queen_goal": supervisor_goal,
         "nodes": nodes,
         "edges": edges,
         "entry_node": "queen",

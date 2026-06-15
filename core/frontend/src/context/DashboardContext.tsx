@@ -3,7 +3,7 @@ import { api, type AgentEntry, type SessionSummary } from "../api";
 
 interface DashboardState {
   agents: AgentEntry[];
-  queens: AgentEntry[];
+  supervisors: AgentEntry[];
   sessions: SessionSummary[];
   model: string;
   loading: boolean;
@@ -16,7 +16,7 @@ const DashboardContext = createContext<DashboardState | null>(null);
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [agents, setAgents] = useState<AgentEntry[]>([]);
-  const [queens, setQueens] = useState<AgentEntry[]>([]);
+  const [supervisors, setSupervisors] = useState<AgentEntry[]>([]);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [model, setModel] = useState("—");
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,20 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         api.getConfig(),
       ]);
       setAgents([...discover.templates, ...discover.exports]);
-      setQueens(discover.queens || []);
+      const rawSupervisors = discover.supervisors?.length
+        ? discover.supervisors
+        : (discover as { queens?: typeof discover.supervisors }).queens || [];
+
+      setSupervisors(
+        rawSupervisors
+          .filter((entry) => entry.node_count > 0 || entry.supervisor_name || entry.supervisor)
+          .map((entry) => ({
+            ...entry,
+            supervisor: entry.supervisor ?? (entry as { queen_bee?: boolean }).queen_bee,
+            supervisor_name:
+              entry.supervisor_name ?? (entry as { queen_name?: string }).queen_name ?? entry.name,
+          })),
+      );
       setSessions(sessionList.sessions);
       setModel(config.model);
       setError(null);
@@ -54,8 +67,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const value = useMemo(
-    () => ({ agents, queens, sessions, model, loading, error, refresh, openAgent }),
-    [agents, queens, sessions, model, loading, error, refresh, openAgent],
+    () => ({ agents, supervisors, sessions, model, loading, error, refresh, openAgent }),
+    [agents, supervisors, sessions, model, loading, error, refresh, openAgent],
   );
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;

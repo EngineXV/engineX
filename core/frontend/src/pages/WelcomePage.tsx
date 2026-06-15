@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useDashboard } from "../context/DashboardContext";
-import { IconChevronRight, IconCrown } from "../components/Icons";
+import { IconChevronRight, IconSupervisor } from "../components/Icons";
 
 export default function WelcomePage() {
   const navigate = useNavigate();
-  const { queens, agents, model, loading, error, openAgent } = useDashboard();
+  const { supervisors, agents, model, loading, error, openAgent } = useDashboard();
 
   const startAgent = async (path: string) => {
     const session = await openAgent(path);
@@ -17,8 +17,8 @@ export default function WelcomePage() {
         <header className="welcome-hero">
           <h1>Build. Launch. Scale.</h1>
           <p className="welcome-lead">
-            Choose a Queen Bee for your department or pick a workflow agent.
-            Queens supervise workers and keep you in the loop.
+            Choose a department supervisor or pick a workflow agent.
+            Supervisors delegate to workers and keep you in the loop.
           </p>
           <div className="welcome-meta">
             <span className="meta-chip">
@@ -26,7 +26,7 @@ export default function WelcomePage() {
             </span>
             {!loading && (
               <span className="meta-chip">
-                <strong>{queens.length}</strong> queen{queens.length === 1 ? "" : "s"} ·{" "}
+                <strong>{supervisors.length}</strong> supervisor{supervisors.length === 1 ? "" : "s"} ·{" "}
                 <strong>{agents.length}</strong> agent{agents.length === 1 ? "" : "s"}
               </span>
             )}
@@ -39,26 +39,26 @@ export default function WelcomePage() {
           <p className="welcome-lead">Loading…</p>
         ) : (
           <>
-            {queens.length > 0 && (
+            {supervisors.length > 0 && (
               <>
-                <p className="welcome-section-label">Queen Bees</p>
-                <div className="welcome-queens">
-                  {queens.map((queen) => (
+                <p className="welcome-section-label">Supervisors</p>
+                <div className="welcome-supervisors">
+                  {supervisors.map((supervisor) => (
                     <button
-                      key={queen.path}
+                      key={supervisor.path}
                       type="button"
-                      className="welcome-queen-card"
-                      onClick={() => void startAgent(queen.path)}
+                      className="welcome-supervisor-card"
+                      onClick={() => void startAgent(supervisor.path)}
                     >
-                      <span className="welcome-queen-avatar">
-                        {(queen.queen_name || queen.name).charAt(0).toUpperCase()}
+                      <span className="welcome-supervisor-avatar">
+                        {(supervisor.supervisor_name || supervisor.name).charAt(0).toUpperCase()}
                       </span>
-                      <span className="welcome-queen-body">
-                        <strong>{queen.queen_name || queen.name}</strong>
-                        <small>{queen.department}</small>
-                        <span className="welcome-queen-role">{queen.role_title}</span>
+                      <span className="welcome-supervisor-body">
+                        <strong>{supervisor.supervisor_name || supervisor.name}</strong>
+                        <small>{supervisor.department}</small>
+                        <span className="welcome-supervisor-role">{supervisor.role_title}</span>
                       </span>
-                      <span className="welcome-queen-crown"><IconCrown size={16} /></span>
+                      <span className="welcome-supervisor-mark"><IconSupervisor size={16} /></span>
                       <span className="card-arrow"><IconChevronRight size={18} /></span>
                     </button>
                   ))}
@@ -91,7 +91,7 @@ export default function WelcomePage() {
               </>
             )}
 
-            {queens.length === 0 && agents.length === 0 && (
+            {supervisors.length === 0 && agents.length === 0 && (
               <div className="welcome-empty">
                 <p>No agents found in <code>examples/templates</code> or <code>exports</code>.</p>
               </div>

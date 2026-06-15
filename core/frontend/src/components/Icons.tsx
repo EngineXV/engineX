@@ -88,6 +88,21 @@ export function IconAgent({ size = defaults.size, className = defaults.className
   );
 }
 
+export function IconSupervisor({ size = defaults.size, className = defaults.className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M12 3L5 6.5v5.8c0 3.8 2.6 7.3 7 8.7 4.4-1.4 7-4.9 7-8.7V6.5L12 3z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="11" r="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M9.5 14.5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconCrown({ size = defaults.size, className = defaults.className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>

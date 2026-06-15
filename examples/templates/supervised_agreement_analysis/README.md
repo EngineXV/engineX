@@ -1,6 +1,6 @@
 # Supervised Agreement Analysis
 
-Hive-style **Queen Bee** supervision over the Agreement Analysis worker.
+Hive-style **Supervisor** supervision over the Agreement Analysis worker.
 
 ## Architecture
 
@@ -12,7 +12,7 @@ Operator ↔ Queen (forever-alive supervisor)
 
 | Layer | Role |
 |-------|------|
-| **Queen** | Your chat interface; delegates tasks and monitors the worker |
+| **Supervisor** | Your chat interface; delegates tasks and monitors the worker |
 | **Worker** | Runs the agreement analysis pipeline (`../agreement_analysis`) |
 
 ## Run
@@ -26,7 +26,7 @@ Web dashboard: start **Supervised Agreement Analysis** from the home page.
 
 ## Example
 
-1. Queen greets you in chat.
+1. Supervisor greets you in chat.
 2. You: “Review this NDA: …” (paste text)
-3. Queen calls `start_worker` → worker intake runs.
+3. Supervisor calls `start_worker` → worker intake runs.
 4. Worker pauses at approval gate → you reply in chat (routed to worker when waiting).

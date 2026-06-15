@@ -1,22 +1,30 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useDashboard } from "../context/DashboardContext";
 import {
   IconBook,
   IconChevronLeft,
   IconChevronRight,
-  IconCrown,
   IconEngine,
   IconKey,
   IconOrgChart,
   IconPlus,
+  IconSupervisor,
 } from "./Icons";
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const { queens, agents, sessions, loading, openAgent } = useDashboard();
+  const location = useLocation();
+  const sessionMatch = useMatch("/session/:sessionId");
+  const { supervisors, agents, sessions, loading, openAgent } = useDashboard();
   const [collapsed, setCollapsed] = useState(false);
   const [starting, setStarting] = useState<string | null>(null);
+
+  const activeSession = sessionMatch
+    ? sessions.find((s) => s.session_id === sessionMatch.params.sessionId)
+    : undefined;
+  const activeAgentPath = activeSession?.agent_path;
+  const isHome = location.pathname === "/";
 
   const handleOpenAgent = async (path: string) => {
     setStarting(path);
@@ -55,10 +63,10 @@ export default function Sidebar() {
       </div>
 
       <nav className="sidebar-nav">
-        <button type="button" className="nav-item nav-primary" onClick={() => navigate("/")}>
+        <NavLink to="/" end className={({ isActive }) => `nav-item nav-home${isActive && isHome ? " active" : ""}`}>
           <span className="nav-icon"><IconPlus size={16} /></span>
           New Session
-        </button>
+        </NavLink>
         <NavLink to="/org-chart" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
           <span className="nav-icon"><IconOrgChart size={16} /></span>
           Org Chart
@@ -74,28 +82,28 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-section">
-        <div className="sidebar-section-label">Queen Bees</div>
+        <div className="sidebar-section-label">Supervisors</div>
         {loading && <div className="sidebar-empty">Loading…</div>}
-        {!loading && queens.length === 0 && (
-          <div className="sidebar-empty">No queens found</div>
+        {!loading && supervisors.length === 0 && (
+          <div className="sidebar-empty">No supervisors found</div>
         )}
-        {queens.map((queen) => (
+        {supervisors.map((supervisor) => (
           <button
-            key={queen.path}
+            key={supervisor.path}
             type="button"
-            className="sidebar-queen"
-            disabled={starting === queen.path}
-            onClick={() => void handleOpenAgent(queen.path)}
+            className={`sidebar-supervisor${activeAgentPath === supervisor.path ? " active" : ""}`}
+            disabled={starting === supervisor.path}
+            onClick={() => void handleOpenAgent(supervisor.path)}
           >
-            <span className="queen-avatar">
+            <span className="supervisor-avatar">
               <span className="status-dot on" />
-              {(queen.queen_name || queen.name).charAt(0).toUpperCase()}
+              {(supervisor.supervisor_name || supervisor.name).charAt(0).toUpperCase()}
             </span>
             <span className="agent-meta">
-              <span className="agent-name">{queen.queen_name || queen.name}</span>
-              <span className="agent-sub">{queen.department}</span>
+              <span className="agent-name">{supervisor.supervisor_name || supervisor.name}</span>
+              <span className="agent-sub">{supervisor.department}</span>
             </span>
-            <IconCrown size={14} className="queen-crown-icon" />
+            <IconSupervisor size={14} className="supervisor-mark-icon" />
           </button>
         ))}
       </div>
@@ -107,7 +115,7 @@ export default function Sidebar() {
             <button
               key={agent.path}
               type="button"
-              className="sidebar-agent"
+              className={`sidebar-agent${activeAgentPath === agent.path ? " active" : ""}`}
               disabled={starting === agent.path}
               onClick={() => void handleOpenAgent(agent.path)}
             >
@@ -133,7 +141,7 @@ export default function Sidebar() {
             >
               <span className={`status-dot ${session.current_exec_id ? "on" : "off"}`} />
               <span className="session-label">
-                {session.queen_name || session.name}
+                {session.supervisor_name || session.name}
                 {session.department ? ` · ${session.department}` : ""}
               </span>
             </NavLink>

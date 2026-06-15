@@ -24,8 +24,8 @@ class AgentEntry:
     node_count: int
     tool_count: int
     category: str
-    queen_bee: bool = False
-    queen_name: str = ""
+    supervisor: bool = False
+    supervisor_name: str = ""
     department: str = ""
     role_title: str = ""
 
@@ -39,9 +39,9 @@ class AgentEntry:
             "tool_count": self.tool_count,
             "is_loaded": is_loaded,
         }
-        if self.queen_bee:
-            row["queen_bee"] = True
-            row["queen_name"] = self.queen_name
+        if self.supervisor:
+            row["supervisor"] = True
+            row["supervisor_name"] = self.supervisor_name
             row["department"] = self.department
             row["role_title"] = self.role_title
         return row
@@ -58,8 +58,8 @@ def _entry_from_runner(path: Path, category: str) -> AgentEntry:
             node_count=info.node_count,
             tool_count=len(info.required_tools),
             category=category,
-            queen_bee=info.queen_bee,
-            queen_name=info.queen_name,
+            supervisor=info.supervisor,
+            supervisor_name=info.supervisor_name,
             department=info.department,
             role_title=info.role_title,
         )
@@ -98,7 +98,7 @@ def discover_agents(repo_root: Path, loaded_paths: set[str] | None = None) -> di
             "templates",
             skip={"queens"},
         ),
-        "queens": _scan_category(repo_root / "examples" / "templates" / "queens", "queens"),
+        "supervisors": _scan_category(repo_root / "examples" / "templates" / "queens", "supervisors"),
         "exports": _scan_category(repo_root / "exports", "exports"),
     }
     return {

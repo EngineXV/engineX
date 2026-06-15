@@ -1,4 +1,4 @@
-"""Alexandra — Technology Queen Bee."""
+"""Alexandra — Technology Department supervisor."""
 
 from .agent import (
     edges,

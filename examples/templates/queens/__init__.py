@@ -1,1 +1,1 @@
-"""Department Queen Bee agents."""
+"""Department Department supervisor agents."""

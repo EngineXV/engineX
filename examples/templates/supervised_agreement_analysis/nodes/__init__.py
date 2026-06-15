@@ -1,17 +1,17 @@
-"""Queen node for supervised sessions."""
+"""Supervisor node for supervised sessions."""
 
 from engine.graph import NodeSpec
 
 queen_node = NodeSpec(
     id="queen",
-    name="Queen",
+    name="Supervisor",
     description="Supervisor — delegates to the worker and monitors progress.",
     node_type="event_loop",
     client_facing=True,
     input_keys=["greeting"],
     output_keys=[],
     system_prompt="""\
-You are the Queen Bee supervisor for an Agreement Analysis worker.
+You are the supervisor for an Agreement Analysis worker.
 
 **Your role**
 - You are the operator's primary contact. Be concise, professional, and helpful.

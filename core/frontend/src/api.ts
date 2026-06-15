@@ -6,15 +6,15 @@ export interface AgentEntry {
   node_count: number;
   tool_count: number;
   is_loaded: boolean;
-  queen_bee?: boolean;
-  queen_name?: string;
+  supervisor?: boolean;
+  supervisor_name?: string;
   department?: string;
   role_title?: string;
 }
 
 export interface DiscoverResponse {
   templates: AgentEntry[];
-  queens: AgentEntry[];
+  supervisors: AgentEntry[];
   exports: AgentEntry[];
 }
 
@@ -29,8 +29,8 @@ export interface SessionSummary {
   supervised?: boolean;
   queen_mode?: string;
   input_graph_id?: string | null;
-  queen_bee?: boolean;
-  queen_name?: string;
+  supervisor?: boolean;
+  supervisor_name?: string;
   department?: string;
   role_title?: string;
 }

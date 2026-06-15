@@ -913,8 +913,15 @@ class AgentRunner:
             has_tools_module=(self.agent_path / "tools.py").exists(),
             async_entry_points=async_entry_points_info,
             is_multi_entry_point=self._uses_async_entry_points,
-            queen_bee=bool(getattr(self._metadata, "queen_bee", False)),
-            queen_name=getattr(self._metadata, "queen_name", "") or "",
+            supervisor=bool(
+                getattr(self._metadata, "supervisor", False)
+                or getattr(self._metadata, "queen_bee", False)
+            ),
+            supervisor_name=(
+                getattr(self._metadata, "supervisor_name", "")
+                or getattr(self._metadata, "queen_name", "")
+                or ""
+            ),
             department=getattr(self._metadata, "department", "") or "",
             role_title=getattr(self._metadata, "role_title", "") or "",
         )
@@ -922,9 +929,13 @@ class AgentRunner:
     def _display_name(self) -> str:
         meta = self._metadata
         if meta is not None:
-            queen_name = getattr(meta, "queen_name", "") or ""
-            if queen_name:
-                return queen_name
+            supervisor_name = (
+                getattr(meta, "supervisor_name", "")
+                or getattr(meta, "queen_name", "")
+                or ""
+            )
+            if supervisor_name:
+                return supervisor_name
             name = getattr(meta, "name", "") or ""
             if name:
                 return name

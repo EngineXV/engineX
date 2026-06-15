@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useDashboard } from "../context/DashboardContext";
 import {
@@ -13,6 +13,45 @@ import {
   IconSupervisor,
 } from "./Icons";
 
+type SectionKey = "supervisors" | "workflows" | "sessions";
+
+function CollapsibleSection({
+  sectionKey,
+  title,
+  hint,
+  count,
+  open,
+  onToggle,
+  children,
+}: {
+  sectionKey: SectionKey;
+  title: string;
+  hint: string;
+  count: number;
+  open: boolean;
+  onToggle: (key: SectionKey) => void;
+  children: ReactNode;
+}) {
+  return (
+    <section className={`sidebar-section sidebar-section--${sectionKey}${open ? "" : " is-collapsed"}`}>
+      <button
+        type="button"
+        className="sidebar-section-toggle"
+        onClick={() => onToggle(sectionKey)}
+        aria-expanded={open}
+      >
+        <span className="sidebar-section-toggle-text">
+          <span className="sidebar-section-label">{title}</span>
+          <span className="sidebar-section-hint">{hint}</span>
+        </span>
+        <span className="sidebar-section-count">{count}</span>
+        <IconChevronRight size={14} className={`sidebar-section-chevron${open ? " is-open" : ""}`} />
+      </button>
+      {open && <div className="sidebar-section-body">{children}</div>}
+    </section>
+  );
+}
+
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,6 +59,15 @@ export default function Sidebar() {
   const { supervisors, agents, sessions, loading, openAgent } = useDashboard();
   const [collapsed, setCollapsed] = useState(false);
   const [starting, setStarting] = useState<string | null>(null);
+  const [sectionsOpen, setSectionsOpen] = useState<Record<SectionKey, boolean>>({
+    supervisors: true,
+    workflows: true,
+    sessions: true,
+  });
+
+  const toggleSection = useCallback((key: SectionKey) => {
+    setSectionsOpen((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   const activeSession = sessionMatch
     ? sessions.find((s) => s.session_id === sessionMatch.params.sessionId)
@@ -83,11 +131,14 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-scroll">
-        <section className="sidebar-section sidebar-section--supervisors">
-          <div className="sidebar-section-header">
-            <span className="sidebar-section-label">Supervisors</span>
-            <span className="sidebar-section-hint">Department leads</span>
-          </div>
+        <CollapsibleSection
+          sectionKey="supervisors"
+          title="Supervisors"
+          hint="Department leads"
+          count={supervisors.length}
+          open={sectionsOpen.supervisors}
+          onToggle={toggleSection}
+        >
           {loading && <div className="sidebar-empty">Loading…</div>}
           {!loading && supervisors.length === 0 && (
             <div className="sidebar-empty">No supervisors found</div>
@@ -108,21 +159,22 @@ export default function Sidebar() {
                 <span className="agent-name">{supervisor.supervisor_name || supervisor.name}</span>
                 <span className="agent-sub">{supervisor.department}</span>
               </span>
-              <IconSupervisor size={14} className="supervisor-mark-icon" />
+              <IconSupervisor size={14} className="sidebar-row-mark" />
             </button>
           ))}
-        </section>
+        </CollapsibleSection>
 
         {agents.length > 0 && (
           <>
             <div className="sidebar-section-divider" role="separator" aria-hidden />
-            <section className="sidebar-section sidebar-section--workflows">
-              <div className="sidebar-section-header">
-                <span className="sidebar-section-label sidebar-section-label--workflows">
-                  Workflow agents
-                </span>
-                <span className="sidebar-section-hint">Automated pipelines</span>
-              </div>
+            <CollapsibleSection
+              sectionKey="workflows"
+              title="Workflow agents"
+              hint="Automated pipelines"
+              count={agents.length}
+              open={sectionsOpen.workflows}
+              onToggle={toggleSection}
+            >
               {agents.map((agent) => (
                 <button
                   key={agent.path}
@@ -131,9 +183,7 @@ export default function Sidebar() {
                   disabled={starting === agent.path}
                   onClick={() => void handleOpenAgent(agent.path)}
                 >
-                  <span className="agent-avatar workflow-avatar">
-                    {agent.name.charAt(0).toUpperCase()}
-                  </span>
+                  <span className="agent-avatar">{agent.name.charAt(0).toUpperCase()}</span>
                   <span className="agent-meta">
                     <span className="agent-name">{agent.name}</span>
                     <span className="agent-sub">{agent.node_count} nodes</span>
@@ -141,22 +191,25 @@ export default function Sidebar() {
                   {agent.is_loaded ? (
                     <span className="status-pill">live</span>
                   ) : (
-                    <IconAgent size={14} className="workflow-mark-icon" />
+                    <IconAgent size={14} className="sidebar-row-mark" />
                   )}
                 </button>
               ))}
-            </section>
+            </CollapsibleSection>
           </>
         )}
 
         {sessions.length > 0 && (
           <>
             <div className="sidebar-section-divider" role="separator" aria-hidden />
-            <section className="sidebar-section sidebar-section--sessions">
-              <div className="sidebar-section-header">
-                <span className="sidebar-section-label">Sessions</span>
-                <span className="sidebar-section-hint">Active runs</span>
-              </div>
+            <CollapsibleSection
+              sectionKey="sessions"
+              title="Sessions"
+              hint="Active runs"
+              count={sessions.length}
+              open={sectionsOpen.sessions}
+              onToggle={toggleSection}
+            >
               {sessions.map((session) => (
                 <NavLink
                   key={session.session_id}
@@ -170,7 +223,7 @@ export default function Sidebar() {
                   </span>
                 </NavLink>
               ))}
-            </section>
+            </CollapsibleSection>
           </>
         )}
       </div>

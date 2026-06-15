@@ -1,93 +1,88 @@
 # Log Monitor Agent
 
-Grafana log monitoring: filtered fetch → dedup → score → LLM triage → Slack/PagerDuty/Jira → human review → learn.
-
-## Flow
+Polls Grafana every 1 min for filtered errors → dedup → score → LLM triage → alert → learn.
 
 ```
-Timer (1 min) → Fetch & Enrich → [LLM Triage] → Dispatch → [Human Review] → Learn
+Timer → Fetch & Enrich → [LLM Triage] → Dispatch → [Human Review] → Learn
 ```
 
-## Quick start (dev / mock)
+---
 
-```bash
-./engine validate examples/templates/log_monitor
-./engine run examples/templates/log_monitor --input '{}' --allow-mock
-```
+## Steps — local dev (mock logs)
 
-Uses sample logs when Grafana is not configured.
+1. **Validate the agent**
+   ```bash
+   ./engine validate examples/templates/log_monitor
+   ```
 
-## Production deployment
+2. **Run one tick** (no Grafana needed)
+   ```bash
+   ./engine run examples/templates/log_monitor --input '{}' --allow-mock
+   ```
 
-### 1. Configure credentials
+3. **Run with TUI** (timer + human review for MEDIUM)
+   ```bash
+   ./engine run examples/templates/log_monitor --tui --allow-mock
+   ```
 
-Copy `examples/templates/log_monitor/.env.example` → `/etc/engine/log-monitor.env` and fill in:
+---
 
-- `GRAFANA_URL`, `GRAFANA_API_TOKEN`, `GRAFANA_DATASOURCE_UID`
-- `SLACK_WEBHOOK_URL`
-- `ANTHROPIC_API_KEY` (or `OPENAI_API_KEY`)
-- Optional: `PAGERDUTY_ROUTING_KEY`, Jira vars
+## Steps — production
 
-Optional local files under `~/.engine/log_monitor/`:
+1. **Copy and fill credentials**
+   ```bash
+   cp examples/templates/log_monitor/.env.example /etc/engine/log-monitor.env
+   ```
+   Required: `GRAFANA_URL`, `GRAFANA_API_TOKEN`, `GRAFANA_DATASOURCE_UID`, `SLACK_WEBHOOK_URL`, `ANTHROPIC_API_KEY`  
+   Optional: `PAGERDUTY_ROUTING_KEY`, Jira vars (`JIRA_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_PROJECT_KEY`)
 
-- `service_catalog.json` — `{"payments-api": {"owner": "@payments-oncall"}}`
-- `deploy_events.json` — recent deploy events for correlation
+2. **Load env and validate**
+   ```bash
+   set -a && source /etc/engine/log-monitor.env && set +a
+   ./engine validate examples/templates/log_monitor
+   ```
 
-### 2. Validate config
+3. **Start headless daemon**
+   ```bash
+   ./engine run examples/templates/log_monitor --daemon --require-live
+   ```
+   - SEVERE/HIGH → Slack + PagerDuty (SEVERE) + Jira  
+   - MEDIUM → Slack digest (no human gate in daemon mode)  
+   - Duplicates muted for 30 min; repeat alerts cooled down for 15 min
 
-```bash
-set -a && source /etc/engine/log-monitor.env && set +a
-./engine run examples/templates/log_monitor --daemon --require-live --allow-mock
-# Ctrl+C after "Daemon running" confirms startup
-```
+4. **Optional — run as a service**
+   ```bash
+   sudo cp examples/templates/log_monitor/deploy/engine-log-monitor.service /etc/systemd/system/
+   sudo systemctl enable --now engine-log-monitor
+   ```
 
-Remove `--allow-mock` in production.
+---
 
-### 3. Run as daemon (headless)
+## Optional setup
 
-```bash
-./engine run examples/templates/log_monitor --daemon --require-live
-```
+| File | Purpose |
+|------|---------|
+| `~/.engine/log_monitor/service_catalog.json` | Map service → owner (`@team`) |
+| `~/.engine/log_monitor/deploy_events.json` | Recent deploys for correlation |
 
-Timer polls every **1 minute**. MEDIUM severity:
+---
 
-- **TUI mode** (`--tui`): human approval gate
-- **Daemon mode** (`--daemon`): auto-posts MEDIUM digest to Slack (no blocking HITL)
+## Commands cheat sheet
 
-### 4. systemd (optional)
+| Command | When |
+|---------|------|
+| `--input '{}'` | Single manual run |
+| `--tui` | Interactive dashboard + human approval |
+| `--daemon --require-live` | Production headless |
+| `--allow-mock` | Dev without Grafana |
 
-See `deploy/engine-log-monitor.service`. Install:
+---
 
-```bash
-sudo cp deploy/engine-log-monitor.service /etc/systemd/system/
-sudo systemctl enable --now engine-log-monitor
-```
+## Key env vars
 
-## Commands
-
-| Command | Use |
-|---------|-----|
-| `./engine validate examples/templates/log_monitor` | Check graph |
-| `./engine run ... --input '{}'` | Single manual tick |
-| `./engine run ... --tui` | Interactive dashboard + timer |
-| `./engine run ... --daemon --require-live` | Production headless |
-| `./engine run ... --allow-mock` | Dev without Grafana |
-
-## Environment reference
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `LOG_MONITOR_KEYWORDS` | error,exception,fatal,panic | LogQL filter |
-| `LOG_MONITOR_LOOKBACK_MINUTES` | 1 | Query window |
-| `LOG_MONITOR_MUTE_MINUTES` | 30 | Skip re-processing same fingerprint |
-| `LOG_MONITOR_ALERT_COOLDOWN_MINUTES` | 15 | Skip repeat Slack/PagerDuty alerts |
-| `LOG_MONITOR_DAEMON` | — | Set by `--daemon` |
-| `LOG_MONITOR_ALLOW_MOCK` | — | Set by `--allow-mock` |
-
-## Architecture
-
-External inputs: Grafana, metrics/deploy context, service catalog.
-
-Engine core: dedup, rule scoring, LLM triage (ambiguous only), routing.
-
-External outputs: Slack, PagerDuty (SEVERE), Jira, human review (TUI), learn store.
+| Variable | Default |
+|----------|---------|
+| `LOG_MONITOR_KEYWORDS` | `error,exception,fatal,panic` |
+| `LOG_MONITOR_LOOKBACK_MINUTES` | `1` |
+| `LOG_MONITOR_MUTE_MINUTES` | `30` |
+| `LOG_MONITOR_ALERT_COOLDOWN_MINUTES` | `15` |

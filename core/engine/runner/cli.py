@@ -59,6 +59,21 @@ def register_commands(subparsers: argparse._SubParsersAction) -> None:
         help="Launch interactive terminal dashboard",
     )
     run_parser.add_argument(
+        "--daemon",
+        action="store_true",
+        help="Headless daemon mode — keep timer entry points running until Ctrl+C",
+    )
+    run_parser.add_argument(
+        "--allow-mock",
+        action="store_true",
+        help="Allow mock Grafana data (LOG_MONITOR_ALLOW_MOCK=1)",
+    )
+    run_parser.add_argument(
+        "--require-live",
+        action="store_true",
+        help="Require live Grafana + Slack config (fail fast if missing)",
+    )
+    run_parser.add_argument(
         "--model",
         "-m",
         type=str,
@@ -291,6 +306,92 @@ def _run_time_report(agent_name: str) -> None:
         print(f"Could not run time report: {e}", file=sys.stderr)
 
 
+def _apply_log_monitor_env_flags(args: argparse.Namespace) -> None:
+    """Apply CLI flags used by the log monitor agent."""
+    import os
+
+    if getattr(args, "allow_mock", False):
+        os.environ["LOG_MONITOR_ALLOW_MOCK"] = "1"
+    if getattr(args, "daemon", False):
+        os.environ["LOG_MONITOR_DAEMON"] = "1"
+
+
+def _cmd_run_daemon(args: argparse.Namespace) -> int:
+    """Run agent in headless daemon mode with timer entry points."""
+    import asyncio
+    import logging
+    import signal
+
+    from engine.credentials.models import CredentialError
+    from engine.runner import AgentRunner
+
+    _apply_log_monitor_env_flags(args)
+
+    if getattr(args, "require_live", False):
+        try:
+            from log_monitor.lib.config import validate_production_config
+
+            errors = validate_production_config(require_live=True)
+        except ImportError:
+            errors = []
+        if errors:
+            print("Production config errors:", file=sys.stderr)
+            for err in errors:
+                print(f"  - {err}", file=sys.stderr)
+            return 1
+
+    if args.quiet:
+        logging.basicConfig(level=logging.ERROR, format="%(message)s")
+    elif getattr(args, "verbose", False):
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+    else:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+    async def _daemon_main() -> int:
+        try:
+            runner = AgentRunner.load(args.agent_path, model=args.model)
+        except (CredentialError, FileNotFoundError) as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+
+        if not runner.graph.has_async_entry_points():
+            print(
+                "Warning: agent has no async timer entry points; daemon will idle only.",
+                file=sys.stderr,
+            )
+
+        runner._setup()
+        runtime = runner._agent_runtime
+        if runtime is None:
+            print("Error: failed to initialize AgentRuntime", file=sys.stderr)
+            return 1
+
+        stop_event = asyncio.Event()
+
+        def _request_stop(*_args: object) -> None:
+            logging.getLogger(__name__).info("Shutdown signal received")
+            stop_event.set()
+
+        loop = asyncio.get_running_loop()
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            try:
+                loop.add_signal_handler(sig, _request_stop)
+            except NotImplementedError:
+                signal.signal(sig, lambda *_: stop_event.set())
+
+        await runtime.start()
+        info = runner.info()
+        print(f"Daemon running: {info.name}")
+        print("Timer entry points active. Press Ctrl+C to stop.")
+
+        await stop_event.wait()
+        await runner.cleanup_async()
+        print("Daemon stopped.")
+        return 0
+
+    return asyncio.run(_daemon_main())
+
+
 def _prompt_before_start(agent_path: str, runner, model: str | None = None):
     """Prompt user to start agent or update credentials"""
     from engine.credentials.setup import CredentialSetupSession
@@ -327,6 +428,11 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     from engine.credentials.models import CredentialError
     from engine.runner import AgentRunner
+
+    _apply_log_monitor_env_flags(args)
+
+    if getattr(args, "daemon", False):
+        return _cmd_run_daemon(args)
 
     # Set logging level (quiet by default for cleaner output)
     if args.quiet:

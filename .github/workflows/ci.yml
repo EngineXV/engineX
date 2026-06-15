@@ -34,7 +34,7 @@ jobs:
       - run: cd tools && uv run python -m pytest tests/ -q
 
   validate:
-    name: Validate example agent
+    name: Validate example agents
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,3 +44,4 @@ jobs:
           python-version: "3.11"
       - run: uv sync
       - run: chmod +x engine && ./engine validate examples/templates/agreement_analysis
+      - run: ./engine validate examples/templates/log_monitor

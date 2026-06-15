@@ -1,0 +1,16 @@
+[Unit]
+Description=Engine Log Monitor Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=engine
+WorkingDirectory=/opt/engine
+EnvironmentFile=/etc/engine/log-monitor.env
+ExecStart=/opt/engine/engine run examples/templates/log_monitor --daemon --require-live
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

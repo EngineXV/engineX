@@ -1,12 +1,17 @@
-import { useMemo } from "react";
 import type { SessionDetail } from "../api";
 
 export type NodeState = "idle" | "active" | "done";
+
+export const GRAPH_NODE_W = 200;
+export const GRAPH_NODE_H = 72;
+export const GRAPH_GAP_Y = 48;
+export const GRAPH_PAD = 24;
 
 interface LayoutNode {
   id: string;
   name: string;
   description?: string;
+  type?: string;
   x: number;
   y: number;
   state: NodeState;
@@ -18,97 +23,103 @@ interface LayoutEdge {
   target: string;
 }
 
-function computeLevels(
+/** Top-to-bottom pipeline order; ignores entry nodes outside this graph (e.g. supervisor "queen"). */
+function computeVerticalOrder(
   nodes: SessionDetail["nodes"],
   edges: SessionDetail["edges"],
   entryNode?: string,
-): Map<string, number> {
-  const levels = new Map<string, number>();
+): SessionDetail["nodes"] {
+  const nodeIds = new Set(nodes.map((n) => n.id));
+  const entry = entryNode && nodeIds.has(entryNode) ? entryNode : undefined;
+  const nodeById = new Map(nodes.map((n) => [n.id, n]));
+
+  if (edges.length === 0) {
+    return [...nodes];
+  }
+
   const incoming = new Map<string, number>();
-  for (const node of nodes) incoming.set(node.id, 0);
+  const outgoing = new Map<string, string[]>();
+  for (const node of nodes) {
+    incoming.set(node.id, 0);
+    outgoing.set(node.id, []);
+  }
   for (const edge of edges) {
+    if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) continue;
     incoming.set(edge.target, (incoming.get(edge.target) || 0) + 1);
+    outgoing.get(edge.source)!.push(edge.target);
   }
 
-  const roots = entryNode
-    ? [entryNode]
-    : nodes.filter((n) => (incoming.get(n.id) || 0) === 0).map((n) => n.id);
+  const order: SessionDetail["nodes"] = [];
+  const visited = new Set<string>();
+  const queue: string[] = [];
 
-  const queue = [...roots];
-  for (const id of roots) levels.set(id, 0);
-
-  const out = new Map<string, string[]>();
-  for (const edge of edges) {
-    if (!out.has(edge.source)) out.set(edge.source, []);
-    out.get(edge.source)!.push(edge.target);
+  if (entry) {
+    queue.push(entry);
+  } else {
+    for (const node of nodes) {
+      if ((incoming.get(node.id) || 0) === 0) queue.push(node.id);
+    }
   }
 
+  const indegree = new Map(incoming);
   while (queue.length) {
     const id = queue.shift()!;
-    const level = levels.get(id) || 0;
-    for (const target of out.get(id) || []) {
-      const next = Math.max(level + 1, levels.get(target) ?? 0);
-      levels.set(target, next);
-      queue.push(target);
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const node = nodeById.get(id);
+    if (node) order.push(node);
+
+    for (const target of outgoing.get(id) || []) {
+      const next = (indegree.get(target) || 0) - 1;
+      indegree.set(target, next);
+      if (next === 0) queue.push(target);
     }
   }
 
   for (const node of nodes) {
-    if (!levels.has(node.id)) levels.set(node.id, 0);
+    if (!visited.has(node.id)) order.push(node);
   }
-  return levels;
+
+  return order;
 }
 
 export function layoutGraph(
   session: SessionDetail | null,
   nodeStates: Map<string, NodeState>,
 ): { nodes: LayoutNode[]; edges: LayoutEdge[]; width: number; height: number } {
-  if (!session) return { nodes: [], edges: [], width: 400, height: 300 };
+  const canvasWidth = GRAPH_NODE_W + GRAPH_PAD * 2;
+  const empty = { nodes: [], edges: [], width: canvasWidth, height: 320 };
+
+  if (!session?.nodes?.length) return empty;
 
   const entry = session.entry_points[0]?.entry_node;
-  const levels = computeLevels(session.nodes, session.edges, entry);
-  const byLevel = new Map<number, SessionDetail["nodes"]>();
-  for (const node of session.nodes) {
-    const level = levels.get(node.id) || 0;
-    if (!byLevel.has(level)) byLevel.set(level, []);
-    byLevel.get(level)!.push(node);
-  }
+  const ordered = computeVerticalOrder(session.nodes, session.edges, entry);
 
-  const nodeW = 160;
-  const nodeH = 56;
-  const gapX = 48;
-  const gapY = 72;
-  const pad = 24;
+  const layoutNodes: LayoutNode[] = ordered.map((node, idx) => ({
+    id: node.id,
+    name: node.name || node.id,
+    description: node.description,
+    type: (node as { type?: string }).type,
+    x: GRAPH_PAD,
+    y: GRAPH_PAD + idx * (GRAPH_NODE_H + GRAPH_GAP_Y),
+    state: nodeStates.get(node.id) || "idle",
+  }));
 
-  const layoutNodes: LayoutNode[] = [];
-  let maxRow = 0;
-
-  for (const [level, rowNodes] of [...byLevel.entries()].sort((a, b) => a[0] - b[0])) {
-    maxRow = Math.max(maxRow, rowNodes.length);
-    const rowWidth = rowNodes.length * nodeW + (rowNodes.length - 1) * gapX;
-    rowNodes.forEach((node, idx) => {
-      layoutNodes.push({
-        id: node.id,
-        name: node.name || node.id,
-        description: node.description,
-        x: pad + idx * (nodeW + gapX) + (400 - rowWidth) / 2,
-        y: pad + level * (nodeH + gapY),
-        state: nodeStates.get(node.id) || "idle",
-      });
-    });
-  }
-
-  const pos = new Map(layoutNodes.map((n) => [n.id, n]));
   const edges: LayoutEdge[] = session.edges.map((e) => ({
     id: e.id,
     source: e.source,
     target: e.target,
   }));
 
-  const width = Math.max(400, maxRow * (nodeW + gapX) + pad * 2);
-  const height = Math.max(300, (byLevel.size || 1) * (nodeH + gapY) + pad * 2);
+  const height =
+    ordered.length * (GRAPH_NODE_H + GRAPH_GAP_Y) - GRAPH_GAP_Y + GRAPH_PAD * 2;
 
-  return { nodes: layoutNodes, edges, width, height };
+  return {
+    nodes: layoutNodes,
+    edges,
+    width: canvasWidth,
+    height: Math.max(320, height),
+  };
 }
 
 export function edgePath(

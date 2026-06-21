@@ -133,10 +133,16 @@ export default function SessionPage() {
   const graphSession = useMemo(() => {
     if (!session) return null;
     if (session.supervised && session.worker_nodes?.length) {
+      const workerIds = new Set(session.worker_nodes.map((n) => n.id));
+      const workerEntryPoints = session.entry_points.filter((ep) => workerIds.has(ep.entry_node));
       return {
         ...session,
         nodes: session.worker_nodes,
         edges: session.worker_edges || [],
+        entry_points:
+          workerEntryPoints.length > 0
+            ? workerEntryPoints
+            : [{ id: "worker", name: "Worker", entry_node: session.worker_nodes[0]!.id }],
       };
     }
     return session;

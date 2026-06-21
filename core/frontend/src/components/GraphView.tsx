@@ -1,4 +1,10 @@
-import { layoutGraph, edgePath, type NodeState } from "../lib/graphLayout";
+import {
+  GRAPH_NODE_H,
+  GRAPH_NODE_W,
+  edgePath,
+  layoutGraph,
+  type NodeState,
+} from "../lib/graphLayout";
 import type { SessionDetail } from "../api";
 
 interface GraphViewProps {
@@ -7,63 +13,116 @@ interface GraphViewProps {
   title?: string;
 }
 
+function truncate(text: string, max: number): string {
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
+
 export default function GraphView({ session, nodeStates, title = "Agent Graph" }: GraphViewProps) {
   const { nodes, edges, width, height } = layoutGraph(session, nodeStates);
   const pos = new Map(nodes.map((n) => [n.id, n]));
-  const nodeW = 160;
-  const nodeH = 56;
+  const nodeCount = session?.nodes?.length ?? 0;
 
   return (
     <div className="graph-view">
       <div className="graph-view-header">
-        <span>{title}</span>
+        <div className="graph-view-title">
+          <span>{title}</span>
+          {nodeCount > 0 && (
+            <span className="graph-view-subtitle">
+              {nodeCount} node{nodeCount === 1 ? "" : "s"}
+            </span>
+          )}
+        </div>
         <span className="graph-legend">
-          <span className="legend-item"><i className="dot idle" /> idle</span>
-          <span className="legend-item"><i className="dot active" /> running</span>
-          <span className="legend-item"><i className="dot done" /> done</span>
+          <span className="legend-item">
+            <i className="dot idle" /> idle
+          </span>
+          <span className="legend-item">
+            <i className="dot active" /> running
+          </span>
+          <span className="legend-item">
+            <i className="dot done" /> done
+          </span>
         </span>
       </div>
       <div className="graph-canvas-wrap">
-        <svg viewBox={`0 0 ${width} ${height}`} className="graph-canvas">
-          {edges.map((edge) => {
-            const s = pos.get(edge.source);
-            const t = pos.get(edge.target);
-            if (!s || !t) return null;
-            return (
-              <path
-                key={edge.id}
-                d={edgePath(s, t, nodeW, nodeH)}
-                className="graph-edge"
-                markerEnd="url(#arrow)"
-              />
-            );
-          })}
-          <defs>
-            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L6,3 L0,6 Z" className="graph-arrow" />
-            </marker>
-          </defs>
-          {nodes.map((node) => (
-            <g key={node.id} transform={`translate(${node.x}, ${node.y})`}>
-              <rect
-                width={nodeW}
-                height={nodeH}
-                rx="10"
-                className={`graph-node-box ${node.state}`}
-              />
-              <text x={nodeW / 2} y={22} textAnchor="middle" className="graph-node-title">
-                {node.name}
-              </text>
-              {node.description && (
-                <text x={nodeW / 2} y={40} textAnchor="middle" className="graph-node-desc">
-                  {node.description.length > 22
-                    ? `${node.description.slice(0, 22)}…`
-                    : node.description}
+        {nodes.length === 0 ? (
+          <div className="graph-empty">No graph nodes loaded yet.</div>
+        ) : (
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            width="100%"
+            height={height}
+            preserveAspectRatio="xMidYMin meet"
+            className="graph-canvas"
+            role="img"
+            aria-label={`${title} with ${nodes.length} nodes`}
+          >
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" className="graph-arrow" />
+              </marker>
+              <filter id="node-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.35" />
+              </filter>
+            </defs>
+            {edges.map((edge) => {
+              const s = pos.get(edge.source);
+              const t = pos.get(edge.target);
+              if (!s || !t) return null;
+              return (
+                <path
+                  key={edge.id}
+                  d={edgePath(s, t, GRAPH_NODE_W, GRAPH_NODE_H)}
+                  className="graph-edge"
+                  markerEnd="url(#arrow)"
+                />
+              );
+            })}
+            {nodes.map((node) => (
+              <g key={node.id} transform={`translate(${node.x}, ${node.y})`}>
+                <rect
+                  width={GRAPH_NODE_W}
+                  height={GRAPH_NODE_H}
+                  rx="12"
+                  className={`graph-node-box ${node.state}`}
+                  filter="url(#node-shadow)"
+                />
+                {node.state === "active" && (
+                  <rect
+                    width={GRAPH_NODE_W}
+                    height={GRAPH_NODE_H}
+                    rx="12"
+                    className="graph-node-glow"
+                  />
+                )}
+                {node.type && (
+                  <text x={12} y={18} className="graph-node-type">
+                    {truncate(node.type.replace(/_/g, " "), 14)}
+                  </text>
+                )}
+                <text
+                  x={GRAPH_NODE_W / 2}
+                  y={node.type ? 38 : 30}
+                  textAnchor="middle"
+                  className="graph-node-title"
+                >
+                  {truncate(node.name, 22)}
                 </text>
-              )}
-            </g>
-          ))}
-        </svg>
+                {node.description && (
+                  <text
+                    x={GRAPH_NODE_W / 2}
+                    y={node.type ? 56 : 48}
+                    textAnchor="middle"
+                    className="graph-node-desc"
+                  >
+                    {truncate(node.description, 28)}
+                  </text>
+                )}
+              </g>
+            ))}
+          </svg>
+        )}
       </div>
     </div>
   );

@@ -1,14 +1,26 @@
 # Engine
 
-Minimal goal-driven agent runtime — graphs, event-loop nodes, human-in-the-loop, checkpoints, credentials, CLI.
+Open-source goal-driven agent runtime — graphs, event-loop nodes, human-in-the-loop, checkpoints, credentials, CLI, and web dashboard.
 
 ## Quick start
 
 ```bash
+git clone https://github.com/mishrapravin114/engine.git
+cd engine
 uv sync
 ./engine validate examples/templates/agreement_analysis
 ./engine run examples/templates/agreement_analysis --tui
 ```
+
+### Web dashboard
+
+```bash
+cd core/frontend && npm install && npm run build
+cd ../..
+./engine serve
+```
+
+Open http://127.0.0.1:8787
 
 ## LLM setup
 
@@ -106,3 +118,11 @@ engine/
 Config and credentials: `~/.engine/`
 
 Architecture overview: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+MIT — see [LICENSE](LICENSE).

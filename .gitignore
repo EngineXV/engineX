@@ -49,6 +49,8 @@ logs/
 
 # Testing / Python caches
 coverage/
+.coverage
+.coverage.*
 .nyc_output/
 .pytest_cache/
 __pycache__/

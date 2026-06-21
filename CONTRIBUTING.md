@@ -5,8 +5,8 @@ Thanks for your interest in Engine. This project is open source and welcomes con
 ## Getting started
 
 ```bash
-git clone https://github.com/mishrapravin114/engine.git
-cd engine
+git clone https://github.com/EngineXV/engineX.git
+cd engineX
 uv sync
 make check
 make test

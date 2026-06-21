@@ -5,8 +5,8 @@ Open-source goal-driven agent runtime — graphs, event-loop nodes, human-in-the
 ## Quick start
 
 ```bash
-git clone https://github.com/mishrapravin114/engine.git
-cd engine
+git clone https://github.com/EngineXV/engineX.git
+cd engineX
 uv sync
 ./engine validate examples/templates/agreement_analysis
 ./engine run examples/templates/agreement_analysis --tui

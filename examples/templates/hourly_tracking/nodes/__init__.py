@@ -13,12 +13,15 @@ fetch_transactions_node = NodeSpec(
         "raw_transactions_json",
     ],
     system_prompt="""\
-Call fetch_broker_transactions().
-Call fetch_investor_logs().
+Call normalize_transactions().
 
-Combine results into one JSON structure.
+Convert raw transaction inputs into a
+standardized schema.
 
-set_output("raw_transactions_json", combined_json)
+set_output(
+    "structured_transactions_json",
+    structured_transactions
+)
 
 Finish.
 """,
@@ -57,7 +60,7 @@ set_output(
 
 Finish.
 """,
-    tools=[],
+    tools=["normalize_transactions"],
 )
 
 validate_transactions_node = NodeSpec(

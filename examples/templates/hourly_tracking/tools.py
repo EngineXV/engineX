@@ -1,3 +1,11 @@
+"""Tools for Hourly Tracking Agent."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from engine.runner.tool_registry import tool
+
 @tool(description="Fetch broker transactions from last hour.")
 def fetch_broker_transactions() -> dict[str, Any]:
     return {

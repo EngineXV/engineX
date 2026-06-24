@@ -13,14 +13,15 @@ fetch_transactions_node = NodeSpec(
         "raw_transactions_json",
     ],
     system_prompt="""\
-Call normalize_transactions().
+Call fetch_broker_transactions().
 
-Convert raw transaction inputs into a
-standardized schema.
+Call fetch_investor_logs().
+
+Combine both transaction sources into a single JSON structure.
 
 set_output(
-    "structured_transactions_json",
-    structured_transactions
+    "raw_transactions_json",
+    combined_json
 )
 
 Finish.
@@ -44,7 +45,9 @@ process_transactions_node = NodeSpec(
         "structured_transactions_json",
     ],
     system_prompt="""\
-Normalize transactions into:
+Call normalize_transactions().
+
+Convert raw transaction inputs into a standardized schema:
 
 transaction_id
 broker_id
@@ -55,12 +58,14 @@ fees
 
 set_output(
     "structured_transactions_json",
-    normalized_json
+    structured_transactions
 )
 
 Finish.
 """,
-    tools=["normalize_transactions"],
+    tools=[
+        "normalize_transactions",
+    ],
 )
 
 validate_transactions_node = NodeSpec(
@@ -84,8 +89,15 @@ Copy outputs:
 validation_passed
 discrepancies
 
-set_output("validation_passed", validation_passed)
-set_output("discrepancies_json", discrepancies)
+set_output(
+    "validation_passed",
+    validation_passed
+)
+
+set_output(
+    "discrepancies_json",
+    discrepancies
+)
 
 Finish.
 """,
@@ -113,6 +125,11 @@ Call correct_transactions().
 Replace structured_transactions_json
 with corrected output.
 
+set_output(
+    "structured_transactions_json",
+    corrected_transactions
+)
+
 Finish.
 """,
     tools=[
@@ -137,7 +154,10 @@ Call store_verified_results().
 
 Store verified transactions.
 
-set_output("tracking_summary", result)
+set_output(
+    "tracking_summary",
+    result
+)
 
 Finish.
 """,

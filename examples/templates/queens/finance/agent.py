@@ -2,7 +2,7 @@
 
 from queen_factory import build_queen_exports
 
-from .config import metadata
+from .config import default_config, metadata
 
 _exports = build_queen_exports(metadata)
 

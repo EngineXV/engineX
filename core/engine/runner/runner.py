@@ -930,7 +930,9 @@ class AgentRunner:
         meta = self._metadata
         if meta is not None:
             supervisor_name = (
-                getattr(meta, "supervisor_name", "") or getattr(meta, "queen_name", "") or ""
+                getattr(meta, "supervisor_name", "")
+                or getattr(meta, "queen_name", "")
+                or ""
             )
             if supervisor_name:
                 return supervisor_name

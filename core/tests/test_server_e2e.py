@@ -51,15 +51,11 @@ async def test_discover_agents(client: TestClient):
 async def test_session_lifecycle(client: TestClient):
     discover = await (await client.get("/api/discover")).json()
     agent_path = discover["templates"][0]["path"]
+
     create = await client.post(
         "/api/sessions",
         json={"agent_path": agent_path},
     )
-
-    print("Status:", create.status)
-    print("Headers:", dict(create.headers))
-    print("Body:", await create.text())
-
     assert create.status == 201
     session = await create.json()
     session_id = session["session_id"]

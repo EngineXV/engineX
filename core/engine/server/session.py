@@ -174,44 +174,21 @@ class SessionManager:
         loop = asyncio.get_running_loop()
 
         def _load() -> AgentRunner:
-            import traceback
-
             from engine.runtime.event_bus import EventBus
 
-            try:
-                bus = EventBus()
+            bus = EventBus()
+            runner = AgentRunner.load(
+                agent_path,
+                model=resolved_model,
+                interactive=False,
+            )
+            if runner.supervised_worker_path is not None:
+                from engine.tools.queen_supervisor import QueenSupervisor, register_queen_tools
 
-                runner = AgentRunner.load(
-                    agent_path,
-                    model=resolved_model,
-                    interactive=False,
-                    skip_credential_validation=True,
-                )
-                if runner._agent_runtime is None:
-                    runner._setup(event_bus=bus)
-                if runner.supervised_worker_path is not None:
-                    from engine.tools.queen_supervisor import (
-                        QueenSupervisor,
-                        register_queen_tools,
-                    )
-
-                    register_queen_tools(
-                        runner,
-                        QueenSupervisor(runner=runner),
-                    )
-
-                if runner._agent_runtime is None:
-                    runner._setup(event_bus=bus)
-
-                return runner
-
-            except Exception as e:
-                print("\n========== AGENT LOAD FAILED ==========")
-                traceback.print_exc()
-                print("TYPE:", type(e).__name__)
-                print("ERROR:", repr(e))
-                print("=======================================\n")
-                raise
+                register_queen_tools(runner, QueenSupervisor(runner=runner))
+            if runner._agent_runtime is None:
+                runner._setup(event_bus=bus)
+            return runner
 
         try:
             runner = await loop.run_in_executor(None, _load)
@@ -274,12 +251,7 @@ class SessionManager:
             session.waiting_for_input = False
             session.input_node_id = None
             session.input_graph_id = None
-            delivered = await runtime.inject_input(
-                node_id,
-                text,
-                graph_id=graph_id,
-                is_client_input=True,
-            )
+            delivered = await runtime.inject_input(node_id, text, graph_id=graph_id, is_client_input=True)
             return {"action": "inject", "delivered": delivered, "node_id": node_id}
 
         if session.current_exec_id is not None and session.active_node_id:

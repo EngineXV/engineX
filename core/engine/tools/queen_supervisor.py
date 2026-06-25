@@ -84,10 +84,7 @@ def register_queen_tools(runner: AgentRunner, supervisor: QueenSupervisor) -> No
                 ids = worker_active[0].get("active_execution_ids", [])
                 if ids:
                     supervisor.worker_exec_id = ids[0]
-                return (
-                    f"Worker execution in progress "
-                    f"(id {(supervisor.worker_exec_id or 'unknown')[:12]}…)."
-                )
+                return f"Worker execution in progress (id {supervisor.worker_exec_id or 'unknown'[:12]}…)."
             supervisor.mode = "staging"
             supervisor.worker_exec_id = None
             return "Worker is idle. Use start_worker(task) to begin agreement analysis."

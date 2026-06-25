@@ -12,7 +12,9 @@ class AgentMetadata:
     name: str = "Victoria"
     version: str = "1.0.0"
     description: str = "Growth department supervisor — supervises agreement analysis for partnerships and channel deals."
-    intro_message: str = "Hi, I'm Victoria, Head of Growth. Share a partnership or channel agreement and I'll coordinate the review."
+    intro_message: str = (
+        "Hi, I'm Victoria, Head of Growth. Share a partnership or channel agreement and I'll coordinate the review."
+    )
     supervisor: bool = True
     supervisor_name: str = "Victoria"
     department: str = "Growth"

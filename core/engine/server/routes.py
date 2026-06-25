@@ -116,7 +116,6 @@ async def handle_create_session(request: web.Request) -> web.Response:
         return _credential_error_response(exc, str(resolved))
     except ValueError as exc:
         return web.json_response({"error": str(exc)}, status=409)
-
     except Exception as exc:  # noqa: BLE001
         logger.exception("Failed to create session")
         return web.json_response({"error": str(exc)}, status=500)

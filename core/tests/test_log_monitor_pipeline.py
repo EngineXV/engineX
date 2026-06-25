@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from log_monitor.lib.dedup_store import DedupStore
 from log_monitor.lib.models import LogEntry
 from log_monitor.lib.pipeline import run_monitor_tick

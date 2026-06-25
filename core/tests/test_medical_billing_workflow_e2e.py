@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -23,7 +21,6 @@ from engine.schemas.session_state import (
     SessionStatus,
     SessionTimestamps,
 )
-
 
 # ============================================================================
 # Mock API Layer — Simulates External Services
@@ -80,7 +77,10 @@ class MockBillingCodeMapper:
             BillingCodeMapping(
                 code="20610",
                 code_system="CPT",
-                description="Arthrocentesis, major joint or bursa (including ultrasound guidance), aspiration",
+                description=(
+                    "Arthrocentesis, major joint or bursa "
+                    "(including ultrasound guidance), aspiration"
+                ),
                 procedure="Arthrocentesis",
                 confidence=0.88,
                 financial_risk=0.35,
@@ -92,7 +92,10 @@ class MockBillingCodeMapper:
             BillingCodeMapping(
                 code="20610",
                 code_system="CPT",
-                description="Arthrocentesis, major joint or bursa (including ultrasound guidance), aspiration",
+                description=(
+                    "Arthrocentesis, major joint or bursa "
+                    "(including ultrasound guidance), aspiration"
+                ),
                 procedure="Fluid aspiration",
                 confidence=0.85,
                 financial_risk=0.30,
@@ -340,9 +343,7 @@ class TestMedicalBillingWorkflowE2E:
     @pytest.mark.asyncio
     async def test_workflow_step_4_hitl_intercept_high_risk_codes(self):
         """Test: High-risk codes trigger HITL intercept and checkpoint."""
-        state = self._create_medical_billing_state(
-            clinical_text="Complex arthrocentesis procedure"
-        )
+        state = self._create_medical_billing_state(clinical_text="Complex arthrocentesis procedure")
 
         # Setup workflow
         procedures = MockEHRExtractor.extract_procedures(state.clinical_text)
@@ -357,9 +358,7 @@ class TestMedicalBillingWorkflowE2E:
             carrier_compliance=0.80,
         )
 
-        state.progress.path.extend(
-            ["ehr_intake", "code_extraction", "compliance_validation"]
-        )
+        state.progress.path.extend(["ehr_intake", "code_extraction", "compliance_validation"])
 
         # Step 4: HITL intercept
         thresholds = MedicalBillingReviewThresholds(minimum_confidence=0.75)
@@ -384,9 +383,7 @@ class TestMedicalBillingWorkflowE2E:
         from engine.graph.hitl import MedicalBillingResolutionPayload
 
         # Setup: Create state with low-confidence code
-        state = self._create_medical_billing_state(
-            clinical_text="Arthrocentesis procedure"
-        )
+        state = self._create_medical_billing_state(clinical_text="Arthrocentesis procedure")
 
         original_code = BillingCodeMapping(
             code="99214",
@@ -489,9 +486,7 @@ class TestMedicalBillingWorkflowE2E:
     def test_reconciliation_loop_low_risk_bypass(self):
         """Test: Low-risk, high-confidence codes bypass human review."""
         # Scenario: High-confidence arthrocentesis code
-        state = self._create_medical_billing_state(
-            clinical_text="Routine arthrocentesis procedure"
-        )
+        state = self._create_medical_billing_state(clinical_text="Routine arthrocentesis procedure")
 
         # Extract and map
         procedures = MockEHRExtractor.extract_procedures(state.clinical_text)
@@ -583,7 +578,9 @@ class TestMedicalBillingWorkflowE2E:
 
         procedures = MockEHRExtractor.extract_procedures(clinical_text)
         state.extracted_procedures = procedures
-        print(f"✓ Extracted {len(procedures)} procedures: {[p['procedure_name'] for p in procedures]}")
+        print(
+            f"✓ Extracted {len(procedures)} procedures: {[p['procedure_name'] for p in procedures]}"
+        )
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # PHASE 2: CODE EXTRACTION & MAPPING
@@ -594,7 +591,9 @@ class TestMedicalBillingWorkflowE2E:
 
         for code in proposed_codes:
             print(f"  Code: {code.code} ({code.code_system}) - {code.description[:50]}...")
-            print(f"    Confidence: {code.confidence:.2%}, Financial Risk: {code.financial_risk:.2%}")
+            print(
+                f"    Confidence: {code.confidence:.2%}, Financial Risk: {code.financial_risk:.2%}"
+            )
 
         # Build confidence vectors
         for code in proposed_codes:
@@ -619,7 +618,7 @@ class TestMedicalBillingWorkflowE2E:
         if validation["warnings"]:
             for w in validation["warnings"][:2]:
                 print(f"    ⚠ {w}")
-        print(f"✓ Validation complete")
+        print("✓ Validation complete")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # PHASE 4: HITL INTERCEPT CHECK
@@ -637,13 +636,13 @@ class TestMedicalBillingWorkflowE2E:
         )
 
         if reviewed_state.status == SessionStatus.PENDING_HUMAN_APPROVAL:
-            print(f"  ⚠ HITL INTERCEPT TRIGGERED")
+            print("  ⚠ HITL INTERCEPT TRIGGERED")
             review_items = reviewed_state.approval_payload.get("review_items", [])
             print(f"  Items Requiring Review: {len(review_items)}")
             for item in review_items:
                 print(f"    Code {item['code']['code']}: {', '.join(item['reasons'])}")
         else:
-            print(f"  ✓ No HITL intercept needed - codes approved for processing")
+            print("  ✓ No HITL intercept needed - codes approved for processing")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # PHASE 5: HUMAN AUDITOR REVIEW (simulated)
@@ -668,7 +667,7 @@ class TestMedicalBillingWorkflowE2E:
         print(f"  Auditor: {resolution.auditor_id}")
         print(f"  Action: {resolution.action.upper()}")
         print(f"  Reason: {resolution.reason[:60]}...")
-        print(f"✓ Auditor review complete - resuming execution")
+        print("✓ Auditor review complete - resuming execution")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # PHASE 6: AUDIT TRAIL & PERSISTENCE
@@ -689,7 +688,7 @@ class TestMedicalBillingWorkflowE2E:
         print(f"  Claim ID: {audit_record['claim_id']}")
         print(f"  Codes Stored: {len(audit_record['proposed_codes'])}")
         print(f"  Override Logs: {len(audit_record['override_logs'])}")
-        print(f"✓ Audit trail persisted to storage")
+        print("✓ Audit trail persisted to storage")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # VERIFICATION & RECONCILIATION

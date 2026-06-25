@@ -196,9 +196,8 @@ def resolve_medical_billing_review(
         original_codes = list(state.proposed_codes)
         state.proposed_codes = approved_codes
         for index, approved_code in enumerate(approved_codes):
-            original_code = (
-                original_by_code.get(approved_code.code)
-                or (original_codes[index] if index < len(original_codes) else None)
+            original_code = original_by_code.get(approved_code.code) or (
+                original_codes[index] if index < len(original_codes) else None
             )
             state.human_override_logs.append(
                 BillingHumanOverrideLog(

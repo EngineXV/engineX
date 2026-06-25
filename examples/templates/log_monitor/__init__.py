@@ -9,10 +9,14 @@ from .agent import (
     graph,
     nodes,
     pause_nodes,
-    skip_credential_validation,
     terminal_nodes,
 )
-from .config import default_config, metadata
+
+from .config import (
+    default_config,
+    metadata,
+    skip_credential_validation,
+)
 
 __version__ = metadata.version
 

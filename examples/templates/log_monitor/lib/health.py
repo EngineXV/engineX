@@ -26,7 +26,11 @@ def _get(url: str, headers: dict[str, str]) -> dict[str, Any]:
 def check_grafana() -> dict[str, Any]:
     cfg = load_config()
     if is_mock_mode(cfg):
-        return {"ok": True, "mode": "mock", "message": "Grafana mock mode (env not configured)"}
+        return {
+            "ok": True,
+            "mode": "mock",
+            "message": "Grafana mock mode (env not configured)",
+        }
 
     url = f"{cfg.grafana_url}/api/health"
     result = _get(url, {"Authorization": f"Bearer {cfg.grafana_token}"})
@@ -39,7 +43,9 @@ def check_slack() -> dict[str, Any]:
     if not webhook:
         return {"ok": False, "service": "slack", "error": "SLACK_WEBHOOK_URL not set"}
 
-    payload = json.dumps({"text": "Engine log monitor health check (safe to ignore)"}).encode("utf-8")
+    payload = json.dumps(
+        {"text": "Engine log monitor health check (safe to ignore)"}
+    ).encode("utf-8")
     request = Request(
         webhook,
         data=payload,
@@ -48,7 +54,11 @@ def check_slack() -> dict[str, Any]:
     )
     try:
         with urlopen(request, timeout=10) as response:
-            return {"ok": response.status == 200, "service": "slack", "status": response.status}
+            return {
+                "ok": response.status == 200,
+                "service": "slack",
+                "status": response.status,
+            }
     except HTTPError as exc:
         return {"ok": False, "service": "slack", "status": exc.code, "error": str(exc)}
     except (URLError, TimeoutError, OSError) as exc:

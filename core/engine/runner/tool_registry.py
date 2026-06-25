@@ -290,22 +290,30 @@ class ToolRegistry:
 
         # Support both formats:
         #   {"servers": [{"name": "x", ...}]}        (list format)
-        #   {"server-name": {"transport": ...}, ...}  (dict format)
+        #   {"server-name": {"transport": ...}, ...} (dict format)
         server_list = config.get("servers", [])
-        if not server_list and "servers" not in config:
+
+        # Support Claude Desktop style config
+        if not server_list and "mcpServers" in config:
+            server_list = [{"name": name, **cfg} for name, cfg in config["mcpServers"].items()]
+        elif not server_list and "servers" not in config:
             # Treat top-level keys as server names
-            server_list = [{"name": name, **cfg} for name, cfg in config.items()]
+            server_list = [
+                {"name": name, **cfg} for name, cfg in config.items() if isinstance(cfg, dict)
+            ]
 
         for server_config in server_list:
             cwd = server_config.get("cwd")
             if cwd and not Path(cwd).is_absolute():
                 server_config["cwd"] = str((base_dir / cwd).resolve())
+
             # Use same Python as parent when command is "python" (no uv)
             cmd = server_config.get("command")
             if cmd == "python":
                 import sys
 
                 server_config = dict(server_config, command=sys.executable)
+
             # Retry MCP connection (stdio can be flaky on first spawn)
             last_err = None
             for attempt in range(3):
@@ -319,6 +327,7 @@ class ToolRegistry:
                         import time
 
                         time.sleep(0.5 * (attempt + 1))
+
             if last_err is not None:
                 name = server_config.get("name", "unknown")
                 logger.warning(f"Failed to register MCP server '{name}': {last_err}")
@@ -336,9 +345,17 @@ class ToolRegistry:
             from engine.runner.mcp_client import MCPClient, MCPServerConfig
 
             # Build config object
+            transport = server_config.get("transport")
+            if not transport:
+                logger.warning(
+                    "Skipping MCP server '%s': missing transport",
+                    server_config.get("name", "unknown"),
+                )
+                return 0
+
             config = MCPServerConfig(
                 name=server_config["name"],
-                transport=server_config["transport"],
+                transport=transport,
                 command=server_config.get("command"),
                 args=server_config.get("args", []),
                 env=server_config.get("env", {}),

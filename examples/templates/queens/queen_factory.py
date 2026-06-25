@@ -6,10 +6,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from engine.graph import Constraint, EdgeCondition, EdgeSpec, Goal, NodeSpec, SuccessCriterion
+from engine.graph import (
+    Constraint,
+    EdgeCondition,
+    EdgeSpec,
+    Goal,
+    NodeSpec,
+    SuccessCriterion,
+)
 from engine.graph.edge import GraphSpec
 
 if TYPE_CHECKING:
+
     @dataclass
     class SupervisorMetadata:
         name: str
@@ -67,7 +75,12 @@ def build_queen_exports(metadata: SupervisorMetadata) -> dict:
         input_keys=["greeting"],
         output_keys=[],
         system_prompt=_build_system_prompt(metadata),
-        tools=["start_worker", "get_worker_status", "inject_worker_message", "stop_worker"],
+        tools=[
+            "start_worker",
+            "get_worker_status",
+            "inject_worker_message",
+            "stop_worker",
+        ],
     )
 
     supervisor_goal = Goal(

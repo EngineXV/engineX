@@ -27,7 +27,7 @@ export interface SessionSummary {
   waiting_for_input: boolean;
   current_exec_id: string | null;
   supervised?: boolean;
-  queen_mode?: string;
+  supervisor_mode?: string;
   input_graph_id?: string | null;
   supervisor?: boolean;
   supervisor_name?: string;
@@ -42,6 +42,24 @@ export interface SessionDetail extends SessionSummary {
   intro_message?: string;
   worker_nodes?: Array<{ id: string; name: string; description?: string }>;
   worker_edges?: Array<{ id: string; source: string; target: string }>;
+}
+
+export interface TaskRecord {
+  id: number;
+  subject: string;
+  description: string;
+  active_form?: string | null;
+  owner?: string | null;
+  status: "pending" | "in_progress" | "completed";
+  blocks: number[];
+  blocked_by: number[];
+}
+
+export interface ModelCatalogResponse {
+  model: string;
+  catalog: Record<string, Array<Record<string, unknown>>>;
+  defaults: Record<string, string>;
+  presets: Record<string, Record<string, unknown>>;
 }
 
 export interface AgentEvent {
@@ -71,7 +89,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   discover: () => request<DiscoverResponse>("/discover"),
-  getConfig: () => request<{ model: string }>("/config"),
+  getConfig: () => request<ModelCatalogResponse>("/config"),
   listSessions: () => request<{ sessions: SessionSummary[] }>("/sessions"),
   createSession: (agentPath: string, model?: string) =>
     request<SessionSummary>("/sessions", {
@@ -86,4 +104,17 @@ export const api = {
     }),
   deleteSession: (sessionId: string) =>
     request<{ stopped: boolean }>(`/sessions/${sessionId}`, { method: "DELETE" }),
+  getSessionTasks: (sessionId: string, supervisor = false) =>
+    request<{ task_list_id: string | null; tasks: TaskRecord[] }>(
+      `/sessions/${sessionId}/tasks${supervisor ? "?supervisor=true" : ""}`,
+    ),
+  patchTask: (
+    taskListId: string,
+    taskId: number,
+    body: Partial<Pick<TaskRecord, "status" | "subject" | "description">>,
+  ) =>
+    request<{ task: TaskRecord }>(`/tasks/${encodeURIComponent(taskListId)}/${taskId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
 };

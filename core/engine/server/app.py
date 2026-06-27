@@ -11,6 +11,7 @@ from aiohttp import web
 from engine.server.routes import register_routes
 from engine.server.routes_credentials import register_routes as register_credential_routes
 from engine.server.routes_skills import register_routes as register_skills_routes
+from engine.server.routes_tasks import register_routes as register_task_routes
 from engine.server.session import SessionManager
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ def create_app(*, model: str | None = None) -> web.Application:
     register_routes(app)
     register_credential_routes(app)
     register_skills_routes(app)
+    register_task_routes(app)
     _setup_static_serving(app)
     return app
 

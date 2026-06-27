@@ -72,6 +72,7 @@ class AgentRuntime:
         accounts_data: list[dict] | None = None,
         tool_provider_map: dict[str, str] | None = None,
         event_bus: "EventBus | None" = None,
+        pipeline: Any | None = None,
     ):
         """Initialize agent runtime"""
         self.graph = graph
@@ -134,6 +135,10 @@ class AgentRuntime:
         # Optional greeting shown to user on TUI load (set by AgentRunner)
         self.intro_message: str = ""
 
+        # Trigger middleware pipeline (built from config on start if unset)
+        self._pipeline = pipeline
+        self._pipeline_initialized = pipeline is not None
+
     def register_entry_point(self, spec: EntryPointSpec) -> None:
         """Register a named entry point for the agent"""
         if self._running:
@@ -165,6 +170,8 @@ class AgentRuntime:
             return
 
         async with self._lock:
+            await self._ensure_pipeline_ready()
+
             # Start storage
             await self._storage.start()
 
@@ -647,6 +654,44 @@ class AgentRuntime:
         # Primary graph (also stored in self._streams)
         return self._streams.get(entry_point_id)
 
+    async def _ensure_pipeline_ready(self) -> None:
+        """Build and initialize trigger middleware from config when needed."""
+        if self._pipeline_initialized:
+            return
+        from engine.config import get_pipeline_stages_config
+        from engine.pipeline.registry import build_pipeline_from_config
+
+        stages_config = get_pipeline_stages_config()
+        if stages_config:
+            self._pipeline = build_pipeline_from_config(stages_config)
+            await self._pipeline.initialize_all()
+        self._pipeline_initialized = True
+
+    async def _run_trigger_pipeline(
+        self,
+        entry_point_id: str,
+        input_data: dict[str, Any],
+        correlation_id: str | None,
+        session_state: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        """Run configured middleware stages before execution."""
+        if self._pipeline is None:
+            return input_data
+
+        from engine.pipeline.stage import PipelineContext, PipelineRejectedError
+
+        ctx = PipelineContext(
+            entry_point_id=entry_point_id,
+            input_data=dict(input_data),
+            correlation_id=correlation_id,
+            session_state=session_state,
+        )
+        try:
+            ctx = await self._pipeline.run(ctx)
+        except PipelineRejectedError as exc:
+            raise RuntimeError(str(exc)) from exc
+        return ctx.input_data
+
     async def trigger(
         self,
         entry_point_id: str,
@@ -663,6 +708,12 @@ class AgentRuntime:
         if stream is None:
             raise ValueError(f"Entry point '{entry_point_id}' not found")
 
+        input_data = await self._run_trigger_pipeline(
+            entry_point_id,
+            input_data,
+            correlation_id,
+            session_state,
+        )
         return await stream.execute(input_data, correlation_id, session_state)
 
     async def trigger_and_wait(
@@ -1369,6 +1420,7 @@ def create_agent_runtime(
     accounts_data: list[dict] | None = None,
     tool_provider_map: dict[str, str] | None = None,
     event_bus: "EventBus | None" = None,
+    pipeline: Any | None = None,
 ) -> AgentRuntime:
     """Create and configure an AgentRuntime with entry points"""
     # Auto-create runtime log store if logging is enabled and not provided
@@ -1393,6 +1445,7 @@ def create_agent_runtime(
         accounts_data=accounts_data,
         tool_provider_map=tool_provider_map,
         event_bus=event_bus,
+        pipeline=pipeline,
     )
 
     for spec in entry_points:

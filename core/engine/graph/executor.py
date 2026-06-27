@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from engine.graph.checkpoint_config import CheckpointConfig
+from engine.graph.constants import LEGACY_RUN_ID
 from engine.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
 from engine.graph.goal import Goal
 from engine.graph.node import (
@@ -24,6 +25,8 @@ from engine.observability import set_trace_context
 from engine.runtime.core import Runtime
 from engine.schemas.checkpoint import Checkpoint
 from engine.storage.checkpoint_store import CheckpointStore
+from engine.tracker.execution_tracker import record_edge_route
+from engine.utils.io import atomic_write
 
 
 @dataclass
@@ -152,6 +155,9 @@ class GraphExecutor:
         # Track the currently executing node for external injection routing
         self.current_node_id: str | None = None
 
+        # Active decision-tracking run id for checkpoint resume
+        self._run_id: str | None = None
+
     def _write_progress(
         self,
         current_node: str,
@@ -188,8 +194,11 @@ class GraphExecutor:
             memory_snapshot = memory.read_all()
             state_data["memory"] = memory_snapshot
             state_data["memory_keys"] = list(memory_snapshot.keys())
+            if self._run_id:
+                state_data["current_run_id"] = self._run_id
 
-            state_path.write_text(_json.dumps(state_data, indent=2), encoding="utf-8")
+            with atomic_write(state_path, encoding="utf-8") as f:
+                f.write(_json.dumps(state_data, indent=2))
         except Exception:
             pass  # Best-effort — never block execution
 
@@ -463,6 +472,8 @@ class GraphExecutor:
                         f"🔄 Resuming from checkpoint: {checkpoint_id} "
                         f"(node: {checkpoint.current_node})"
                     )
+                    checkpoint_run_id = checkpoint.run_id or LEGACY_RUN_ID
+                    self._run_id = checkpoint_run_id
 
                     # Restore memory from checkpoint
                     for key, value in checkpoint.shared_memory.items():
@@ -613,6 +624,7 @@ class GraphExecutor:
             goal_description=goal.description,
             input_data=input_data or {},
         )
+        self._run_id = _run_id
 
         if self.runtime_logger:
             # Extract session_id from storage_path if available (for unified sessions)
@@ -1878,6 +1890,12 @@ class GraphExecutor:
                 for key, value in mapped.items():
                     memory.write(key, value, validate=False)
 
+                record_edge_route(
+                    self.runtime,
+                    source_node_id=current_node_id,
+                    target_node_id=edge.target,
+                    edge_condition=str(edge.condition),
+                )
                 return edge.target
 
         return None
@@ -2203,4 +2221,5 @@ class GraphExecutor:
             shared_memory=memory.read_all(),
             next_node=next_node,
             is_clean=is_clean,
+            run_id=self._run_id,
         )

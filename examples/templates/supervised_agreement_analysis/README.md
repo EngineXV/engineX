@@ -1,12 +1,12 @@
 # Supervised Agreement Analysis
 
-Hive-style **Supervisor** supervision over the Agreement Analysis worker.
+EngineX **supervisor** pattern over the Agreement Analysis worker.
 
 ## Architecture
 
 ```
-Operator ↔ Queen (forever-alive supervisor)
-              ↓ start_worker / inject_worker_message
+Operator ↔ Supervisor (forever-alive lead)
+              ↓ spawn_worker / inject_worker_message
            Worker graph (intake → extract → approval → audit)
 ```
 
@@ -28,5 +28,4 @@ Web dashboard: start **Supervised Agreement Analysis** from the home page.
 
 1. Supervisor greets you in chat.
 2. You: “Review this NDA: …” (paste text)
-3. Supervisor calls `start_worker` → worker intake runs.
-4. Worker pauses at approval gate → you reply in chat (routed to worker when waiting).
+3. Supervisor calls `spawn_worker` — worker runs the pipeline; you approve at HITL gates.

@@ -17,6 +17,30 @@ from engine.runtime.execution_stream import ExecutionAlreadyRunningError
 
 logger = logging.getLogger(__name__)
 
+WORKER_GRAPH_ID = "worker"
+
+
+def _primary_graph_id(session: Session) -> str:
+    runtime = session.runtime
+    if runtime is not None:
+        return runtime._graph_id  # noqa: SLF001
+    return "primary"
+
+
+def _event_graph_id(event: AgentEvent) -> str | None:
+    return event.graph_id
+
+
+def _is_worker_event(session: Session, event: AgentEvent) -> bool:
+    return session.supervised and _event_graph_id(event) == WORKER_GRAPH_ID
+
+
+def _is_primary_event(session: Session, event: AgentEvent) -> bool:
+    graph_id = _event_graph_id(event)
+    if graph_id is None:
+        return True
+    return graph_id == _primary_graph_id(session)
+
 
 @dataclass
 class Session:
@@ -31,7 +55,8 @@ class Session:
     input_node_id: str | None = None
     input_graph_id: str | None = None
     supervised: bool = False
-    queen_mode: str = "staging"
+    supervisor_mode: str = "staging"
+    last_execution_id: str | None = None
     _subscription_id: str | None = None
 
     @property
@@ -58,7 +83,7 @@ class Session:
             "waiting_for_input": self.waiting_for_input,
             "current_exec_id": self.current_exec_id,
             "supervised": self.supervised,
-            "queen_mode": self.queen_mode,
+            "supervisor_mode": self.supervisor_mode,
             "input_graph_id": self.input_graph_id,
         }
         if info.supervisor:
@@ -118,8 +143,28 @@ class Session:
 
         async def on_event(event: AgentEvent) -> None:
             et = event.type
+
+            if _is_worker_event(self, event):
+                if et == EventType.EXECUTION_COMPLETED:
+                    supervisor = getattr(self.runner, "_session_supervisor", None)
+                    if supervisor is not None:
+                        await supervisor.on_worker_execution_finished(success=True)
+                elif et == EventType.EXECUTION_FAILED:
+                    supervisor = getattr(self.runner, "_session_supervisor", None)
+                    if supervisor is not None:
+                        await supervisor.on_worker_execution_finished(success=False)
+                if et == EventType.CLIENT_INPUT_REQUESTED:
+                    self.waiting_for_input = True
+                    self.input_node_id = event.node_id
+                    self.input_graph_id = event.graph_id
+                return
+
+            if not _is_primary_event(self, event):
+                return
+
             if et == EventType.EXECUTION_STARTED:
                 self.current_exec_id = event.execution_id
+                self.last_execution_id = event.execution_id
                 if event.node_id:
                     self.active_node_id = event.node_id
             elif et in (EventType.EXECUTION_COMPLETED, EventType.EXECUTION_FAILED):
@@ -183,9 +228,9 @@ class SessionManager:
                 interactive=False,
             )
             if runner.supervised_worker_path is not None:
-                from engine.tools.queen_supervisor import QueenSupervisor, register_queen_tools
+                from engine.tools.supervisor_runtime import SessionSupervisor
 
-                register_queen_tools(runner, QueenSupervisor(runner=runner))
+                runner._session_supervisor = SessionSupervisor(runner=runner)  # noqa: SLF001
             if runner._agent_runtime is None:
                 runner._setup(event_bus=bus)
             return runner
@@ -208,6 +253,38 @@ class SessionManager:
             await runtime.start()
 
         if runner.supervised_worker_path is not None:
+            info = runner.info()
+            supervisor = getattr(runner, "_session_supervisor", None)
+            if supervisor is not None:
+                from engine.tools.supervisor_runtime import (
+                    SessionSupervisor,
+                    register_supervisor_tools,
+                )
+
+                if not isinstance(supervisor, SessionSupervisor):
+                    supervisor = SessionSupervisor(runner=runner)
+                register_supervisor_tools(
+                    runner,
+                    supervisor,
+                    session_id=sid,
+                    department=getattr(info, "department", None) or None,
+                )
+
+            from engine.tasks.supervisor import (
+                emit_supervisor_tasks_updated,
+                seed_supervisor_action_plan,
+            )
+
+            seeded = await seed_supervisor_action_plan(
+                sid,
+                department=getattr(info, "department", None) or None,
+            )
+            await emit_supervisor_tasks_updated(
+                runtime.event_bus if runtime else None,
+                session_id=sid,
+                tasks=seeded,
+            )
+
             worker_path = runner.supervised_worker_path
             if not worker_path.is_dir():
                 worker_path = (agent_path.parent / worker_path.name).resolve()
@@ -219,7 +296,47 @@ class SessionManager:
 
         session.attach_event_tracking()
         self._sessions[sid] = session
+        try:
+            from engine.observability.metrics import inc, observe_session_count
+
+            inc("engine_sessions_created_total")
+            observe_session_count(len(self._sessions))
+        except ImportError:
+            pass
         return session
+
+    async def pause_session(self, session: Session) -> dict[str, Any]:
+        runtime = session.runtime
+        if runtime is None:
+            raise RuntimeError("Agent runtime is not available")
+        paused = await runtime.cancel_all_tasks_async()
+        session.current_exec_id = None
+        session.active_node_id = None
+        return {"paused": paused, "session_id": session.id}
+
+    async def resume_session(self, session: Session) -> dict[str, Any]:
+        runtime = session.runtime
+        if runtime is None:
+            raise RuntimeError("Agent runtime is not available")
+        if session.current_exec_id is not None:
+            raise ExecutionAlreadyRunningError("Agent is already running")
+
+        entry_points = runtime.get_entry_points()
+        manual_eps = [ep for ep in entry_points if ep.trigger_type in ("manual", "api")]
+        if not manual_eps:
+            manual_eps = entry_points
+        if not manual_eps:
+            raise RuntimeError("No entry points available")
+
+        entry_point = manual_eps[0]
+        execution_id = await runtime.trigger(entry_point_id=entry_point.id, input_data={})
+        session.current_exec_id = execution_id
+        return {
+            "resumed": True,
+            "session_id": session.id,
+            "execution_id": execution_id,
+            "entry_point_id": entry_point.id,
+        }
 
     async def delete_session(self, session_id: str) -> bool:
         session = self._sessions.pop(session_id, None)
@@ -230,6 +347,12 @@ class SessionManager:
             await session.runner.cleanup_async()
         except Exception as exc:  # noqa: BLE001
             logger.warning("Session cleanup failed for %s: %s", session_id, exc)
+        try:
+            from engine.observability.metrics import observe_session_count
+
+            observe_session_count(len(self._sessions))
+        except ImportError:
+            pass
         return True
 
     async def shutdown_all(self) -> None:
@@ -251,7 +374,12 @@ class SessionManager:
             session.waiting_for_input = False
             session.input_node_id = None
             session.input_graph_id = None
-            delivered = await runtime.inject_input(node_id, text, graph_id=graph_id, is_client_input=True)
+            delivered = await runtime.inject_input(
+                node_id,
+                text,
+                graph_id=graph_id,
+                is_client_input=True,
+            )
             return {"action": "inject", "delivered": delivered, "node_id": node_id}
 
         if session.current_exec_id is not None and session.active_node_id:

@@ -96,15 +96,17 @@ def discover_agents(repo_root: Path, loaded_paths: set[str] | None = None) -> di
         "templates": _scan_category(
             repo_root / "examples" / "templates",
             "templates",
-            skip={"queens"},
+            skip={"supervisors"},
         ),
-        "supervisors": _scan_category(repo_root / "examples" / "templates" / "queens", "supervisors"),
+        "supervisors": _scan_category(
+            repo_root / "examples" / "templates" / "supervisors",
+            "supervisors",
+        ),
         "exports": _scan_category(repo_root / "exports", "exports"),
     }
     return {
         category: [
-            entry.to_dict(is_loaded=entry.path.as_posix() in loaded_paths)
-            for entry in entries
+            entry.to_dict(is_loaded=entry.path.as_posix() in loaded_paths) for entry in entries
         ]
         for category, entries in groups.items()
     }
@@ -119,7 +121,7 @@ def resolve_agent_path(repo_root: Path, agent_path: str) -> Path | None:
     for candidate in (
         repo_root / agent_path,
         repo_root / "examples" / "templates" / agent_path,
-        repo_root / "examples" / "templates" / "queens" / agent_path,
+        repo_root / "examples" / "templates" / "supervisors" / agent_path,
         repo_root / "exports" / agent_path,
     ):
         if candidate.is_dir() and _is_valid_agent_dir(candidate):

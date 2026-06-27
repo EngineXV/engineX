@@ -448,7 +448,7 @@ class NodeContext:
 
     # Dynamic tool provider — when set, EventLoopNode rebuilds the tool
     # list from this callback at the start of each iteration.  Used by
-    # the queen to switch between building-mode and running-mode tools.
+    # Allows the supervisor to switch between building-mode and running-mode tools.
     dynamic_tools_provider: Any = None  # Callable[[], list[Tool]] | None
 
 

@@ -119,9 +119,9 @@ class EventType(StrEnum):
     # Escalation (agent requests handoff to engine_coder)
     ESCALATION_REQUESTED = "escalation_requested"
 
-    # Worker health monitoring (judge → queen → operator)
+    # Worker health monitoring (judge → supervisor → operator)
     WORKER_ESCALATION_TICKET = "worker_escalation_ticket"
-    QUEEN_INTERVENTION_REQUESTED = "queen_intervention_requested"
+    SUPERVISOR_INTERVENTION_REQUESTED = "supervisor_intervention_requested"
 
     # Execution resurrection (auto-restart on non-fatal failure)
     EXECUTION_RESURRECTED = "execution_resurrected"
@@ -130,8 +130,8 @@ class EventType(StrEnum):
     WORKER_LOADED = "worker_loaded"
     CREDENTIALS_REQUIRED = "credentials_required"
 
-    # Queen mode changes (building ↔ running)
-    QUEEN_MODE_CHANGED = "queen_mode_changed"
+    # Supervisor mode changes (building ↔ running)
+    SUPERVISOR_MODE_CHANGED = "supervisor_mode_changed"
 
     # Subagent reports (one-way progress updates from sub-agents)
     SUBAGENT_REPORT = "subagent_report"
@@ -652,11 +652,17 @@ class EventBus:
         prompt: str = "",
         execution_id: str | None = None,
         options: list[str] | None = None,
+        evidence: list[dict[str, Any]] | None = None,
+        audit_card: dict[str, Any] | None = None,
     ) -> None:
         """Emit client input requested event (client_facing=True nodes)"""
         data: dict[str, Any] = {"prompt": prompt}
         if options:
             data["options"] = options
+        if evidence:
+            data["evidence"] = evidence
+        if audit_card:
+            data["audit_card"] = audit_card
         await self.publish(
             AgentEvent(
                 type=EventType.CLIENT_INPUT_REQUESTED,
@@ -930,21 +936,21 @@ class EventBus:
             )
         )
 
-    async def emit_queen_intervention_requested(
+    async def emit_supervisor_intervention_requested(
         self,
         stream_id: str,
         node_id: str,
         ticket_id: str,
         analysis: str,
         severity: str,
-        queen_graph_id: str,
-        queen_stream_id: str,
+        supervisor_graph_id: str,
+        supervisor_stream_id: str,
         execution_id: str | None = None,
     ) -> None:
-        """Emitted by queen when she decides the operator should be involved"""
+        """Emitted when the supervisor decides the operator should be involved."""
         await self.publish(
             AgentEvent(
-                type=EventType.QUEEN_INTERVENTION_REQUESTED,
+                type=EventType.SUPERVISOR_INTERVENTION_REQUESTED,
                 stream_id=stream_id,
                 node_id=node_id,
                 execution_id=execution_id,
@@ -952,8 +958,8 @@ class EventBus:
                     "ticket_id": ticket_id,
                     "analysis": analysis,
                     "severity": severity,
-                    "queen_graph_id": queen_graph_id,
-                    "queen_stream_id": queen_stream_id,
+                    "supervisor_graph_id": supervisor_graph_id,
+                    "supervisor_stream_id": supervisor_stream_id,
                 },
             )
         )

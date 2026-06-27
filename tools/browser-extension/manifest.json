@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Engine Browser Bridge",
+  "version": "1.0.0",
+  "description": "Connects Chrome to the Engine GCU browser automation bridge.",
+  "permissions": ["tabs", "tabGroups", "debugger", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Engine Browser Bridge",
+    "default_popup": "popup.html"
+  }
+}

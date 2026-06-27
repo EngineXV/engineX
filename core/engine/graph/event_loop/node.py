@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from engine.graph.constants import SUPERVISOR_NODE_ID
 from engine.graph.conversation import ConversationStore, NodeConversation
 from engine.graph.event_loop.config import LoopConfig, OutputAccumulator
 from engine.graph.event_loop.errors import _is_context_too_large_error
@@ -154,12 +155,21 @@ class EventLoopNode(NodeProtocol):
                 # understands the session history, not just the node directive.
                 from engine.graph.prompt_composer import compose_system_prompt
 
+                _repo_root = Path(__file__).resolve().parents[4]
+                from engine.skills.context import get_skill_filter
+                from engine.skills.discovery import build_skills_prompt_section
+
+                _skills_section = build_skills_prompt_section(
+                    _repo_root, skill_names=get_skill_filter()
+                )
                 _current_prompt = compose_system_prompt(
                     identity_prompt=ctx.identity_prompt or None,
                     focus_prompt=ctx.node_spec.system_prompt,
                     narrative=ctx.narrative or None,
                     accounts_prompt=ctx.accounts_prompt or None,
                 )
+                if _skills_section:
+                    _current_prompt = f"{_current_prompt}\n\n{_skills_section}"
                 if conversation.system_prompt != _current_prompt:
                     conversation.update_system_prompt(_current_prompt)
                     logger.info("Refreshed system prompt for restored conversation")
@@ -174,6 +184,16 @@ class EventLoopNode(NodeProtocol):
                 # Append connected accounts info if available
                 if ctx.accounts_prompt:
                     system_prompt = f"{system_prompt}\n\n{ctx.accounts_prompt}"
+
+                _repo_root = Path(__file__).resolve().parents[4]
+                from engine.skills.context import get_skill_filter
+                from engine.skills.discovery import build_skills_prompt_section
+
+                _skills_section = build_skills_prompt_section(
+                    _repo_root, skill_names=get_skill_filter()
+                )
+                if _skills_section:
+                    system_prompt = f"{system_prompt}\n\n{_skills_section}"
 
                 # Inject agent working memory (adapt.md).
                 # If it doesn't exist yet, seed it with available context.
@@ -261,13 +281,13 @@ class EventLoopNode(NodeProtocol):
         await self._publish_loop_started(stream_id, node_id, execution_id)
 
         # 4b. Fire-and-forget action plan generation (once per node per lifetime)
-        # Skip for queen/judge — action plans are only meaningful for worker nodes.
+        # Skip for supervisor/judge — action plans are only meaningful for worker nodes.
         if (
             start_iteration == 0
             and ctx.llm
             and self._event_bus
             and node_id not in self._action_plan_emitted
-            and stream_id not in ("queen", "judge")
+            and stream_id not in (SUPERVISOR_NODE_ID, "judge")
         ):
             self._action_plan_emitted.add(node_id)
             asyncio.create_task(self._generate_action_plan(ctx, stream_id, node_id, execution_id))
@@ -560,7 +580,7 @@ class EventLoopNode(NodeProtocol):
                 )
                 # Only accept on empty response if the node actually has
                 # output_keys that are all satisfied.  Nodes with NO
-                # output_keys (e.g. the forever-alive queen) should never
+                # output_keys (e.g. the forever-alive supervisor) should never
                 # be terminated by a ghost empty stream — "missing" is
                 # trivially empty when there are no required outputs.
                 has_real_outputs = bool(ctx.node_spec.output_keys)
@@ -776,8 +796,8 @@ class EventLoopNode(NodeProtocol):
             #     The LLM intentionally asked a question; judging before the
             #     user answers would inject confusing "missing outputs"
             #     feedback.  Works for all client-facing nodes.
-            # (b) Auto-block (queen only) — a text-only turn (no real
-            #     tools, no set_output) from the queen node.  Blocks for
+            # (b) Auto-block (supervisor only) — a text-only turn (no real
+            #     tools, no set_output) from the supervisor node.  Blocks for
             #     the user's response, then falls through to judge so
             #     models stuck in a clarification loop get RETRY feedback.
             #     Workers are autonomous and don't auto-block — they use
@@ -797,10 +817,12 @@ class EventLoopNode(NodeProtocol):
                     and not real_tool_results
                     and not outputs_set
                     and (
-                        stream_id == "queen" or ctx.node_id == "queen" or ctx.node_spec.output_keys
+                        stream_id == SUPERVISOR_NODE_ID
+                        or ctx.node_id == SUPERVISOR_NODE_ID
+                        or ctx.node_spec.output_keys
                     )
                 ):
-                    # Auto-block: queen (conversational) and client-facing
+                    # Auto-block: supervisor (conversational) and client-facing
                     # workers with required outputs (e.g. intake) should wait
                     # for user input after a text-only turn.
                     _cf_block = True
@@ -814,7 +836,7 @@ class EventLoopNode(NodeProtocol):
                 # Without this, _await_user_input() would block
                 # forever since no inject_event is coming.
                 #
-                # When no outputs are missing (e.g. queen monitoring
+                # When no outputs are missing (e.g. supervisor monitoring
                 # with output_keys=[]), text-only is legitimate
                 # conversation and should always block.
                 if _cf_auto:
@@ -1262,12 +1284,22 @@ class EventLoopNode(NodeProtocol):
         self._input_ready.clear()
 
         if self._event_bus:
+            from engine.graph.hitl_evidence import build_hitl_payload
+
+            evidence, audit_card = build_hitl_payload(
+                node_id=ctx.node_id,
+                node_spec=ctx.node_spec,
+                memory=ctx.memory,
+                prompt=prompt,
+            )
             await self._event_bus.emit_client_input_requested(
                 stream_id=ctx.stream_id or ctx.node_id,
                 node_id=ctx.node_id,
                 prompt=prompt,
                 execution_id=ctx.execution_id or "",
                 options=options,
+                evidence=evidence,
+                audit_card=audit_card,
             )
 
         self._awaiting_input = True
@@ -1337,7 +1369,7 @@ class EventLoopNode(NodeProtocol):
             _stream_error: StreamErrorEvent | None = None
 
             # Stream LLM response in a child task so cancel_current_turn()
-            # can kill it instantly without terminating the queen's main loop.
+            # can kill it instantly without terminating the supervisor's main loop.
             # Capture loop-scoped variables as defaults to satisfy B023.
             async def _do_stream(
                 _msgs: list = messages,  # noqa: B006
@@ -1554,8 +1586,8 @@ class EventLoopNode(NodeProtocol):
                         ask_user_options = None  # fall back to free-text input
 
                     # Workers MUST provide at least 2 options — no free-text
-                    # questions allowed.  Only the queen may omit options.
-                    if ask_user_options is None and stream_id != "queen":
+                    # questions allowed.  Only the supervisor may omit options.
+                    if ask_user_options is None and stream_id != SUPERVISOR_NODE_ID:
                         result = ToolResult(
                             tool_use_id=tc.tool_use_id,
                             content=(

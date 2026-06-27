@@ -76,7 +76,16 @@ async def handle_health(_request: web.Request) -> web.Response:
 
 
 async def handle_config(_request: web.Request) -> web.Response:
-    return web.json_response({"model": get_preferred_model()})
+    from engine.llm.model_catalog import get_default_models, get_models_catalogue, get_presets
+
+    return web.json_response(
+        {
+            "model": get_preferred_model(),
+            "catalog": get_models_catalogue(),
+            "defaults": get_default_models(),
+            "presets": get_presets(),
+        }
+    )
 
 
 async def handle_discover(request: web.Request) -> web.Response:
@@ -169,6 +178,38 @@ async def handle_message(request: web.Request) -> web.Response:
     return web.json_response(result)
 
 
+async def handle_pause_session(request: web.Request) -> web.Response:
+    session, err = resolve_session(request)
+    if err:
+        return err
+    assert session is not None
+    try:
+        result = await _manager(request).pause_session(session)
+    except Exception as exc:  # noqa: BLE001
+        return web.json_response({"error": str(exc)}, status=500)
+    return web.json_response(result)
+
+
+async def handle_resume_session(request: web.Request) -> web.Response:
+    session, err = resolve_session(request)
+    if err:
+        return err
+    assert session is not None
+    try:
+        result = await _manager(request).resume_session(session)
+    except ExecutionAlreadyRunningError as exc:
+        return web.json_response({"error": str(exc)}, status=409)
+    except Exception as exc:  # noqa: BLE001
+        return web.json_response({"error": str(exc)}, status=500)
+    return web.json_response(result)
+
+
+async def handle_metrics(_request: web.Request) -> web.Response:
+    from engine.observability.metrics import prometheus_text
+
+    return web.Response(text=prometheus_text(), content_type="text/plain; version=0.0.4")
+
+
 def _parse_event_types(query_param: str | None) -> list[EventType]:
     if not query_param:
         return DEFAULT_EVENT_TYPES
@@ -255,4 +296,7 @@ def register_routes(app: web.Application) -> None:
     app.router.add_get("/api/sessions/{session_id}", handle_get_session)
     app.router.add_delete("/api/sessions/{session_id}", handle_delete_session)
     app.router.add_post("/api/sessions/{session_id}/message", handle_message)
+    app.router.add_post("/api/sessions/{session_id}/pause", handle_pause_session)
+    app.router.add_post("/api/sessions/{session_id}/resume", handle_resume_session)
     app.router.add_get("/api/sessions/{session_id}/events", handle_events)
+    app.router.add_get("/api/metrics", handle_metrics)

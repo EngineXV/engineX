@@ -93,9 +93,42 @@ def discover_skills(repo_root: Path | None = None) -> list[SkillEntry]:
     return sorted(by_name.values(), key=lambda e: e.name.lower())
 
 
+def build_skills_prompt_section(
+    repo_root: Path | None = None,
+    *,
+    max_skills: int = 16,
+    skill_names: list[str] | None = None,
+) -> str:
+    """Compact skills index for event-loop system prompts."""
+    skills = [s for s in discover_skills(repo_root) if s.enabled]
+    if skill_names is None:
+        from engine.skills.context import get_skill_filter
+
+        skill_names = get_skill_filter()
+    if skill_names:
+        allowed = {name.strip().lower() for name in skill_names if name.strip()}
+        skills = [s for s in skills if s.name.lower() in allowed]
+    skills = skills[:max_skills]
+    if not skills:
+        return ""
+    lines = [
+        "## Available Skills",
+        "When a skill applies, call `load_skill(name)` to read its full guidance before acting.",
+        "",
+    ]
+    for entry in skills:
+        desc = entry.description or "No description"
+        lines.append(f"- **{entry.name}** ({entry.scope}): {desc}")
+    return "\n".join(lines)
+
+
 def read_skill_body(
-    skill_name: str, repo_root: Path | None = None
+    skill_name: str, repo_root: Path | None = None, *, allowed_names: list[str] | None = None
 ) -> tuple[SkillEntry, str, list[str]] | None:
+    if allowed_names:
+        allowed = {name.strip().lower() for name in allowed_names if name.strip()}
+        if skill_name.lower() not in allowed:
+            return None
     for entry in discover_skills(repo_root):
         if entry.name != skill_name:
             continue

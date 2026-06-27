@@ -1,0 +1,349 @@
+"""
+Browser lifecycle tools - start, stop, status.
+
+These tools manage the browser context via the Beeline extension bridge.
+No Playwright required - all operations go through the Chrome extension.
+"""
+
+from __future__ import annotations
+
+import logging
+import time
+from pathlib import Path
+from typing import Any
+
+from fastmcp import FastMCP
+
+from ..bridge import get_bridge
+from ..session import _active_profile
+from ..telemetry import log_context_event, log_tool_call
+
+logger = logging.getLogger(__name__)
+
+# Track active contexts per profile
+_contexts: dict[str, dict[str, Any]] = {}
+
+
+def _resolve_profile(profile: str | None) -> str:
+    """Resolve profile name, using context variable if not provided."""
+    if profile is not None:
+        return profile
+    return _active_profile.get()
+
+
+# Resolve extension path relative to this file: tools/browser-extension/
+_EXTENSION_PATH = (
+    Path(__file__).parent.parent.parent.parent.parent / "browser-extension"
+).resolve()
+
+
+def _clear_profile_tab_caches(ctx: dict[str, Any]) -> None:
+    """Clear per-tab caches for every tab the profile knew about.
+
+    Individual tab closes go through ``bridge.close_tab`` which clears
+    caches per-tab; context destroys close every tab at once without
+    per-tab notifications, so we clear them here from the tracked set.
+    """
+    tab_ids = ctx.get("tabs") or set()
+    if not tab_ids:
+        return
+    from ..bridge import clear_tab_highlights
+    from .inspection import clear_tab_state
+
+    clear_tab_state(tab_ids)
+    clear_tab_highlights(tab_ids)
+
+
+async def _ensure_context(
+    bridge: Any,
+    profile: str | None,
+) -> tuple[str, dict[str, Any], bool]:
+    """Return ``(profile_name, ctx, created)`` for ``profile``.
+
+    Uses the Chrome extension when connected; otherwise falls back to
+    headless Playwright when the optional browser extra is installed.
+    """
+    profile_name = _resolve_profile(profile)
+    existing = _contexts.get(profile_name)
+    if existing is not None:
+        return profile_name, existing, False
+
+    if bridge and bridge.is_connected:
+        result = await bridge.create_context(profile_name)
+        group_id = result.get("groupId")
+        tab_id = result.get("tabId")
+
+        ctx: dict[str, Any] = {
+            "groupId": group_id,
+            "activeTabId": tab_id,
+            "_seedTabId": tab_id,
+            "tabs": {tab_id} if tab_id is not None else set(),
+            "backend": "extension",
+        }
+        _contexts[profile_name] = ctx
+
+        logger.info(
+            "Started browser context '%s': groupId=%s, tabId=%s",
+            profile_name,
+            group_id,
+            tab_id,
+        )
+        log_context_event("start", profile_name, group_id=group_id, tab_id=tab_id)
+        return profile_name, ctx, True
+
+    from . import playwright_backend as pw
+
+    if not pw.playwright_available():
+        raise RuntimeError(
+            "Browser extension not connected and Playwright is not installed. "
+            "Load tools/browser-extension in Chrome or run: uv sync --extra browser"
+        )
+
+    result = await pw.create_context(profile_name)
+    pw_ctx = pw.get_context(profile_name)
+    if pw_ctx is None:
+        raise RuntimeError("Failed to start Playwright browser context")
+
+    ctx = {
+        "groupId": result.get("groupId"),
+        "activeTabId": result.get("tabId"),
+        "_seedTabId": result.get("tabId"),
+        "tabs": pw_ctx.get("tabs", set()),
+        "backend": "playwright",
+    }
+    _contexts[profile_name] = ctx
+    logger.info("Started Playwright fallback context '%s'", profile_name)
+    log_context_event("start", profile_name, group_id=profile_name, tab_id=result.get("tabId"))
+    return profile_name, ctx, True
+
+
+async def shutdown_all_contexts() -> None:
+    """Close all active browser contexts. Called at GCU server shutdown."""
+    if not _contexts:
+        return
+    bridge = get_bridge()
+    for profile_name, ctx in list(_contexts.items()):
+        group_id = ctx.get("groupId")
+        _clear_profile_tab_caches(ctx)
+        if group_id is not None and bridge and bridge.is_connected:
+            try:
+                await bridge.destroy_context(group_id)
+                logger.info(
+                    "Shutdown: closed browser context '%s' (groupId=%s)", profile_name, group_id
+                )
+            except Exception as e:
+                logger.warning("Shutdown: failed to close context '%s': %s", profile_name, e)
+    _contexts.clear()
+
+
+def register_lifecycle_tools(mcp: FastMCP) -> None:
+    """Register browser lifecycle management tools."""
+
+    @mcp.tool()
+    async def browser_setup() -> dict:
+        """
+        Check browser extension status and show installation instructions if needed.
+
+        Call this first if browser tools are not working. It checks whether the
+        Engine Chrome extension is installed and connected, and provides step-by-step
+        instructions to install it if not.
+
+        Returns:
+            Dict with connection status and setup instructions if needed
+        """
+        bridge = get_bridge()
+        connected = bool(bridge and bridge.is_connected)
+
+        ext_path = str(_EXTENSION_PATH)
+        ext_exists = _EXTENSION_PATH.exists()
+
+        if connected:
+            return {
+                "ok": True,
+                "connected": True,
+                "backend": "extension",
+                "status": "Extension is connected and ready. Call browser_open(url) to begin.",
+            }
+
+        from ..automation import backend_mode
+
+        if backend_mode() == "playwright":
+            return {
+                "ok": True,
+                "connected": False,
+                "backend": "playwright",
+                "status": (
+                    "Extension not connected — Playwright headless fallback is available. "
+                    "Call browser_open(url) to begin."
+                ),
+            }
+
+        return {
+            "ok": False,
+            "connected": False,
+            "status": "Extension not connected",
+            "instructions": {
+                "step_1": "Open Chrome and go to chrome://extensions",
+                "step_2": "Enable 'Developer mode' (toggle in the top-right corner)",
+                "step_3": "Click 'Load unpacked'",
+                "step_4": f"Select this directory: {ext_path}",
+                "step_5": (
+                    "Click the extension icon in the Chrome toolbar to confirm it says 'Connected'"
+                ),
+                "step_6": "Return here and call browser_open(url) to begin",
+            },
+            "extensionPath": ext_path,
+            "extensionPathExists": ext_exists,
+            "note": (
+                "The extension connects via WebSocket on ws://127.0.0.1:9229. "
+                "Make sure Chrome is running before loading the extension."
+            ),
+            "playwrightFallback": (
+                "Optional: uv sync --extra browser && uv run playwright install chromium"
+            ),
+        }
+
+    @mcp.tool()
+    async def browser_status(profile: str | None = None) -> dict:
+        """
+        Get the current status of the browser.
+
+        Args:
+            profile: Browser profile name (default: "default")
+
+        Returns:
+            Dict with browser status
+        """
+        start = time.perf_counter()
+        params = {"profile": profile}
+
+        bridge = get_bridge()
+        from ..automation import backend_mode, extension_connected
+
+        mode = backend_mode()
+        if mode == "none":
+            result = {
+                "ok": False,
+                "connected": False,
+                "error": (
+                    "Browser extension not connected and Playwright is not installed. "
+                    "Call browser_setup for installation instructions."
+                ),
+            }
+            log_tool_call("browser_status", params, result=result)
+            return result
+
+        try:
+            _, ctx, _ = await _ensure_context(bridge, profile)
+        except Exception as e:
+            result = {"ok": False, "error": str(e)}
+            log_tool_call("browser_status", params, error=e)
+            return result
+
+        profile_name = _resolve_profile(profile)
+        result = {
+            "ok": True,
+            "connected": extension_connected(),
+            "backend": ctx.get("backend", mode),
+            "profile": profile_name,
+            "activeTabId": ctx.get("activeTabId"),
+            "tabCount": len(ctx.get("tabs") or []),
+        }
+
+        if ctx.get("backend") == "extension" and bridge and bridge.is_connected:
+            try:
+                tabs_result = await bridge.list_tabs(ctx.get("groupId"))
+                tabs = tabs_result.get("tabs", [])
+                result.update(
+                    {
+                        "running": True,
+                        "groupId": ctx.get("groupId"),
+                        "activeTab": ctx.get("activeTabId"),
+                        "tabs": len(tabs),
+                    }
+                )
+            except Exception as e:
+                result.update({"running": False, "error": str(e)})
+        else:
+            result.update({"running": True, "tabs": len(ctx.get("tabs") or [])})
+
+        log_tool_call(
+            "browser_status",
+            params,
+            result=result,
+            duration_ms=(time.perf_counter() - start) * 1000,
+        )
+        return result
+
+    @mcp.tool()
+    async def browser_stop(profile: str | None = None) -> dict:
+        """
+        Stop the browser context and close all tabs in the group.
+
+        Args:
+            profile: Browser profile name (default: "default")
+
+        Returns:
+            Dict with stop status
+        """
+        start = time.perf_counter()
+        params = {"profile": profile}
+
+        bridge = get_bridge()
+        if not bridge or not bridge.is_connected:
+            result = {"ok": False, "error": "Browser extension not connected"}
+            log_tool_call("browser_stop", params, result=result)
+            return result
+
+        profile_name = _resolve_profile(profile)
+        ctx = _contexts.pop(profile_name, None)
+
+        if not ctx:
+            result = {"ok": True, "status": "not_running", "profile": profile_name}
+            log_tool_call(
+                "browser_stop",
+                params,
+                result=result,
+                duration_ms=(time.perf_counter() - start) * 1000,
+            )
+            return result
+
+        try:
+            group_id = ctx.get("groupId")
+            closed_tabs = 0
+            # Clear per-tab caches before tearing down the group — once
+            # destroyed we won't get per-tab close notifications.
+            _clear_profile_tab_caches(ctx)
+            if group_id is not None:
+                result = await bridge.destroy_context(group_id)
+                closed_tabs = result.get("closedTabs", 0)
+                logger.info(
+                    "Stopped browser context '%s': closed %d tabs",
+                    profile_name,
+                    closed_tabs,
+                )
+
+            log_context_event(
+                "stop", profile_name, group_id=group_id, details={"closed_tabs": closed_tabs}
+            )
+
+            result = {
+                "ok": True,
+                "status": "stopped",
+                "profile": profile_name,
+                "closedTabs": closed_tabs,
+            }
+            log_tool_call(
+                "browser_stop",
+                params,
+                result=result,
+                duration_ms=(time.perf_counter() - start) * 1000,
+            )
+            return result
+        except Exception as e:
+            logger.exception("Failed to stop browser context")
+            result = {"ok": False, "error": str(e)}
+            log_tool_call(
+                "browser_stop", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
+            return result

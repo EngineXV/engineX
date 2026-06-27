@@ -30,19 +30,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         api.getConfig(),
       ]);
       setAgents([...discover.templates, ...discover.exports]);
-      const rawSupervisors = discover.supervisors?.length
-        ? discover.supervisors
-        : (discover as { queens?: typeof discover.supervisors }).queens || [];
-
       setSupervisors(
-        rawSupervisors
-          .filter((entry) => entry.node_count > 0 || entry.supervisor_name || entry.supervisor)
-          .map((entry) => ({
-            ...entry,
-            supervisor: entry.supervisor ?? (entry as { queen_bee?: boolean }).queen_bee,
-            supervisor_name:
-              entry.supervisor_name ?? (entry as { queen_name?: string }).queen_name ?? entry.name,
-          })),
+        (discover.supervisors || [])
+          .filter((entry) => entry.node_count > 0 || entry.supervisor_name || entry.supervisor),
       );
       setSessions(sessionList.sessions);
       setModel(config.model);

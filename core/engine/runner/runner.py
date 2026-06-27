@@ -72,7 +72,7 @@ class AgentRunner:
         self._list_accounts = list_accounts
         self._credential_store = credential_store
         self.supervised_worker_path: Path | None = None
-        self._queen_supervisor = None
+        self._session_supervisor = None
         self._metadata: Any | None = None
 
         # Set up storage
@@ -260,6 +260,11 @@ class AgentRunner:
             if swp is not None:
                 runner.supervised_worker_path = Path(swp).resolve()
             runner._metadata = agent_metadata
+            skills = getattr(agent_metadata, "skills", None)
+            if skills:
+                from engine.skills.context import set_skill_filter
+
+                set_skill_filter(list(skills))
             return runner
 
         # Fallback: load from agent.json (legacy JSON-based agents)
@@ -440,21 +445,28 @@ class AgentRunner:
             if self._llm is None:
                 has_llm_nodes = any(node.node_type == "event_loop" for node in self.graph.nodes)
                 if has_llm_nodes:
-                    from engine.credentials.models import CredentialError
+                    if self.skip_credential_validation:
+                        from engine.llm.mock import MockLLMProvider
 
-                    if self._is_local_model(self.model):
-                        raise CredentialError(
-                            f"Failed to initialize LLM for local model '{self.model}'. "
-                            f"Ensure your local LLM server is running "
-                            f"(e.g. 'ollama serve' for Ollama)."
+                        self._llm = MockLLMProvider(model=self.model)
+                    else:
+                        from engine.credentials.models import CredentialError
+
+                        if self._is_local_model(self.model):
+                            raise CredentialError(
+                                f"Failed to initialize LLM for local model '{self.model}'. "
+                                f"Ensure your local LLM server is running "
+                                f"(e.g. 'ollama serve' for Ollama)."
+                            )
+                        api_key_env = self._get_api_key_env_var(self.model)
+                        hint = (
+                            f"Set it with: export {api_key_env}=your-api-key"
+                            if api_key_env
+                            else "Configure an API key for your LLM provider."
                         )
-                    api_key_env = self._get_api_key_env_var(self.model)
-                    hint = (
-                        f"Set it with: export {api_key_env}=your-api-key"
-                        if api_key_env
-                        else "Configure an API key for your LLM provider."
-                    )
-                    raise CredentialError(f"LLM API key not found for model '{self.model}'. {hint}")
+                        raise CredentialError(
+                            f"LLM API key not found for model '{self.model}'. {hint}"
+                        )
 
         # For event_loop nodes: auto-register file tools MCP server, then expand tool lists
         has_loop_nodes = any(node.node_type == "event_loop" for node in self.graph.nodes)
@@ -477,6 +489,14 @@ class AgentRunner:
                         for tool_name in sorted(files_tool_names):
                             if tool_name not in existing:
                                 node.tools.append(tool_name)
+
+            from engine.skills.runtime_tools import register_skill_tools
+
+            _repo_root = Path(__file__).resolve().parent.parent.parent.parent
+            register_skill_tools(self._tool_registry, repo_root=_repo_root)
+            for node in self.graph.nodes:
+                if node.node_type == "event_loop" and "load_skill" not in node.tools:
+                    node.tools.append("load_skill")
 
         # Get tools for runtime
         tools = list(self._tool_registry.get_tools().values())
@@ -638,7 +658,7 @@ class AgentRunner:
         )
 
         # Handle runtime_config - only pass through if it's actually an AgentRuntimeConfig.
-        # Agents may export a RuntimeConfig (LLM settings) or queen-generated custom classes
+        # Agents may export a RuntimeConfig (LLM settings) or supervisor-generated custom classes
         # that would crash AgentRuntime if passed through.
         runtime_config = None
         if self.runtime_config is not None:
@@ -913,15 +933,8 @@ class AgentRunner:
             has_tools_module=(self.agent_path / "tools.py").exists(),
             async_entry_points=async_entry_points_info,
             is_multi_entry_point=self._uses_async_entry_points,
-            supervisor=bool(
-                getattr(self._metadata, "supervisor", False)
-                or getattr(self._metadata, "queen_bee", False)
-            ),
-            supervisor_name=(
-                getattr(self._metadata, "supervisor_name", "")
-                or getattr(self._metadata, "queen_name", "")
-                or ""
-            ),
+            supervisor=bool(getattr(self._metadata, "supervisor", False)),
+            supervisor_name=getattr(self._metadata, "supervisor_name", "") or "",
             department=getattr(self._metadata, "department", "") or "",
             role_title=getattr(self._metadata, "role_title", "") or "",
         )
@@ -929,11 +942,7 @@ class AgentRunner:
     def _display_name(self) -> str:
         meta = self._metadata
         if meta is not None:
-            supervisor_name = (
-                getattr(meta, "supervisor_name", "")
-                or getattr(meta, "queen_name", "")
-                or ""
-            )
+            supervisor_name = getattr(meta, "supervisor_name", "") or ""
             if supervisor_name:
                 return supervisor_name
             name = getattr(meta, "name", "") or ""

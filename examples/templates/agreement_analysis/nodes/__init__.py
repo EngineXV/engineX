@@ -64,6 +64,10 @@ Rules:
 - Call set_output for each field above.
 """,
     tools=[],
+    success_criteria=(
+        "All required fields are extracted with plausible values from the source text. "
+        "Use 'Not found' only when absent. confidence reflects extraction quality."
+    ),
 )
 
 human_review_node = NodeSpec(

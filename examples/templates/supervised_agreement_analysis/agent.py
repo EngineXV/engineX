@@ -1,20 +1,21 @@
-"""Supervisor supervisor — primary interface for supervised worker sessions."""
+"""Supervisor agent — primary interface for supervised worker sessions."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 from engine.graph import Constraint, EdgeCondition, EdgeSpec, Goal, SuccessCriterion
+from engine.graph.constants import SUPERVISOR_NODE_ID
 from engine.graph.edge import GraphSpec
 
 from .config import metadata
-from .nodes import queen_node
+from .nodes import supervisor_node
 
 # Worker graph loaded at session startup (Agreement Analysis pipeline).
 supervised_worker_path = Path(__file__).resolve().parent.parent / "agreement_analysis"
 
-queen_goal = Goal(
-    id="queen-supervisor",
+supervisor_goal = Goal(
+    id="agreement-supervisor",
     name="Agreement Supervisor",
     description="Primary operator interface; delegates and monitors the agreement analysis worker.",
     success_criteria=[
@@ -43,21 +44,20 @@ queen_goal = Goal(
     ],
 )
 
-# Supervisor node references lifecycle tools (registered at session setup).
-nodes = [queen_node]
+nodes = [supervisor_node]
 
 edges = [
     EdgeSpec(
-        id="queen-loop",
-        source="queen",
-        target="queen",
+        id="supervisor-loop",
+        source=SUPERVISOR_NODE_ID,
+        target=SUPERVISOR_NODE_ID,
         condition=EdgeCondition.ALWAYS,
         priority=1,
     ),
 ]
 
-entry_node = "queen"
-entry_points = {"queen": "queen"}
+entry_node = SUPERVISOR_NODE_ID
+entry_points = {SUPERVISOR_NODE_ID: SUPERVISOR_NODE_ID}
 terminal_nodes = []
 pause_nodes = []
 loop_config = {
@@ -66,11 +66,11 @@ loop_config = {
     "max_history_tokens": 48000,
 }
 
-goal = queen_goal
+goal = supervisor_goal
 
 graph = GraphSpec(
-    id="queen-graph",
-    goal_id=queen_goal.id,
+    id="supervisor-graph",
+    goal_id=supervisor_goal.id,
     version=metadata.version,
     entry_node=entry_node,
     entry_points=entry_points,

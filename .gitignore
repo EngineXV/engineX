@@ -80,6 +80,7 @@ tmp/
 temp/
 exports/*
 agent_logs/
+# Local-only documentation (not published to the public repo)
 docs/
 .agent-builder-sessions/*
 screenshots/*

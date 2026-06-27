@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import ChartBlock, { type ChartBlockProps } from "./ChartBlock";
 import { IconSend } from "./Icons";
 
 export interface ChatLine {
@@ -6,6 +7,7 @@ export interface ChatLine {
   role: "user" | "agent" | "system";
   text: string;
   timestamp?: string;
+  chart?: ChartBlockProps;
 }
 
 interface ChatPanelProps {
@@ -61,7 +63,10 @@ export default function ChatPanel({
               ) : line.role === "system" ? (
                 <div className="chat-system">{line.text}</div>
               ) : (
-                <div className="chat-bubble agent">{line.text}</div>
+                <div className="chat-bubble agent">
+                  {line.chart ? <ChartBlock {...line.chart} /> : null}
+                  {line.text}
+                </div>
               )}
               {line.timestamp && <div className="chat-time">{formatTime(line.timestamp)}</div>}
             </div>

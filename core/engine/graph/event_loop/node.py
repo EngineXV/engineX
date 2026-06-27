@@ -155,12 +155,21 @@ class EventLoopNode(NodeProtocol):
                 # understands the session history, not just the node directive.
                 from engine.graph.prompt_composer import compose_system_prompt
 
+                _repo_root = Path(__file__).resolve().parents[4]
+                from engine.skills.context import get_skill_filter
+                from engine.skills.discovery import build_skills_prompt_section
+
+                _skills_section = build_skills_prompt_section(
+                    _repo_root, skill_names=get_skill_filter()
+                )
                 _current_prompt = compose_system_prompt(
                     identity_prompt=ctx.identity_prompt or None,
                     focus_prompt=ctx.node_spec.system_prompt,
                     narrative=ctx.narrative or None,
                     accounts_prompt=ctx.accounts_prompt or None,
                 )
+                if _skills_section:
+                    _current_prompt = f"{_current_prompt}\n\n{_skills_section}"
                 if conversation.system_prompt != _current_prompt:
                     conversation.update_system_prompt(_current_prompt)
                     logger.info("Refreshed system prompt for restored conversation")
@@ -175,6 +184,16 @@ class EventLoopNode(NodeProtocol):
                 # Append connected accounts info if available
                 if ctx.accounts_prompt:
                     system_prompt = f"{system_prompt}\n\n{ctx.accounts_prompt}"
+
+                _repo_root = Path(__file__).resolve().parents[4]
+                from engine.skills.context import get_skill_filter
+                from engine.skills.discovery import build_skills_prompt_section
+
+                _skills_section = build_skills_prompt_section(
+                    _repo_root, skill_names=get_skill_filter()
+                )
+                if _skills_section:
+                    system_prompt = f"{system_prompt}\n\n{_skills_section}"
 
                 # Inject agent working memory (adapt.md).
                 # If it doesn't exist yet, seed it with available context.
@@ -1265,12 +1284,22 @@ class EventLoopNode(NodeProtocol):
         self._input_ready.clear()
 
         if self._event_bus:
+            from engine.graph.hitl_evidence import build_hitl_payload
+
+            evidence, audit_card = build_hitl_payload(
+                node_id=ctx.node_id,
+                node_spec=ctx.node_spec,
+                memory=ctx.memory,
+                prompt=prompt,
+            )
             await self._event_bus.emit_client_input_requested(
                 stream_id=ctx.stream_id or ctx.node_id,
                 node_id=ctx.node_id,
                 prompt=prompt,
                 execution_id=ctx.execution_id or "",
                 options=options,
+                evidence=evidence,
+                audit_card=audit_card,
             )
 
         self._awaiting_input = True

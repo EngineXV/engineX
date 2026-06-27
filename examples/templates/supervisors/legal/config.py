@@ -20,6 +20,7 @@ class AgentMetadata:
     department: str = "Legal"
     role_title: str = "Head of Legal"
     domain_focus: str = "NDAs, legal contracts, and compliance agreements"
+    worker_template: str = "agreement_analysis"
 
 
 metadata = AgentMetadata()

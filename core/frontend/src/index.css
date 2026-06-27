@@ -1969,3 +1969,227 @@ code {
   width: 100%;
   margin-bottom: 0.5rem;
 }
+
+.session-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0 1.25rem 0.75rem;
+}
+
+.hitl-review-panel {
+  margin: 0 0 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  background: var(--primary-soft);
+}
+
+.hitl-review-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.hitl-review-prompt {
+  margin: 0 0 0.65rem;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.hitl-review-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.hitl-review-node {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.hitl-evidence-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.hitl-evidence-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 0.5rem 0.65rem;
+}
+
+.hitl-evidence-card header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.hitl-evidence-card pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.hitl-audit-card {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.82rem;
+}
+
+.hitl-audit-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.hitl-attachments ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+}
+
+.checkpoint-panel {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.checkpoint-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.checkpoint-select-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.5rem;
+}
+
+.checkpoint-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.checkpoint-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+}
+
+.checkpoint-item span,
+.checkpoint-item time {
+  display: block;
+  color: var(--text-muted);
+}
+
+.btn-small {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.ops-page {
+  padding: 0 1.25rem 1.5rem;
+}
+
+.ops-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.ops-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.ops-card-wide {
+  grid-column: 1 / -1;
+}
+
+.ops-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.ops-metrics dt {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ops-metrics dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ops-alert-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ops-alert {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.65rem;
+}
+
+.ops-alert-high {
+  border-color: #ef4444;
+}
+
+.ops-table-wrap {
+  overflow: auto;
+}
+
+.ops-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.ops-table th,
+.ops-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.45rem 0.35rem;
+  text-align: left;
+}
+
+.ops-link {
+  display: inline-block;
+  margin-top: 0.65rem;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 960px) {
+  .ops-grid {
+    grid-template-columns: 1fr;
+  }
+}

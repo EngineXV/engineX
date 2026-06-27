@@ -26,9 +26,17 @@ def get_engine_config() -> dict[str, Any]:
         return {}
 
 
+_DEFAULT_PIPELINE_STAGES: list[dict[str, Any]] = [
+    {"type": "input_validation", "order": 100, "config": {}},
+    {"type": "rate_limit", "order": 200, "config": {"max_requests_per_minute": 120}},
+]
+
+
 def get_pipeline_stages_config() -> list[dict[str, Any]]:
     """Return declarative pipeline stage specs from configuration."""
     pipeline = get_engine_config().get("pipeline", {})
+    if "stages" not in pipeline:
+        return list(_DEFAULT_PIPELINE_STAGES)
     stages = pipeline.get("stages", [])
     return stages if isinstance(stages, list) else []
 

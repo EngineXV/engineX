@@ -56,6 +56,7 @@ class Session:
     input_graph_id: str | None = None
     supervised: bool = False
     supervisor_mode: str = "staging"
+    last_execution_id: str | None = None
     _subscription_id: str | None = None
 
     @property
@@ -163,6 +164,7 @@ class Session:
 
             if et == EventType.EXECUTION_STARTED:
                 self.current_exec_id = event.execution_id
+                self.last_execution_id = event.execution_id
                 if event.node_id:
                     self.active_node_id = event.node_id
             elif et in (EventType.EXECUTION_COMPLETED, EventType.EXECUTION_FAILED):
@@ -294,7 +296,47 @@ class SessionManager:
 
         session.attach_event_tracking()
         self._sessions[sid] = session
+        try:
+            from engine.observability.metrics import inc, observe_session_count
+
+            inc("engine_sessions_created_total")
+            observe_session_count(len(self._sessions))
+        except ImportError:
+            pass
         return session
+
+    async def pause_session(self, session: Session) -> dict[str, Any]:
+        runtime = session.runtime
+        if runtime is None:
+            raise RuntimeError("Agent runtime is not available")
+        paused = await runtime.cancel_all_tasks_async()
+        session.current_exec_id = None
+        session.active_node_id = None
+        return {"paused": paused, "session_id": session.id}
+
+    async def resume_session(self, session: Session) -> dict[str, Any]:
+        runtime = session.runtime
+        if runtime is None:
+            raise RuntimeError("Agent runtime is not available")
+        if session.current_exec_id is not None:
+            raise ExecutionAlreadyRunningError("Agent is already running")
+
+        entry_points = runtime.get_entry_points()
+        manual_eps = [ep for ep in entry_points if ep.trigger_type in ("manual", "api")]
+        if not manual_eps:
+            manual_eps = entry_points
+        if not manual_eps:
+            raise RuntimeError("No entry points available")
+
+        entry_point = manual_eps[0]
+        execution_id = await runtime.trigger(entry_point_id=entry_point.id, input_data={})
+        session.current_exec_id = execution_id
+        return {
+            "resumed": True,
+            "session_id": session.id,
+            "execution_id": execution_id,
+            "entry_point_id": entry_point.id,
+        }
 
     async def delete_session(self, session_id: str) -> bool:
         session = self._sessions.pop(session_id, None)
@@ -305,6 +347,12 @@ class SessionManager:
             await session.runner.cleanup_async()
         except Exception as exc:  # noqa: BLE001
             logger.warning("Session cleanup failed for %s: %s", session_id, exc)
+        try:
+            from engine.observability.metrics import observe_session_count
+
+            observe_session_count(len(self._sessions))
+        except ImportError:
+            pass
         return True
 
     async def shutdown_all(self) -> None:

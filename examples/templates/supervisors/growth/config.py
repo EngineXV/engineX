@@ -20,6 +20,7 @@ class AgentMetadata:
     department: str = "Growth"
     role_title: str = "Head of Growth"
     domain_focus: str = "partnership agreements, channel deals, and growth contracts"
+    worker_template: str = "meeting_scheduler"
 
 
 metadata = AgentMetadata()

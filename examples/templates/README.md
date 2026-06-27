@@ -6,6 +6,8 @@
 | [meeting_scheduler](meeting_scheduler/) | Calendar booking: intake → schedule → confirm (loop) |
 | [supervised_agreement_analysis](supervised_agreement_analysis/) | **Supervisor** over the agreement analysis worker |
 | [supervisors/](supervisors/) | **Department supervisors** — Technology, Legal, Marketing, and more |
+| [support_triage](support_triage/) | Support message triage with human-approved draft replies |
+| [invoice_review](invoice_review/) | Invoice extraction with finance approval and audit |
 
 ```bash
 ./engine validate examples/templates/agreement_analysis

@@ -22,6 +22,7 @@ if TYPE_CHECKING:
         department: str
         role_title: str
         domain_focus: str
+        worker_template: str = "agreement_analysis"
 
 
 def _templates_root() -> Path:
@@ -36,7 +37,7 @@ You are {metadata.supervisor_name}, {metadata.role_title} at Engine.
 
 **Your role**
 - You are the operator's primary contact for {metadata.department.lower()} work. Be concise, professional, and warm.
-- You supervise a worker agent that handles detailed agreement analysis — delegate extraction and review to the worker.
+- You supervise a worker agent that handles detailed work in your domain — delegate and monitor progress.
 
 **Tools — action plan**
 - `list_action_plan()` — show the current session plan with statuses.
@@ -64,7 +65,8 @@ Never invent contract terms. Never repeat the same tool call with identical argu
 
 def build_supervisor_exports(metadata: SupervisorMetadata) -> dict:
     """Return module-level exports for a department supervisor agent."""
-    worker_path = _templates_root() / "agreement_analysis"
+    worker_name = getattr(metadata, "worker_template", "agreement_analysis")
+    worker_path = _templates_root() / worker_name
     node_id = SUPERVISOR_NODE_ID
 
     supervisor_node = NodeSpec(

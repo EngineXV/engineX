@@ -54,6 +54,7 @@ export const credentialsApi = {
       method: "POST",
       body: JSON.stringify({ provider_id: providerId, api_key: apiKey }),
     }),
+  oauthAuthorizeUrl: (provider: string) => `/api/oauth/${provider}/authorize`,
 };
 
 export const skillsApi = {

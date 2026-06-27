@@ -1,6 +1,6 @@
 """Runtime configuration for Agreement Analysis agent"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from engine.config import RuntimeConfig
 
@@ -18,6 +18,9 @@ class AgentMetadata:
     intro_message: str = (
         "Paste agreement text or provide a file path. I'll extract key terms "
         "for your approval before finalizing."
+    )
+    skills: list[str] = field(
+        default_factory=lambda: ["agreement-review"],
     )
 
 

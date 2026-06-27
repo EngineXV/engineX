@@ -260,6 +260,11 @@ class AgentRunner:
             if swp is not None:
                 runner.supervised_worker_path = Path(swp).resolve()
             runner._metadata = agent_metadata
+            skills = getattr(agent_metadata, "skills", None)
+            if skills:
+                from engine.skills.context import set_skill_filter
+
+                set_skill_filter(list(skills))
             return runner
 
         # Fallback: load from agent.json (legacy JSON-based agents)
@@ -484,6 +489,14 @@ class AgentRunner:
                         for tool_name in sorted(files_tool_names):
                             if tool_name not in existing:
                                 node.tools.append(tool_name)
+
+            from engine.skills.runtime_tools import register_skill_tools
+
+            _repo_root = Path(__file__).resolve().parent.parent.parent.parent
+            register_skill_tools(self._tool_registry, repo_root=_repo_root)
+            for node in self.graph.nodes:
+                if node.node_type == "event_loop" and "load_skill" not in node.tools:
+                    node.tools.append("load_skill")
 
         # Get tools for runtime
         tools = list(self._tool_registry.get_tools().values())

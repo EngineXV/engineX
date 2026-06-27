@@ -4,6 +4,8 @@ import ChatPanel, { type ChatLine } from "../components/ChatPanel";
 import ChartBlock, { parseChartPayload } from "../components/ChartBlock";
 import DashboardHeader from "../components/DashboardHeader";
 import GraphView from "../components/GraphView";
+import CheckpointPanel from "../components/CheckpointPanel";
+import HitlReviewPanel, { type HitlAuditCard, type HitlEvidence } from "../components/HitlReviewPanel";
 import TaskListPanel from "../components/TaskListPanel";
 import { useDashboard } from "../context/DashboardContext";
 import { useSSE } from "../hooks/useSSE";
@@ -47,6 +49,10 @@ export default function SessionPage() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [taskListId, setTaskListId] = useState<string | null>(null);
   const [tasksLoading, setTasksLoading] = useState(false);
+  const [hitlPrompt, setHitlPrompt] = useState<string | null>(null);
+  const [hitlEvidence, setHitlEvidence] = useState<HitlEvidence[]>([]);
+  const [hitlAudit, setHitlAudit] = useState<HitlAuditCard | undefined>(undefined);
+  const [sessionPaused, setSessionPaused] = useState(false);
   const streamNodeRef = useRef<string | null>(null);
   const lineCounter = useRef(0);
 
@@ -106,6 +112,18 @@ export default function SessionPage() {
         void refresh();
       }
       if (event.type === "client_input_requested") {
+        setWaitingForInput(true);
+        const prompt = (event.data?.prompt ?? event.data?.message ?? event.data?.question) as
+          | string
+          | undefined;
+        if (prompt) setHitlPrompt(prompt);
+        const evidence = event.data?.evidence;
+        if (Array.isArray(evidence)) setHitlEvidence(evidence as HitlEvidence[]);
+        const audit = event.data?.audit_card;
+        if (audit && typeof audit === "object") setHitlAudit(audit as HitlAuditCard);
+      }
+      if (event.type === "execution_paused") {
+        setSessionPaused(true);
         setWaitingForInput(true);
       }
 
@@ -186,9 +204,8 @@ export default function SessionPage() {
     return map;
   }, [graphSession, activeNode, doneNodes]);
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || !sessionId) return;
+  const sendText = async (text: string) => {
+    if (!text.trim() || !sessionId) return;
     setError(null);
     setBusy(true);
     lineCounter.current += 1;
@@ -197,6 +214,10 @@ export default function SessionPage() {
       { id: `u-${lineCounter.current}`, role: "user", text, timestamp: new Date().toISOString() },
     ]);
     setInput("");
+    setHitlPrompt(null);
+    setHitlEvidence([]);
+    setHitlAudit(undefined);
+    setWaitingForInput(false);
     try {
       await api.sendMessage(sessionId, text);
     } catch (e) {
@@ -206,13 +227,50 @@ export default function SessionPage() {
     }
   };
 
+  const send = async () => {
+    await sendText(input);
+  };
+
   return (
     <div className="session-page">
       <DashboardHeader session={session} model={model} connected={connected} />
       {error && <div className="error-banner session-error">{error}</div>}
 
+      <div className="session-controls">
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={!sessionId || busy}
+          onClick={() => void api.pauseSession(sessionId).then(() => setSessionPaused(true))}
+        >
+          Pause
+        </button>
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={!sessionId || busy}
+          onClick={() =>
+            void api.resumeSession(sessionId).then(() => {
+              setSessionPaused(false);
+              setWaitingForInput(false);
+            })
+          }
+        >
+          Resume
+        </button>
+        {sessionPaused ? <span className="status-chip">Paused</span> : null}
+      </div>
+
       <div className="session-workspace">
         <section className="session-chat">
+          <HitlReviewPanel
+            visible={waitingForInput}
+            prompt={hitlPrompt || undefined}
+            evidence={hitlEvidence}
+            auditCard={hitlAudit}
+            onApprove={() => void sendText("Approved — please continue.")}
+            onReject={() => void sendText("Please revise based on my feedback in chat.")}
+          />
           <ChatPanel
             lines={lines}
             streamingText={streamingText}
@@ -241,6 +299,7 @@ export default function SessionPage() {
           {session?.supervised && tasks.length === 0 && !tasksLoading ? (
             <p className="task-panel-empty">Supervisor plan will appear when the session starts.</p>
           ) : null}
+          <CheckpointPanel sessionId={sessionId} />
         </aside>
       </div>
     </div>

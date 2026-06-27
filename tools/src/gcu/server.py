@@ -81,6 +81,12 @@ async def _lifespan(server: FastMCP) -> AsyncIterator[dict]:
 
     logger.info("Server shutting down, cleaning up browser sessions...")
     await shutdown_all_browsers()
+    try:
+        from gcu.browser.playwright_backend import shutdown_playwright
+
+        await shutdown_playwright()
+    except Exception:
+        pass
     await bridge.stop()
 
 

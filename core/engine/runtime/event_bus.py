@@ -652,11 +652,17 @@ class EventBus:
         prompt: str = "",
         execution_id: str | None = None,
         options: list[str] | None = None,
+        evidence: list[dict[str, Any]] | None = None,
+        audit_card: dict[str, Any] | None = None,
     ) -> None:
         """Emit client input requested event (client_facing=True nodes)"""
         data: dict[str, Any] = {"prompt": prompt}
         if options:
             data["options"] = options
+        if evidence:
+            data["evidence"] = evidence
+        if audit_card:
+            data["audit_card"] = audit_card
         await self.publish(
             AgentEvent(
                 type=EventType.CLIENT_INPUT_REQUESTED,

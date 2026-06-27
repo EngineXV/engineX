@@ -21,6 +21,7 @@ class AgentMetadata:
     department: str = "Technology"
     role_title: str = "Head of Technology"
     domain_focus: str = "vendor agreements, SaaS contracts, and technology partnerships"
+    worker_template: str = "log_monitor"
 
 
 metadata = AgentMetadata()

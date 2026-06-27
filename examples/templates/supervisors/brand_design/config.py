@@ -20,6 +20,7 @@ class AgentMetadata:
     department: str = "Brand & Design"
     role_title: str = "Head of Brand & Design"
     domain_focus: str = "creative agreements, licensing, and design contracts"
+    worker_template: str = "meeting_scheduler"
 
 
 metadata = AgentMetadata()

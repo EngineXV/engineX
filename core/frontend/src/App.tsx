@@ -5,6 +5,7 @@ import SessionPage from "./pages/SessionPage";
 import CredentialsPage from "./pages/CredentialsPage";
 import SkillsPage from "./pages/SkillsPage";
 import OrgChartPage from "./pages/OrgChartPage";
+import OpsPage from "./pages/OpsPage";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/" element={<WelcomePage />} />
         <Route path="/session/:sessionId" element={<SessionPage />} />
         <Route path="/org-chart" element={<OrgChartPage />} />
+        <Route path="/ops" element={<OpsPage />} />
         <Route path="/credentials" element={<CredentialsPage />} />
         <Route path="/skills" element={<SkillsPage />} />
         <Route path="/agent/:sessionId" element={<LegacyAgentRedirect />} />

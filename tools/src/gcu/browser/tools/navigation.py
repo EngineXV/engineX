@@ -55,13 +55,15 @@ def register_navigation_tools(mcp: FastMCP) -> None:
         params = {"url": url, "tab_id": tab_id, "profile": profile, "wait_until": wait_until}
 
         bridge = get_bridge()
-        if not bridge or not bridge.is_connected:
+        from ..automation import backend_mode
+
+        if backend_mode() == "none":
             result = {"ok": False, "error": "Browser extension not connected"}
             log_tool_call("browser_navigate", params, result=result)
             return result
 
         try:
-            _, ctx, _ = await _ensure_context(bridge, profile)
+            profile_name, ctx, _ = await _ensure_context(bridge, profile)
         except Exception as e:
             result = {"ok": False, "error": str(e)}
             log_tool_call(
@@ -79,12 +81,18 @@ def register_navigation_tools(mcp: FastMCP) -> None:
             return result
 
         try:
-            nav_result = await bridge.navigate(target_tab, url, wait_until=wait_until)
+            if ctx.get("backend") == "playwright":
+                from .. import playwright_backend as pw
+
+                nav_result = await pw.navigate(profile_name, url, wait_until=wait_until)
+            else:
+                nav_result = await bridge.navigate(target_tab, url, wait_until=wait_until)
             result = {
                 "ok": True,
                 "tabId": target_tab,
                 "url": nav_result.get("url"),
                 "title": nav_result.get("title"),
+                "backend": ctx.get("backend", "extension"),
             }
             log_tool_call(
                 "browser_navigate",

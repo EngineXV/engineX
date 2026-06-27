@@ -60,40 +60,60 @@ async def _ensure_context(
 ) -> tuple[str, dict[str, Any], bool]:
     """Return ``(profile_name, ctx, created)`` for ``profile``.
 
-    Lazy-creates the browser context (tab group + seed tab) the first time
-    a profile is used so URL-taking tools (``browser_open`` /
-    ``browser_navigate``) can be the agent's single cold-start entry
-    point — no separate "start" tool to remember.
-
-    Caller must verify ``bridge`` is connected first; any failure in
-    ``bridge.create_context`` propagates so the caller's existing
-    try/except converts it to an ``{"ok": False, ...}`` result.
+    Uses the Chrome extension when connected; otherwise falls back to
+    headless Playwright when the optional browser extra is installed.
     """
     profile_name = _resolve_profile(profile)
     existing = _contexts.get(profile_name)
     if existing is not None:
         return profile_name, existing, False
 
-    result = await bridge.create_context(profile_name)
-    group_id = result.get("groupId")
-    tab_id = result.get("tabId")
+    if bridge and bridge.is_connected:
+        result = await bridge.create_context(profile_name)
+        group_id = result.get("groupId")
+        tab_id = result.get("tabId")
 
-    ctx: dict[str, Any] = {
-        "groupId": group_id,
-        "activeTabId": tab_id,
-        "_seedTabId": tab_id,  # reused by first browser_open call
-        "tabs": {tab_id} if tab_id is not None else set(),
+        ctx: dict[str, Any] = {
+            "groupId": group_id,
+            "activeTabId": tab_id,
+            "_seedTabId": tab_id,
+            "tabs": {tab_id} if tab_id is not None else set(),
+            "backend": "extension",
+        }
+        _contexts[profile_name] = ctx
+
+        logger.info(
+            "Started browser context '%s': groupId=%s, tabId=%s",
+            profile_name,
+            group_id,
+            tab_id,
+        )
+        log_context_event("start", profile_name, group_id=group_id, tab_id=tab_id)
+        return profile_name, ctx, True
+
+    from . import playwright_backend as pw
+
+    if not pw.playwright_available():
+        raise RuntimeError(
+            "Browser extension not connected and Playwright is not installed. "
+            "Load tools/browser-extension in Chrome or run: uv sync --extra browser"
+        )
+
+    result = await pw.create_context(profile_name)
+    pw_ctx = pw.get_context(profile_name)
+    if pw_ctx is None:
+        raise RuntimeError("Failed to start Playwright browser context")
+
+    ctx = {
+        "groupId": result.get("groupId"),
+        "activeTabId": result.get("tabId"),
+        "_seedTabId": result.get("tabId"),
+        "tabs": pw_ctx.get("tabs", set()),
+        "backend": "playwright",
     }
     _contexts[profile_name] = ctx
-
-    logger.info(
-        "Started browser context '%s': groupId=%s, tabId=%s",
-        profile_name,
-        group_id,
-        tab_id,
-    )
-    log_context_event("start", profile_name, group_id=group_id, tab_id=tab_id)
-
+    logger.info("Started Playwright fallback context '%s'", profile_name)
+    log_context_event("start", profile_name, group_id=profile_name, tab_id=result.get("tabId"))
     return profile_name, ctx, True
 
 
@@ -141,7 +161,21 @@ def register_lifecycle_tools(mcp: FastMCP) -> None:
             return {
                 "ok": True,
                 "connected": True,
+                "backend": "extension",
                 "status": "Extension is connected and ready. Call browser_open(url) to begin.",
+            }
+
+        from ..automation import backend_mode
+
+        if backend_mode() == "playwright":
+            return {
+                "ok": True,
+                "connected": False,
+                "backend": "playwright",
+                "status": (
+                    "Extension not connected — Playwright headless fallback is available. "
+                    "Call browser_open(url) to begin."
+                ),
             }
 
         return {
@@ -161,8 +195,11 @@ def register_lifecycle_tools(mcp: FastMCP) -> None:
             "extensionPath": ext_path,
             "extensionPathExists": ext_exists,
             "note": (
-                "The extension connects via WebSocket on ws://127.0.0.1:9229/beeline. "
+                "The extension connects via WebSocket on ws://127.0.0.1:9229. "
                 "Make sure Chrome is running before loading the extension."
+            ),
+            "playwrightFallback": (
+                "Optional: uv sync --extra browser && uv run playwright install chromium"
             ),
         }
 
@@ -181,64 +218,55 @@ def register_lifecycle_tools(mcp: FastMCP) -> None:
         params = {"profile": profile}
 
         bridge = get_bridge()
-        if not bridge or not bridge.is_connected:
+        from ..automation import backend_mode, extension_connected
+
+        mode = backend_mode()
+        if mode == "none":
             result = {
                 "ok": False,
+                "connected": False,
                 "error": (
-                    "Browser extension not connected. "
+                    "Browser extension not connected and Playwright is not installed. "
                     "Call browser_setup for installation instructions."
                 ),
-                "connected": False,
             }
             log_tool_call("browser_status", params, result=result)
             return result
 
-        profile_name = _resolve_profile(profile)
-        ctx = _contexts.get(profile_name)
+        try:
+            _, ctx, _ = await _ensure_context(bridge, profile)
+        except Exception as e:
+            result = {"ok": False, "error": str(e)}
+            log_tool_call("browser_status", params, error=e)
+            return result
 
-        if ctx:
+        profile_name = _resolve_profile(profile)
+        result = {
+            "ok": True,
+            "connected": extension_connected(),
+            "backend": ctx.get("backend", mode),
+            "profile": profile_name,
+            "activeTabId": ctx.get("activeTabId"),
+            "tabCount": len(ctx.get("tabs") or []),
+        }
+
+        if ctx.get("backend") == "extension" and bridge and bridge.is_connected:
             try:
                 tabs_result = await bridge.list_tabs(ctx.get("groupId"))
                 tabs = tabs_result.get("tabs", [])
-                result = {
-                    "ok": True,
-                    "connected": True,
-                    "profile": profile_name,
-                    "running": True,
-                    "groupId": ctx.get("groupId"),
-                    "activeTab": ctx.get("activeTabId"),
-                    "tabs": len(tabs),
-                }
-                log_tool_call(
-                    "browser_status",
-                    params,
-                    result=result,
-                    duration_ms=(time.perf_counter() - start) * 1000,
+                result.update(
+                    {
+                        "running": True,
+                        "groupId": ctx.get("groupId"),
+                        "activeTab": ctx.get("activeTabId"),
+                        "tabs": len(tabs),
+                    }
                 )
-                return result
             except Exception as e:
-                result = {
-                    "ok": True,
-                    "connected": True,
-                    "profile": profile_name,
-                    "running": False,
-                    "error": str(e),
-                }
-                log_tool_call(
-                    "browser_status",
-                    params,
-                    result=result,
-                    duration_ms=(time.perf_counter() - start) * 1000,
-                )
-                return result
+                result.update({"running": False, "error": str(e)})
+        else:
+            result.update({"running": True, "tabs": len(ctx.get("tabs") or [])})
 
-        result = {
-            "ok": True,
-            "connected": True,
-            "profile": profile_name,
-            "running": False,
-            "tabs": 0,
-        }
         log_tool_call(
             "browser_status",
             params,

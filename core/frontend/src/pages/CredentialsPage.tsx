@@ -130,6 +130,14 @@ export default function CredentialsPage() {
               </div>
               <div className="cred-meta">{spec.env_var}</div>
               <div className="cred-actions">
+                {spec.engine_oauth_supported && (
+                  <a
+                    className="btn-primary"
+                    href={credentialsApi.oauthAuthorizeUrl(spec.credential_name)}
+                  >
+                    Connect OAuth
+                  </a>
+                )}
                 {spec.direct_api_key_supported && (
                   <button type="button" className="btn-secondary" onClick={() => openEditor(spec)}>
                     {spec.available ? "Update" : "Add key"}

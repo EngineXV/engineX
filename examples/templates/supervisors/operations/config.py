@@ -20,6 +20,7 @@ class AgentMetadata:
     department: str = "Operations"
     role_title: str = "Head of Operations"
     domain_focus: str = "operational agreements, SLAs, and process contracts"
+    worker_template: str = "log_monitor"
 
 
 metadata = AgentMetadata()

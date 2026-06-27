@@ -124,6 +124,10 @@ export default function Sidebar() {
           <span className="nav-icon"><IconKey size={16} /></span>
           Credentials
         </NavLink>
+        <NavLink to="/ops" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
+          <span className="nav-icon"><IconEngine size={16} /></span>
+          Ops
+        </NavLink>
         <NavLink to="/skills" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
           <span className="nav-icon"><IconBook size={16} /></span>
           Skills

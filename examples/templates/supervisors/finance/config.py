@@ -20,6 +20,7 @@ class AgentMetadata:
     department: str = "Finance"
     role_title: str = "Head of Finance"
     domain_focus: str = "financial agreements, payment terms, and investment documents"
+    worker_template: str = "hourly_tracking"
 
 
 metadata = AgentMetadata()

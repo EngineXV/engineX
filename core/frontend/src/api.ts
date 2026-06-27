@@ -62,6 +62,41 @@ export interface ModelCatalogResponse {
   presets: Record<string, Record<string, unknown>>;
 }
 
+export interface CheckpointSummary {
+  checkpoint_id: string;
+  checkpoint_type: string;
+  created_at: string;
+  current_node: string;
+  description: string;
+  is_clean: boolean;
+}
+
+export interface ExecutionSummary {
+  execution_id: string;
+  checkpoint_count: number;
+  latest_checkpoint_id: string | null;
+}
+
+export interface OpsRun {
+  agent: string;
+  execution_id: string;
+  status: string;
+  started_at?: string;
+  ended_at?: string;
+  checkpoint_count: number;
+  latest_checkpoint_id?: string | null;
+  error?: string;
+}
+
+export interface OpsAlert {
+  severity: string;
+  title: string;
+  message: string;
+  timestamp?: string;
+  execution_id?: string;
+  agent?: string;
+}
+
 export interface AgentEvent {
   type: string;
   stream_id: string;
@@ -104,6 +139,29 @@ export const api = {
     }),
   deleteSession: (sessionId: string) =>
     request<{ stopped: boolean }>(`/sessions/${sessionId}`, { method: "DELETE" }),
+  pauseSession: (sessionId: string) =>
+    request<{ paused: boolean; session_id: string }>(`/sessions/${sessionId}/pause`, {
+      method: "POST",
+    }),
+  resumeSession: (sessionId: string) =>
+    request<{ resumed: boolean; session_id: string; execution_id?: string }>(
+      `/sessions/${sessionId}/resume`,
+      { method: "POST" },
+    ),
+  listExecutions: (sessionId: string) =>
+    request<{ executions: ExecutionSummary[] }>(`/sessions/${sessionId}/executions`),
+  listCheckpoints: (sessionId: string, executionId: string) =>
+    request<{ execution_id: string; checkpoints: CheckpointSummary[] }>(
+      `/sessions/${sessionId}/executions/${executionId}/checkpoints`,
+    ),
+  resumeFromCheckpoint: (sessionId: string, executionId: string, checkpointId: string) =>
+    request<{ resumed: boolean; session_id: string; execution_id: string; checkpoint_id: string }>(
+      `/sessions/${sessionId}/executions/${executionId}/checkpoints/${checkpointId}/resume`,
+      { method: "POST" },
+    ),
+  getOpsSummary: () => request<{ metrics: Record<string, unknown>; otel: Record<string, unknown> }>("/ops/summary"),
+  getOpsRuns: () => request<{ runs: OpsRun[]; count: number }>("/ops/runs"),
+  getOpsAlerts: () => request<{ alerts: OpsAlert[]; count: number }>("/ops/alerts"),
   getSessionTasks: (sessionId: string, supervisor = false) =>
     request<{ task_list_id: string | null; tasks: TaskRecord[] }>(
       `/sessions/${sessionId}/tasks${supervisor ? "?supervisor=true" : ""}`,

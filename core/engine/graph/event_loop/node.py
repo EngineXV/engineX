@@ -796,7 +796,9 @@ class EventLoopNode(NodeProtocol):
                     ctx.node_spec.client_facing
                     and not real_tool_results
                     and not outputs_set
-                    and (stream_id == "queen" or ctx.node_id == "queen" or ctx.node_spec.output_keys)
+                    and (
+                        stream_id == "queen" or ctx.node_id == "queen" or ctx.node_spec.output_keys
+                    )
                 ):
                     # Auto-block: queen (conversational) and client-facing
                     # workers with required outputs (e.g. intake) should wait

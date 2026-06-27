@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import json
-import os
 import tempfile
 from pathlib import Path
 
 import pytest
-
 from log_monitor.lib.alerts import send_slack_alert
 from log_monitor.lib.config import validate_production_config
 from log_monitor.lib.dedup_store import DedupStore

@@ -101,13 +101,12 @@ def discover_agents(repo_root: Path, loaded_paths: set[str] | None = None) -> di
         "supervisors": _scan_category(
             repo_root / "examples" / "templates" / "queens",
             "supervisors",
-),
+        ),
         "exports": _scan_category(repo_root / "exports", "exports"),
     }
     return {
         category: [
-            entry.to_dict(is_loaded=entry.path.as_posix() in loaded_paths)
-            for entry in entries
+            entry.to_dict(is_loaded=entry.path.as_posix() in loaded_paths) for entry in entries
         ]
         for category, entries in groups.items()
     }

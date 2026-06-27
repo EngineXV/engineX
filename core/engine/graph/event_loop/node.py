@@ -797,9 +797,7 @@ class EventLoopNode(NodeProtocol):
                     and not real_tool_results
                     and not outputs_set
                     and (
-                        stream_id == "queen"
-                        or ctx.node_id == "queen"
-                        or ctx.node_spec.output_keys
+                        stream_id == "queen" or ctx.node_id == "queen" or ctx.node_spec.output_keys
                     )
                 ):
                     # Auto-block: queen (conversational) and client-facing

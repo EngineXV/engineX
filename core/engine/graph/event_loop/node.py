@@ -793,15 +793,15 @@ class EventLoopNode(NodeProtocol):
                     _cf_block = True
                     _cf_prompt = ask_user_prompt
                 elif (
-    ctx.node_spec.client_facing
-    and not real_tool_results
-    and not outputs_set
-    and (
-        stream_id == "queen"
-        or ctx.node_id == "queen"
-        or ctx.node_spec.output_keys
-    )
-):
+                    ctx.node_spec.client_facing
+                    and not real_tool_results
+                    and not outputs_set
+                    and (
+                        stream_id == "queen"
+                        or ctx.node_id == "queen"
+                        or ctx.node_spec.output_keys
+                    )
+                ):
                     # Auto-block: queen (conversational) and client-facing
                     # workers with required outputs (e.g. intake) should wait
                     # for user input after a text-only turn.

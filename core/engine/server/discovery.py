@@ -99,8 +99,8 @@ def discover_agents(repo_root: Path, loaded_paths: set[str] | None = None) -> di
             skip={"queens"},
         ),
         "supervisors": _scan_category(
-             repo_root / "examples" / "templates" / "queens",
-             "supervisors",
+            repo_root / "examples" / "templates" / "queens",
+            "supervisors",
 ),
         "exports": _scan_category(repo_root / "exports", "exports"),
     }

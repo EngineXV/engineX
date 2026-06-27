@@ -88,7 +88,9 @@ class JobLimitExceeded(RuntimeError):
 
 class JobManager:
     def __init__(self, max_jobs: int | None = None, ring_bytes: int = _DEFAULT_RING_BYTES):
-        self._max_jobs = max_jobs or int(os.getenv("TERMINAL_TOOLS_MAX_JOBS", str(_MAX_JOBS_DEFAULT)))
+        self._max_jobs = max_jobs or int(
+            os.getenv("TERMINAL_TOOLS_MAX_JOBS", str(_MAX_JOBS_DEFAULT))
+        )
         self._ring_bytes = ring_bytes
         self._jobs: dict[str, JobRecord] = {}
         # FIFO of recently-exited job_ids so list/inspect can still
@@ -120,7 +122,9 @@ class JobManager:
                 "Wait for a job to finish or raise TERMINAL_TOOLS_MAX_JOBS."
             )
 
-        proc = self._spawn(command, cwd=cwd, env=env, shell=shell, merge_stderr=merge_stderr, preexec_fn=preexec_fn)
+        proc = self._spawn(
+            command, cwd=cwd, env=env, shell=shell, merge_stderr=merge_stderr, preexec_fn=preexec_fn
+        )
         record = self._adopt(proc, command, name=name, merged=merge_stderr)
         return record
 
@@ -149,7 +153,8 @@ class JobManager:
             except Exception:
                 pass
             raise JobLimitExceeded(
-                f"terminal-tools job cap reached ({self._max_jobs}); foreground exec was killed during auto-promotion."
+                "terminal-tools job cap reached "
+                f"({self._max_jobs}); foreground exec was killed during auto-promotion."
             )
         record = self._wrap(
             proc,
@@ -297,7 +302,9 @@ class JobManager:
         stdout_buf = RingBuffer(self._ring_bytes)
         stderr_buf = None if merged else RingBuffer(self._ring_bytes)
 
-        record = self._wrap(proc, command, name=name, merged=merged, stdout_buf=stdout_buf, stderr_buf=stderr_buf)
+        record = self._wrap(
+            proc, command, name=name, merged=merged, stdout_buf=stdout_buf, stderr_buf=stderr_buf
+        )
         with self._lock:
             self._jobs[record.job_id] = record
 

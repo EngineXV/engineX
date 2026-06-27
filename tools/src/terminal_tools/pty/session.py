@@ -100,7 +100,9 @@ class PtySession:
         self._busy_lock = threading.Lock()
         self._closed = threading.Event()
 
-        self._reader = threading.Thread(target=self._read_loop, daemon=True, name=f"pty-reader-{self.session_id}")
+        self._reader = threading.Thread(
+            target=self._read_loop, daemon=True, name=f"pty-reader-{self.session_id}"
+        )
         self._reader.start()
 
         # Wait for the first prompt so the session is "ready" before we return.
@@ -304,7 +306,9 @@ class PtySession:
                 m = pattern.search(text)
                 if m is not None:
                     output = text[: m.start()]
-                    prompt_offset = since_offset + len(text[: m.end()].encode("utf-8", errors="replace"))
+                    prompt_offset = since_offset + len(
+                        text[: m.end()].encode("utf-8", errors="replace")
+                    )
                     return {
                         "output": output,
                         "prompt_after": True,
@@ -322,7 +326,8 @@ class PtySession:
                         "output": output,
                         "prompt_after": True,
                         "matched_expect": False,
-                        "next_offset": since_offset + len(text[: m.end()].encode("utf-8", errors="replace")),
+                        "next_offset": since_offset
+                        + len(text[: m.end()].encode("utf-8", errors="replace")),
                         "timed_out": False,
                     }
             time.sleep(0.05)

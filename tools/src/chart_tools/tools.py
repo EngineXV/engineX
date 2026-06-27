@@ -282,7 +282,9 @@ def _resolve_output_path(override: str | None, title: str) -> Path:
     return charts_dir / f"{ts}-{_slugify(title)}.png"
 
 
-async def _render_async(*, kind: str, spec: Any, width: int, height: int, dpi: int, theme: str) -> bytes:
+async def _render_async(
+    *, kind: str, spec: Any, width: int, height: int, dpi: int, theme: str
+) -> bytes:
     """Render with a fresh Chromium per call.
 
     Playwright proxy objects are bound to the asyncio loop that

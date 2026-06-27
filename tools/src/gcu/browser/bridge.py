@@ -156,7 +156,12 @@ _HIT_ELEMENT_JS = """
     }
     return {
         clickPoint: { x: x, y: y },
-        viewport: { w: window.innerWidth, h: window.innerHeight, sx: window.scrollX, sy: window.scrollY },
+        viewport: {
+            w: window.innerWidth,
+            h: window.innerHeight,
+            sx: window.scrollX,
+            sy: window.scrollY,
+        },
         hit: hit,
         stack: stack,
         sweep: sweep,
@@ -282,7 +287,8 @@ class BeelineBridge:
             import websockets
         except ImportError:
             logger.warning(
-                "websockets not installed — Chrome extension bridge disabled. Install with: uv pip install websockets"
+                "websockets not installed — Chrome extension bridge disabled. "
+                "Install with: uv pip install websockets"
             )
             return
 
@@ -300,7 +306,9 @@ class BeelineBridge:
                 "127.0.0.1",
                 port,
                 logger=null_logger,
-                max_size=50 * 1024 * 1024,  # 50 MB — CDP responses (AX tree, screenshots) can be large
+                max_size=50
+                * 1024
+                * 1024,  # 50 MB — CDP responses (AX tree, screenshots) can be large
             )
             logger.info("Beeline bridge listening on ws://127.0.0.1:%d", port)
         except OSError as e:
@@ -351,7 +359,9 @@ class BeelineBridge:
                 pass
             self._status_server = None
 
-    async def _http_status_handler(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+    async def _http_status_handler(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> None:
         """Minimal asyncio TCP handler serving HTTP GET /status on the status port."""
         try:
             raw = await asyncio.wait_for(reader.read(512), timeout=2.0)
@@ -379,7 +389,9 @@ class BeelineBridge:
                     b"\r\n"
                 )
             else:
-                response = b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                response = (
+                    b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                )
             writer.write(response)
             await writer.drain()
         except Exception:
@@ -425,10 +437,14 @@ class BeelineBridge:
                     fut = self._pending.pop(msg_id)
                     if not fut.done():
                         if "error" in msg:
-                            log_bridge_message("recv", "response", msg_id=msg_id, error=msg["error"])
+                            log_bridge_message(
+                                "recv", "response", msg_id=msg_id, error=msg["error"]
+                            )
                             fut.set_exception(RuntimeError(msg["error"]))
                         else:
-                            log_bridge_message("recv", "response", msg_id=msg_id, result=msg.get("result"))
+                            log_bridge_message(
+                                "recv", "response", msg_id=msg_id, result=msg.get("result")
+                            )
                             fut.set_result(msg.get("result", {}))
         except Exception:
             pass
@@ -615,7 +631,9 @@ class BeelineBridge:
             # what actually hung — the generic 'cdp' type is useless
             # when ten different CDP calls use the same type.
             detail = f" method={params.get('method')}" if params.get("method") else ""
-            raise RuntimeError(f"Bridge command '{type_}'{detail} timed out after {effective_timeout:.0f}s") from None
+            raise RuntimeError(
+                f"Bridge command '{type_}'{detail} timed out after {effective_timeout:.0f}s"
+            ) from None
         except BaseException:
             # CancelledError or any other exception — remove stale future so a late
             # response from the extension doesn't try to resolve a cancelled future.
@@ -731,7 +749,9 @@ class BeelineBridge:
         Returns {"groupId": int, "tabId": int}.
         """
         result = await self._send("context.create", agentId=agent_id)
-        log_context_event("create", agent_id, group_id=result.get("groupId"), tab_id=result.get("tabId"))
+        log_context_event(
+            "create", agent_id, group_id=result.get("groupId"), tab_id=result.get("tabId")
+        )
         return result
 
     async def destroy_context(self, group_id: int) -> dict:
@@ -1090,7 +1110,9 @@ class BeelineBridge:
         deadline = poll_start + timeout_ms / 1000
         node_id = None
         while asyncio.get_event_loop().time() < deadline:
-            result = await self._cdp(tab_id, "DOM.querySelector", {"nodeId": root_id, "selector": selector})
+            result = await self._cdp(
+                tab_id, "DOM.querySelector", {"nodeId": root_id, "selector": selector}
+            )
             node_id = result.get("nodeId")
             if node_id:
                 break
@@ -1186,7 +1208,9 @@ class BeelineBridge:
                 # JavaScript click succeeded — highlight element
                 rx = value.get("x", 0) - value.get("width", 0) / 2
                 ry = value.get("y", 0) - value.get("height", 0) / 2
-                await self.highlight_rect(tab_id, rx, ry, value.get("width", 0), value.get("height", 0), label=selector)
+                await self.highlight_rect(
+                    tab_id, rx, ry, value.get("width", 0), value.get("height", 0), label=selector
+                )
                 focused_info = await self._read_focused_element(tab_id)
                 resp = {
                     "ok": True,
@@ -1543,12 +1567,24 @@ class BeelineBridge:
             await self._cdp(
                 tab_id,
                 "Input.dispatchMouseEvent",
-                {"type": "mousePressed", "x": click_x, "y": click_y, "button": "left", "clickCount": 1},
+                {
+                    "type": "mousePressed",
+                    "x": click_x,
+                    "y": click_y,
+                    "button": "left",
+                    "clickCount": 1,
+                },
             )
             await self._cdp(
                 tab_id,
                 "Input.dispatchMouseEvent",
-                {"type": "mouseReleased", "x": click_x, "y": click_y, "button": "left", "clickCount": 1},
+                {
+                    "type": "mouseReleased",
+                    "x": click_x,
+                    "y": click_y,
+                    "button": "left",
+                    "clickCount": 1,
+                },
             )
             await asyncio.sleep(0.15)  # Let focus / editor-init animations settle.
         else:
@@ -1621,7 +1657,9 @@ class BeelineBridge:
             )
             rect = (rect_result or {}).get("result")
             if rect:
-                await self.highlight_rect(tab_id, rect["x"], rect["y"], rect["w"], rect["h"], label=selector)
+                await self.highlight_rect(
+                    tab_id, rect["x"], rect["y"], rect["w"], rect["h"], label=selector
+                )
         else:
             # Highlight the active element when no selector was provided.
             # Drill into same-origin iframes to find the real focused
@@ -1641,7 +1679,13 @@ class BeelineBridge:
             rect = (rect_result or {}).get("result")
             if rect:
                 await self.highlight_rect(
-                    tab_id, rect["x"], rect["y"], rect["w"], rect["h"], label="active element", border_style="dashed"
+                    tab_id,
+                    rect["x"],
+                    rect["y"],
+                    rect["w"],
+                    rect["h"],
+                    label="active element",
+                    border_style="dashed",
                 )
         return {"ok": True, "action": "type", "selector": selector, "length": len(text)}
 
@@ -1693,7 +1737,9 @@ class BeelineBridge:
         if selector:
             doc = await self._cdp(tab_id, "DOM.getDocument")
             root_id = doc.get("root", {}).get("nodeId")
-            result = await self._cdp(tab_id, "DOM.querySelector", {"nodeId": root_id, "selector": selector})
+            result = await self._cdp(
+                tab_id, "DOM.querySelector", {"nodeId": root_id, "selector": selector}
+            )
             node_id = result.get("nodeId")
             if node_id:
                 await self._cdp(tab_id, "DOM.focus", {"nodeId": node_id})
@@ -2252,7 +2298,11 @@ class BeelineBridge:
 
             function canScroll(el) {{
                 if (!el || el.nodeType !== 1) return false;
-                if (el === document.scrollingElement || el === document.documentElement || el === document.body) {{
+                if (
+                    el === document.scrollingElement
+                    || el === document.documentElement
+                    || el === document.body
+                ) {{
                     return axis === 'y'
                         ? document.documentElement.scrollHeight > window.innerHeight + 1
                         : document.documentElement.scrollWidth > window.innerWidth + 1;
@@ -2283,7 +2333,11 @@ class BeelineBridge:
                     ? _shadowQuery(userSelector)
                     : document.querySelector(userSelector);
                 if (!el) {{
-                    return {{ success: false, error: 'selector_not_found', selector: userSelector }};
+                    return {{
+                        success: false,
+                        error: 'selector_not_found',
+                        selector: userSelector,
+                    }};
                 }}
                 if (!canScroll(el)) {{
                     return {{ success: false, error: 'not_scrollable_in_direction',
@@ -2394,7 +2448,9 @@ class BeelineBridge:
         )
         rect = (rect_result or {}).get("result")
         if rect:
-            await self.highlight_rect(tab_id, rect["x"], rect["y"], rect["w"], rect["h"], label=selector)
+            await self.highlight_rect(
+                tab_id, rect["x"], rect["y"], rect["w"], rect["h"], label=selector
+            )
 
         return {"ok": True, "action": "select", "selector": selector, "selected": values}
 
@@ -2408,7 +2464,9 @@ class BeelineBridge:
         stripped = script.strip()
 
         # Already a complete IIFE — run as-is, no re-wrapping
-        is_iife = stripped.startswith("(function") and (stripped.endswith("})()") or stripped.endswith("})();"))
+        is_iife = stripped.startswith("(function") and (
+            stripped.endswith("})()") or stripped.endswith("})();")
+        )
         # Arrow-function IIFE: (() => { ... })()
         is_arrow_iife = stripped.startswith("(()") and (
             stripped.endswith("})()")
@@ -2443,7 +2501,9 @@ class BeelineBridge:
         if "exceptionDetails" in result:
             ex = result["exceptionDetails"]
             # Extract the actual exception message from the nested structure
-            ex_value = (ex.get("exception") or {}).get("description") or ex.get("text", "Script error")
+            ex_value = (ex.get("exception") or {}).get("description") or ex.get(
+                "text", "Script error"
+            )
             return {"ok": False, "error": ex_value}
 
         # The CDP response structure is {result: {type: ..., value: ...}}
@@ -2665,7 +2725,9 @@ class BeelineBridge:
                 continue
 
             name_info = n.get("name", {})
-            parent_name = name_info.get("value", "") if isinstance(name_info, dict) else str(name_info)
+            parent_name = (
+                name_info.get("value", "") if isinstance(name_info, dict) else str(name_info)
+            )
             if not parent_name:
                 continue
 
@@ -2677,14 +2739,18 @@ class BeelineBridge:
                     break
                 child_role_info = child.get("role", {})
                 child_role = (
-                    child_role_info.get("value", "") if isinstance(child_role_info, dict) else str(child_role_info)
+                    child_role_info.get("value", "")
+                    if isinstance(child_role_info, dict)
+                    else str(child_role_info)
                 )
                 if child_role != "InlineTextBox":
                     all_inline = False
                     break
                 child_name_info = child.get("name", {})
                 child_name = (
-                    child_name_info.get("value", "") if isinstance(child_name_info, dict) else str(child_name_info)
+                    child_name_info.get("value", "")
+                    if isinstance(child_name_info, dict)
+                    else str(child_name_info)
                 )
                 if child_name and child_name not in parent_name:
                     all_inline = False
@@ -2699,7 +2765,9 @@ class BeelineBridge:
 
         return [n for n in nodes if n["nodeId"] not in ids_to_remove]
 
-    def _format_ax_tree(self, nodes: list[dict], max_nodes: int = 2000, mode: str = "default") -> str:
+    def _format_ax_tree(
+        self, nodes: list[dict], max_nodes: int = 2000, mode: str = "default"
+    ) -> str:
         """Format a CDP Accessibility.getFullAXTree result.
 
         Args:
@@ -2833,7 +2901,9 @@ class BeelineBridge:
 
         return {"ok": False, "error": f"Element not found: {selector}"}
 
-    async def get_attribute(self, tab_id: int, selector: str, attribute: str, timeout_ms: int = 30000) -> dict:
+    async def get_attribute(
+        self, tab_id: int, selector: str, attribute: str, timeout_ms: int = 30000
+    ) -> dict:
         """Get an attribute value of an element."""
         await self.cdp_attach(tab_id)
 

@@ -65,7 +65,10 @@ def register_tab_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_tabs", params, result=result)
             return result
 
@@ -88,7 +91,9 @@ def register_tab_tools(mcp: FastMCP) -> None:
             return result
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_tabs", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_tabs", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -163,7 +168,9 @@ def register_tab_tools(mcp: FastMCP) -> None:
             return result
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_open", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_open", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -192,7 +199,10 @@ def register_tab_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_close", params, result=result)
             return result
 
@@ -228,7 +238,9 @@ def register_tab_tools(mcp: FastMCP) -> None:
             return result
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_close", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_close", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -271,7 +283,10 @@ def register_tab_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_activate_tab", params, result=result)
             return result
 

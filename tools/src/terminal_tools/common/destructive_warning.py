@@ -22,8 +22,14 @@ _PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(r"\bgit\s+clean\b(?![^;&|\n]*(?:-[a-zA-Z]*n|--dry-run))[^;&|\n]*-[a-zA-Z]*f"),
         "may permanently delete untracked files",
     ),
-    (re.compile(r"\bgit\s+checkout\s+(--\s+)?\.[ \t]*($|[;&|\n])"), "may discard all working tree changes"),
-    (re.compile(r"\bgit\s+restore\s+(--\s+)?\.[ \t]*($|[;&|\n])"), "may discard all working tree changes"),
+    (
+        re.compile(r"\bgit\s+checkout\s+(--\s+)?\.[ \t]*($|[;&|\n])"),
+        "may discard all working tree changes",
+    ),
+    (
+        re.compile(r"\bgit\s+restore\s+(--\s+)?\.[ \t]*($|[;&|\n])"),
+        "may discard all working tree changes",
+    ),
     (re.compile(r"\bgit\s+stash[ \t]+(drop|clear)\b"), "may permanently remove stashed changes"),
     (
         re.compile(r"\bgit\s+branch\s+(-D[ \t]|--delete\s+--force|--force\s+--delete)\b"),
@@ -34,7 +40,9 @@ _PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\bgit\s+commit\b[^;&|\n]*--amend\b"), "may rewrite the last commit"),
     # File deletion — most specific patterns first so the warning is descriptive
     (
-        re.compile(r"(^|[;&|\n]\s*)rm\s+-[a-zA-Z]*[rR][a-zA-Z]*f|(^|[;&|\n]\s*)rm\s+-[a-zA-Z]*f[a-zA-Z]*[rR]"),
+        re.compile(
+            r"(^|[;&|\n]\s*)rm\s+-[a-zA-Z]*[rR][a-zA-Z]*f|(^|[;&|\n]\s*)rm\s+-[a-zA-Z]*f[a-zA-Z]*[rR]"
+        ),
         "may recursively force-remove files",
     ),
     (re.compile(r"(^|[;&|\n]\s*)rm\s+-[a-zA-Z]*[rR]"), "may recursively remove files"),
@@ -44,7 +52,10 @@ _PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(r"\b(DROP|TRUNCATE)\s+(TABLE|DATABASE|SCHEMA)\b", re.IGNORECASE),
         "may drop or truncate database objects",
     ),
-    (re.compile(r"\bDELETE\s+FROM\s+\w+[ \t]*(;|\"|'|\n|$)", re.IGNORECASE), "may delete rows from a database table"),
+    (
+        re.compile(r"\bDELETE\s+FROM\s+\w+[ \t]*(;|\"|'|\n|$)", re.IGNORECASE),
+        "may delete rows from a database table",
+    ),
     # Infrastructure
     (re.compile(r"\bkubectl\s+delete\b"), "may delete Kubernetes resources"),
     (re.compile(r"\bterraform\s+destroy\b"), "may destroy Terraform infrastructure"),

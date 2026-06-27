@@ -64,7 +64,9 @@ async def _build_visual_response(result: dict, bridge, target_tab: int | None) -
         shot = await bridge.screenshot(target_tab, full_page=False)
         if not shot.get("ok"):
             return [text_block]
-        highlights = [_interaction_highlights[target_tab]] if target_tab in _interaction_highlights else None
+        highlights = (
+            [_interaction_highlights[target_tab]] if target_tab in _interaction_highlights else None
+        )
         data, _ = await asyncio.to_thread(
             _resize_and_annotate,
             shot["data"],
@@ -153,7 +155,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_click", params, result=result)
             return result
 
@@ -180,7 +185,9 @@ def register_interaction_tools(mcp: FastMCP) -> None:
             return await _attach_snapshot(click_result, bridge, target_tab, auto_snapshot_mode)
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_click", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_click", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -247,7 +254,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_click_coordinate", params, result=result)
             return _text_only(result)
 
@@ -352,7 +362,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_type", params, result=result)
             return result
 
@@ -381,7 +394,9 @@ def register_interaction_tools(mcp: FastMCP) -> None:
             return await _attach_snapshot(type_result, bridge, target_tab, auto_snapshot_mode)
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_type", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_type", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -432,7 +447,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_type_focused", params, result=result)
             return result
 
@@ -460,7 +478,12 @@ def register_interaction_tools(mcp: FastMCP) -> None:
             return await _attach_snapshot(type_result, bridge, target_tab, auto_snapshot_mode)
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_type_focused", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_type_focused",
+                params,
+                error=e,
+                duration_ms=(time.perf_counter() - start) * 1000,
+            )
             return result
 
     @mcp.tool()
@@ -506,7 +529,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_press", params, result=result)
             return result
 
@@ -517,7 +543,9 @@ def register_interaction_tools(mcp: FastMCP) -> None:
             return result
 
         try:
-            press_result = await bridge.press_key(target_tab, key, selector=selector, modifiers=modifiers)
+            press_result = await bridge.press_key(
+                target_tab, key, selector=selector, modifiers=modifiers
+            )
             log_tool_call(
                 "browser_press",
                 params,
@@ -527,7 +555,9 @@ def register_interaction_tools(mcp: FastMCP) -> None:
             return press_result
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_press", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_press", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -560,7 +590,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_hover", params, result=result)
             return result
 
@@ -581,7 +614,9 @@ def register_interaction_tools(mcp: FastMCP) -> None:
             return hover_result
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_hover", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_hover", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -627,7 +662,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_hover_coordinate", params, result=result)
             return _text_only(result)
 
@@ -640,7 +678,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
         if x > 1.5 or y > 1.5 or x < -0.1 or y < -0.1:
             result = {
                 "ok": False,
-                "error": (f"Coords ({x}, {y}) look like pixels. This tool expects fractions 0..1 of the viewport."),
+                "error": (
+                    f"Coords ({x}, {y}) look like pixels. "
+                    "This tool expects fractions 0..1 of the viewport."
+                ),
             }
             log_tool_call("browser_hover_coordinate", params, result=result)
             return _text_only(result)
@@ -712,7 +753,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_press_at", params, result=result)
             return _text_only(result)
 
@@ -725,7 +769,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
         if x > 1.5 or y > 1.5 or x < -0.1 or y < -0.1:
             result = {
                 "ok": False,
-                "error": (f"Coords ({x}, {y}) look like pixels. This tool expects fractions 0..1 of the viewport."),
+                "error": (
+                    f"Coords ({x}, {y}) look like pixels. "
+                    "This tool expects fractions 0..1 of the viewport."
+                ),
             }
             log_tool_call("browser_press_at", params, result=result)
             return _text_only(result)
@@ -782,7 +829,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_select", params, result=result)
             return result
 
@@ -803,7 +853,9 @@ def register_interaction_tools(mcp: FastMCP) -> None:
             return select_result
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_select", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_select", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -860,7 +912,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_scroll", params, result=result)
             return result
 
@@ -871,7 +926,9 @@ def register_interaction_tools(mcp: FastMCP) -> None:
             return result
 
         try:
-            scroll_result = await bridge.scroll(target_tab, direction=direction, amount=amount, selector=selector)
+            scroll_result = await bridge.scroll(
+                target_tab, direction=direction, amount=amount, selector=selector
+            )
             log_tool_call(
                 "browser_scroll",
                 params,
@@ -881,7 +938,9 @@ def register_interaction_tools(mcp: FastMCP) -> None:
             return await _attach_snapshot(scroll_result, bridge, target_tab, auto_snapshot_mode)
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_scroll", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_scroll", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -924,7 +983,10 @@ def register_interaction_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_drag", params, result=result)
             return result
 

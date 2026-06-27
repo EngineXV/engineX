@@ -129,7 +129,10 @@ def register_navigation_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_go_back", params, result=result)
             return result
 
@@ -150,7 +153,9 @@ def register_navigation_tools(mcp: FastMCP) -> None:
             return nav_result
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_go_back", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_go_back", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result
 
     @mcp.tool()
@@ -179,7 +184,10 @@ def register_navigation_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_go_forward", params, result=result)
             return result
 
@@ -234,7 +242,10 @@ def register_navigation_tools(mcp: FastMCP) -> None:
 
         ctx = _get_context(profile)
         if not ctx:
-            result = {"ok": False, "error": "Browser not started. Call browser_open(url) first to open a tab."}
+            result = {
+                "ok": False,
+                "error": "Browser not started. Call browser_open(url) first to open a tab.",
+            }
             log_tool_call("browser_reload", params, result=result)
             return result
 
@@ -255,5 +266,7 @@ def register_navigation_tools(mcp: FastMCP) -> None:
             return nav_result
         except Exception as e:
             result = {"ok": False, "error": str(e)}
-            log_tool_call("browser_reload", params, error=e, duration_ms=(time.perf_counter() - start) * 1000)
+            log_tool_call(
+                "browser_reload", params, error=e, duration_ms=(time.perf_counter() - start) * 1000
+            )
             return result

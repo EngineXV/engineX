@@ -74,7 +74,9 @@ def build_exec_envelope(
         combined = b"--- stdout ---\n" + stdout_bytes + b"\n--- stderr ---\n" + stderr_bytes
         output_handle = store.put(combined)
 
-    semantic_status, semantic_message = classify(command, exit_code, timed_out=timed_out, signaled=signaled)
+    semantic_status, semantic_message = classify(
+        command, exit_code, timed_out=timed_out, signaled=signaled
+    )
 
     warning = get_warning(command)
 

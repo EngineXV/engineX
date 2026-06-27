@@ -39,9 +39,7 @@ class _FakeRuntime:
         return decision_id
 
     def record_outcome(self, decision_id: str, success: bool, summary: str = "", **kwargs) -> None:
-        self.outcomes.append(
-            {"decision_id": decision_id, "success": success, "summary": summary}
-        )
+        self.outcomes.append({"decision_id": decision_id, "success": success, "summary": summary})
 
 
 def test_record_edge_route_creates_path_choice() -> None:

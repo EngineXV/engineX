@@ -44,8 +44,7 @@ async def emit_supervisor_tasks_updated(
     if event_bus is None:
         return
     summary = "\n".join(
-        f"- [{'x' if t.status == TaskStatus.COMPLETED else ' '}] #{t.id} {t.subject}"
-        for t in tasks
+        f"- [{'x' if t.status == TaskStatus.COMPLETED else ' '}] #{t.id} {t.subject}" for t in tasks
     )
     try:
         await event_bus.emit_node_action_plan(

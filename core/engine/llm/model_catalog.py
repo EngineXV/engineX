@@ -72,7 +72,9 @@ def _validate_model_catalog(data: dict[str, Any]) -> dict[str, Any]:
             if not isinstance(model_id, str) or not model_id.strip():
                 raise ModelCatalogError(f"{model_path}.id must be a non-empty string")
             if model_id in seen_model_ids:
-                raise ModelCatalogError(f"Duplicate model id {model_id!r} in {provider_path}.models")
+                raise ModelCatalogError(
+                    f"Duplicate model id {model_id!r} in {provider_path}.models"
+                )
             seen_model_ids.add(model_id)
 
             if model_id == default_model:
@@ -97,11 +99,14 @@ def _validate_model_catalog(data: dict[str, Any]) -> dict[str, Any]:
 
             supports_vision = model_map.get("supports_vision")
             if supports_vision is not None and not isinstance(supports_vision, bool):
-                raise ModelCatalogError(f"{model_path}.supports_vision must be a boolean when present")
+                raise ModelCatalogError(
+                    f"{model_path}.supports_vision must be a boolean when present"
+                )
 
         if not default_found:
             raise ModelCatalogError(
-                f"{provider_path}.default_model={default_model!r} is not present in {provider_path}.models"
+                f"{provider_path}.default_model={default_model!r} "
+                f"is not present in {provider_path}.models"
             )
 
     presets = _require_mapping(data.get("presets"), "presets")
@@ -119,11 +124,17 @@ def _validate_model_catalog(data: dict[str, Any]) -> dict[str, Any]:
 
         api_base = preset_map.get("api_base")
         if api_base is not None and (not isinstance(api_base, str) or not api_base.strip()):
-            raise ModelCatalogError(f"{preset_path}.api_base must be a non-empty string when present")
+            raise ModelCatalogError(
+                f"{preset_path}.api_base must be a non-empty string when present"
+            )
 
         api_key_env_var = preset_map.get("api_key_env_var")
-        if api_key_env_var is not None and (not isinstance(api_key_env_var, str) or not api_key_env_var.strip()):
-            raise ModelCatalogError(f"{preset_path}.api_key_env_var must be a non-empty string when present")
+        if api_key_env_var is not None and (
+            not isinstance(api_key_env_var, str) or not api_key_env_var.strip()
+        ):
+            raise ModelCatalogError(
+                f"{preset_path}.api_key_env_var must be a non-empty string when present"
+            )
 
         for key in ("max_tokens", "max_context_tokens"):
             value = preset_map.get(key)
@@ -132,7 +143,9 @@ def _validate_model_catalog(data: dict[str, Any]) -> dict[str, Any]:
 
         model_choices = preset_map.get("model_choices")
         if model_choices is not None:
-            for idx, choice in enumerate(_require_list(model_choices, f"{preset_path}.model_choices")):
+            for idx, choice in enumerate(
+                _require_list(model_choices, f"{preset_path}.model_choices")
+            ):
                 choice_path = f"{preset_path}.model_choices[{idx}]"
                 choice_map = _require_mapping(choice, choice_path)
                 choice_id = choice_map.get("id")
@@ -164,13 +177,19 @@ def load_model_catalog() -> dict[str, Any]:
 def get_models_catalogue() -> dict[str, list[dict[str, Any]]]:
     """Return provider -> model list."""
     providers = load_model_catalog()["providers"]
-    return {provider_id: copy.deepcopy(provider_info["models"]) for provider_id, provider_info in providers.items()}
+    return {
+        provider_id: copy.deepcopy(provider_info["models"])
+        for provider_id, provider_info in providers.items()
+    }
 
 
 def get_default_models() -> dict[str, str]:
     """Return provider -> default model id."""
     providers = load_model_catalog()["providers"]
-    return {provider_id: str(provider_info["default_model"]) for provider_id, provider_info in providers.items()}
+    return {
+        provider_id: str(provider_info["default_model"])
+        for provider_id, provider_info in providers.items()
+    }
 
 
 def get_provider_models(provider: str) -> list[dict[str, Any]]:

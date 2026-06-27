@@ -126,7 +126,9 @@ class ChartRenderer:
                 # back to CDN. Mermaid takes a beat to typeset; ECharts
                 # renders synchronously once setOption is called.
                 await _inject_lib(page, kind)
-                await _render_in_page(page, kind=kind, spec=spec, theme=theme, width=width, height=height)
+                await _render_in_page(
+                    page, kind=kind, spec=spec, theme=theme, width=width, height=height
+                )
                 # Make sure fonts are loaded before screenshotting so
                 # rotated text doesn't shift after the snapshot.
                 await page.wait_for_function("() => document.fonts.ready.then(() => true)")
@@ -247,7 +249,9 @@ async def _render_in_page(
         # expected to have already coerced JSON-string specs into dicts
         # in chart_tools/tools.py — this is a defense-in-depth check.
         if isinstance(spec, str):
-            raise RendererError("spec arrived as a string; it should have been parsed to a dict in chart_render")
+            raise RendererError(
+                "spec arrived as a string; it should have been parsed to a dict in chart_render"
+            )
         try:
             json.dumps(spec)
         except (TypeError, ValueError) as exc:
@@ -369,7 +373,8 @@ async def _render_in_page(
                   securityLevel: 'loose',
                 });
                 window.__chartReady = false;
-                const out = await mermaid.render('mmd-' + Math.random().toString(36).slice(2), source);
+                const out = await mermaid.render(
+                  'mmd-' + Math.random().toString(36).slice(2), source);
                 document.getElementById('chart').innerHTML = out.svg;
                 window.__chartReady = true;
                 return {ok: true};

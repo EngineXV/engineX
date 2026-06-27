@@ -326,7 +326,9 @@ class SessionManager:
             session.waiting_for_input = False
             session.input_node_id = None
             session.input_graph_id = None
-            delivered = await runtime.inject_input(node_id, text, graph_id=graph_id, is_client_input=True)
+            delivered = await runtime.inject_input(
+                node_id, text, graph_id=graph_id, is_client_input=True
+            )
             return {"action": "inject", "delivered": delivered, "node_id": node_id}
 
         if session.current_exec_id is not None and session.active_node_id:

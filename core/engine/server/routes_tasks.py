@@ -99,7 +99,9 @@ async def handle_create_session_tasks(request: web.Request) -> web.Response:
     store = get_task_store()
     await store.ensure_task_list(task_list_id)
     created = await store.create_tasks_batch(task_list_id, specs)
-    return web.json_response({"task_list_id": task_list_id, "tasks": [_task_payload(r) for r in created]})
+    return web.json_response(
+        {"task_list_id": task_list_id, "tasks": [_task_payload(r) for r in created]}
+    )
 
 
 async def handle_patch_task(request: web.Request) -> web.Response:

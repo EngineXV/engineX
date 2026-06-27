@@ -149,7 +149,9 @@ def register_pty_tools(mcp: FastMCP) -> None:
         """
         _REGISTRY.reap_idle()
         try:
-            sess = PtySession(cwd=cwd, env=env, cols=cols, rows=rows, idle_timeout_sec=idle_timeout_sec)
+            sess = PtySession(
+                cwd=cwd, env=env, cols=cols, rows=rows, idle_timeout_sec=idle_timeout_sec
+            )
         except ZshRefused as e:
             return {"error": str(e)}
         except Exception as e:

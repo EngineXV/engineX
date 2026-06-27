@@ -32,6 +32,7 @@ class Checkpoint(BaseModel):
     # Metadata
     is_clean: bool = True  # True if no failures/retries before this checkpoint
     description: str = ""  # Human-readable checkpoint description
+    run_id: str | None = None  # Decision-tracking run id at checkpoint time
 
     model_config = {"extra": "allow"}
 
@@ -48,6 +49,7 @@ class Checkpoint(BaseModel):
         metrics_snapshot: dict[str, Any] | None = None,
         is_clean: bool = True,
         description: str = "",
+        run_id: str | None = None,
     ) -> "Checkpoint":
         """Create a new checkpoint with generated ID and timestamp"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -69,6 +71,7 @@ class Checkpoint(BaseModel):
             metrics_snapshot=metrics_snapshot or {},
             is_clean=is_clean,
             description=description,
+            run_id=run_id,
         )
 
 

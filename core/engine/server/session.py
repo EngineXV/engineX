@@ -17,6 +17,30 @@ from engine.runtime.execution_stream import ExecutionAlreadyRunningError
 
 logger = logging.getLogger(__name__)
 
+WORKER_GRAPH_ID = "worker"
+
+
+def _primary_graph_id(session: Session) -> str:
+    runtime = session.runtime
+    if runtime is not None:
+        return runtime._graph_id  # noqa: SLF001
+    return "primary"
+
+
+def _event_graph_id(event: AgentEvent) -> str | None:
+    return event.graph_id
+
+
+def _is_worker_event(session: Session, event: AgentEvent) -> bool:
+    return session.supervised and _event_graph_id(event) == WORKER_GRAPH_ID
+
+
+def _is_primary_event(session: Session, event: AgentEvent) -> bool:
+    graph_id = _event_graph_id(event)
+    if graph_id is None:
+        return True
+    return graph_id == _primary_graph_id(session)
+
 
 @dataclass
 class Session:
@@ -31,7 +55,7 @@ class Session:
     input_node_id: str | None = None
     input_graph_id: str | None = None
     supervised: bool = False
-    queen_mode: str = "staging"
+    supervisor_mode: str = "staging"
     _subscription_id: str | None = None
 
     @property
@@ -58,7 +82,7 @@ class Session:
             "waiting_for_input": self.waiting_for_input,
             "current_exec_id": self.current_exec_id,
             "supervised": self.supervised,
-            "queen_mode": self.queen_mode,
+            "supervisor_mode": self.supervisor_mode,
             "input_graph_id": self.input_graph_id,
         }
         if info.supervisor:
@@ -118,6 +142,25 @@ class Session:
 
         async def on_event(event: AgentEvent) -> None:
             et = event.type
+
+            if _is_worker_event(self, event):
+                if et == EventType.EXECUTION_COMPLETED:
+                    supervisor = getattr(self.runner, "_session_supervisor", None)
+                    if supervisor is not None:
+                        await supervisor.on_worker_execution_finished(success=True)
+                elif et == EventType.EXECUTION_FAILED:
+                    supervisor = getattr(self.runner, "_session_supervisor", None)
+                    if supervisor is not None:
+                        await supervisor.on_worker_execution_finished(success=False)
+                if et == EventType.CLIENT_INPUT_REQUESTED:
+                    self.waiting_for_input = True
+                    self.input_node_id = event.node_id
+                    self.input_graph_id = event.graph_id
+                return
+
+            if not _is_primary_event(self, event):
+                return
+
             if et == EventType.EXECUTION_STARTED:
                 self.current_exec_id = event.execution_id
                 if event.node_id:
@@ -183,9 +226,9 @@ class SessionManager:
                 interactive=False,
             )
             if runner.supervised_worker_path is not None:
-                from engine.tools.queen_supervisor import QueenSupervisor, register_queen_tools
+                from engine.tools.supervisor_runtime import SessionSupervisor
 
-                register_queen_tools(runner, QueenSupervisor(runner=runner))
+                runner._session_supervisor = SessionSupervisor(runner=runner)  # noqa: SLF001
             if runner._agent_runtime is None:
                 runner._setup(event_bus=bus)
             return runner
@@ -208,6 +251,38 @@ class SessionManager:
             await runtime.start()
 
         if runner.supervised_worker_path is not None:
+            info = runner.info()
+            supervisor = getattr(runner, "_session_supervisor", None)
+            if supervisor is not None:
+                from engine.tools.supervisor_runtime import (
+                    SessionSupervisor,
+                    register_supervisor_tools,
+                )
+
+                if not isinstance(supervisor, SessionSupervisor):
+                    supervisor = SessionSupervisor(runner=runner)
+                register_supervisor_tools(
+                    runner,
+                    supervisor,
+                    session_id=sid,
+                    department=getattr(info, "department", None) or None,
+                )
+
+            from engine.tasks.supervisor import (
+                emit_supervisor_tasks_updated,
+                seed_supervisor_action_plan,
+            )
+
+            seeded = await seed_supervisor_action_plan(
+                sid,
+                department=getattr(info, "department", None) or None,
+            )
+            await emit_supervisor_tasks_updated(
+                runtime.event_bus if runtime else None,
+                session_id=sid,
+                tasks=seeded,
+            )
+
             worker_path = runner.supervised_worker_path
             if not worker_path.is_dir():
                 worker_path = (agent_path.parent / worker_path.name).resolve()

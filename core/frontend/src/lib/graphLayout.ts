@@ -23,7 +23,7 @@ interface LayoutEdge {
   target: string;
 }
 
-/** Top-to-bottom pipeline order; ignores entry nodes outside this graph (e.g. supervisor "queen"). */
+/** Top-to-bottom pipeline order; ignores entry nodes outside this graph (e.g. supervisor lead). */
 function computeVerticalOrder(
   nodes: SessionDetail["nodes"],
   edges: SessionDetail["edges"],

@@ -4,12 +4,39 @@ from __future__ import annotations
 
 import asyncio
 import re
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
 from aiohttp.test_utils import TestClient, TestServer
 
 from engine.server.app import create_app
+
+
+def _frontend_dist_exists() -> bool:
+    root = Path(__file__).resolve().parents[2]
+    dist = root / "frontend" / "dist" / "index.html"
+    return dist.is_file()
+
+
+def _ci_safe_agent_path(discover: dict) -> str:
+    """Prefer templates that skip credential validation (stable in CI without API keys)."""
+    templates = discover.get("templates", [])
+    for entry in templates:
+        path = entry.get("path", "")
+        if "log_monitor" in path:
+            return path
+    for entry in templates:
+        path = entry.get("path", "")
+        if "meeting_scheduler" in path:
+            return path
+    for entry in templates:
+        path = entry.get("path", "")
+        if "agreement_analysis" in path:
+            return path
+    if not templates:
+        raise AssertionError("No templates discovered")
+    return templates[0]["path"]
 
 
 @pytest_asyncio.fixture
@@ -50,13 +77,13 @@ async def test_discover_agents(client: TestClient):
 @pytest.mark.asyncio
 async def test_session_lifecycle(client: TestClient):
     discover = await (await client.get("/api/discover")).json()
-    agent_path = discover["templates"][0]["path"]
+    agent_path = _ci_safe_agent_path(discover)
 
     create = await client.post(
         "/api/sessions",
         json={"agent_path": agent_path},
     )
-    assert create.status == 201
+    assert create.status == 201, await create.text()
     session = await create.json()
     session_id = session["session_id"]
     assert session["name"]
@@ -83,8 +110,10 @@ async def test_session_lifecycle(client: TestClient):
 @pytest.mark.asyncio
 async def test_session_message_empty_rejected(client: TestClient):
     discover = await (await client.get("/api/discover")).json()
-    agent_path = discover["templates"][0]["path"]
-    session = await (await client.post("/api/sessions", json={"agent_path": agent_path})).json()
+    agent_path = _ci_safe_agent_path(discover)
+    create = await client.post("/api/sessions", json={"agent_path": agent_path})
+    assert create.status == 201, await create.text()
+    session = await create.json()
     session_id = session["session_id"]
 
     try:
@@ -97,8 +126,10 @@ async def test_session_message_empty_rejected(client: TestClient):
 @pytest.mark.asyncio
 async def test_session_sse_stream(client: TestClient):
     discover = await (await client.get("/api/discover")).json()
-    agent_path = discover["templates"][0]["path"]
-    session = await (await client.post("/api/sessions", json={"agent_path": agent_path})).json()
+    agent_path = _ci_safe_agent_path(discover)
+    create = await client.post("/api/sessions", json={"agent_path": agent_path})
+    assert create.status == 201, await create.text()
+    session = await create.json()
     session_id = session["session_id"]
 
     try:
@@ -133,6 +164,7 @@ async def test_skills_list(client: TestClient):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _frontend_dist_exists(), reason="frontend dist not built")
 async def test_spa_routes_serve_index(client: TestClient):
     for path in ("/", "/session/test-id", "/credentials", "/skills", "/org-chart"):
         resp = await client.get(path)
@@ -143,6 +175,7 @@ async def test_spa_routes_serve_index(client: TestClient):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _frontend_dist_exists(), reason="frontend dist not built")
 async def test_static_assets(client: TestClient):
     index = await (await client.get("/")).text()
     match = re.search(r'src="(/assets/[^"]+)"', index)

@@ -1892,3 +1892,80 @@ code {
   .welcome-page { padding: 1.5rem 1rem; }
   .feature-page { padding: 1.25rem 1rem 2rem; }
 }
+
+.task-panel {
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.task-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.task-panel-count {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.task-item {
+  display: flex;
+  gap: 0.55rem;
+  padding: 0.45rem 0.35rem;
+  border-radius: var(--radius-sm);
+}
+
+.task-item.task-completed .task-subject {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.task-check {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.task-subject {
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.task-description,
+.task-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.task-panel-empty,
+.task-panel-error {
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.chart-block {
+  min-height: 220px;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}

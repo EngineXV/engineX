@@ -55,7 +55,13 @@ class SessionStore:
             if not state_path.exists():
                 return None
 
-            return SessionState.model_validate_json(state_path.read_text(encoding="utf-8"))
+            import json
+
+            from engine.storage.migrate import migrate_session_state
+
+            raw = json.loads(state_path.read_text(encoding="utf-8"))
+            migrated = migrate_session_state(raw)
+            return SessionState.model_validate(migrated)
 
         return await asyncio.to_thread(_read)
 

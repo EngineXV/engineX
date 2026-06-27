@@ -76,7 +76,16 @@ async def handle_health(_request: web.Request) -> web.Response:
 
 
 async def handle_config(_request: web.Request) -> web.Response:
-    return web.json_response({"model": get_preferred_model()})
+    from engine.llm.model_catalog import get_default_models, get_models_catalogue, get_presets
+
+    return web.json_response(
+        {
+            "model": get_preferred_model(),
+            "catalog": get_models_catalogue(),
+            "defaults": get_default_models(),
+            "presets": get_presets(),
+        }
+    )
 
 
 async def handle_discover(request: web.Request) -> web.Response:

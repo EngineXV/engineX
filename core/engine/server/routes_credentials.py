@@ -197,6 +197,9 @@ async def handle_list_specs(request: web.Request) -> web.Response:
             )
         has_oauth_key = bool(os.environ.get("ENGINE_OAUTH_API_KEY"))
         return web.json_response({"specs": specs, "has_engine_oauth_key": has_oauth_key})
+    except ImportError:
+        has_oauth_key = bool(os.environ.get("ENGINE_OAUTH_API_KEY"))
+        return web.json_response({"specs": [], "has_engine_oauth_key": has_oauth_key})
     except Exception as exc:  # noqa: BLE001
         logger.exception("Error listing credential specs: %s", exc)
         return web.json_response(

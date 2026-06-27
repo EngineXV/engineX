@@ -698,7 +698,7 @@ class EngineTUI(App):
         EventType.EXECUTION_RESUMED,
         EventType.ESCALATION_REQUESTED,
         EventType.WORKER_ESCALATION_TICKET,
-        EventType.QUEEN_INTERVENTION_REQUESTED,
+        EventType.SUPERVISOR_INTERVENTION_REQUESTED,
     ]
 
     _LOG_PANE_EVENTS = frozenset(_EVENT_TYPES) - {

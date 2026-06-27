@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import ChatPanel, { type ChatLine } from "../components/ChatPanel";
+import ChartBlock, { parseChartPayload } from "../components/ChartBlock";
 import DashboardHeader from "../components/DashboardHeader";
 import GraphView from "../components/GraphView";
+import TaskListPanel from "../components/TaskListPanel";
 import { useDashboard } from "../context/DashboardContext";
 import { useSSE } from "../hooks/useSSE";
-import { api, type AgentEvent, type SessionDetail } from "../api";
+import { api, type AgentEvent, type SessionDetail, type TaskRecord } from "../api";
 import type { NodeState } from "../lib/graphLayout";
 
 function extractDelta(event: AgentEvent): string | null {
@@ -42,6 +44,9 @@ export default function SessionPage() {
   const [doneNodes, setDoneNodes] = useState<Set<string>>(new Set());
   const [waitingForInput, setWaitingForInput] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [tasks, setTasks] = useState<TaskRecord[]>([]);
+  const [taskListId, setTaskListId] = useState<string | null>(null);
+  const [tasksLoading, setTasksLoading] = useState(false);
   const streamNodeRef = useRef<string | null>(null);
   const lineCounter = useRef(0);
 
@@ -65,8 +70,25 @@ export default function SessionPage() {
     });
   }, []);
 
+  const loadTasks = useCallback(async () => {
+    if (!sessionId) return;
+    setTasksLoading(true);
+    try {
+      const res = await api.getSessionTasks(sessionId, Boolean(session?.supervised));
+      setTaskListId(res.task_list_id);
+      setTasks(res.tasks);
+    } catch {
+      setTasks([]);
+    } finally {
+      setTasksLoading(false);
+    }
+  }, [sessionId, session?.supervised]);
+
   const onEvent = useCallback(
     (event: AgentEvent) => {
+      if (event.type === "node_action_plan") {
+        void loadTasks();
+      }
       if (event.type === "node_loop_started" && event.node_id) {
         if (!event.graph_id || event.graph_id === "worker") {
           setActiveNode(event.node_id);
@@ -98,12 +120,14 @@ export default function SessionPage() {
       ) {
         flushStream();
         lineCounter.current += 1;
+        const chart = parseChartPayload(delta);
         setLines((prev) => [
           ...prev,
           {
             id: `${event.type}-${lineCounter.current}`,
             role: event.type === "tool_call_started" ? "system" : "agent",
-            text: delta,
+            text: chart ? "" : delta,
+            chart: chart || undefined,
             timestamp: event.timestamp,
           },
         ]);
@@ -113,7 +137,7 @@ export default function SessionPage() {
       streamNodeRef.current = event.node_id;
       setStreamingText((prev) => prev + delta);
     },
-    [flushStream, refresh],
+    [flushStream, refresh, loadTasks],
   );
 
   const { connected } = useSSE(sessionId, onEvent);
@@ -129,6 +153,10 @@ export default function SessionPage() {
       })
       .catch((e: Error) => setError(e.message));
   }, [sessionId]);
+
+  useEffect(() => {
+    void loadTasks();
+  }, [loadTasks]);
 
   const graphSession = useMemo(() => {
     if (!session) return null;
@@ -201,6 +229,18 @@ export default function SessionPage() {
             nodeStates={nodeStates}
             title={session?.supervised ? "Worker Graph" : "Agent Graph"}
           />
+          <TaskListPanel
+            tasks={tasks}
+            loading={tasksLoading}
+            title={session?.supervised ? "Supervisor plan" : "Action plan"}
+            onToggle={(taskId, status) => {
+              if (!taskListId) return;
+              void api.patchTask(taskListId, taskId, { status }).then(() => loadTasks());
+            }}
+          />
+          {session?.supervised && tasks.length === 0 && !tasksLoading ? (
+            <p className="task-panel-empty">Supervisor plan will appear when the session starts.</p>
+          ) : null}
         </aside>
       </div>
     </div>

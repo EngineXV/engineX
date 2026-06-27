@@ -11,10 +11,16 @@ dependencies = [
     "httpx>=0.27.0",
     "fastmcp>=2.0.0",
     "python-dotenv>=1.0.0",
+    "playwright>=1.40.0",
+    "websockets>=12.0",
     "engine",
 ]
 
 [project.optional-dependencies]
+browser = [
+    "pillow>=10.0.0",
+]
+
 dev = ["pytest>=7.0.0", "pytest-asyncio>=0.21.0"]
 
 [tool.uv.sources]
@@ -25,14 +31,19 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/engine_tools"]
+packages = [
+    "src/engine_tools",
+    "src/chart_tools",
+    "src/terminal_tools",
+    "src/gcu",
+]
 
 [tool.ruff]
 target-version = "py311"
 line-length = 100
 
 lint.select = ["B", "C4", "E", "F", "I", "Q", "UP", "W"]
-lint.isort.known-first-party = ["engine_tools"]
+lint.isort.known-first-party = ["engine_tools", "chart_tools", "terminal_tools", "gcu"]
 
 [dependency-groups]
 dev = ["ruff>=0.14.14", "pytest>=8.0", "pytest-asyncio>=0.23"]

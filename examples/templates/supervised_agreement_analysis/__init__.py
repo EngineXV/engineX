@@ -8,7 +8,7 @@ from .agent import (
     graph,
     nodes,
     pause_nodes,
-    queen_goal,
+    supervisor_goal,
     supervised_worker_path,
     terminal_nodes,
 )
@@ -18,7 +18,7 @@ __version__ = metadata.version
 
 __all__ = [
     "goal",
-    "queen_goal",
+    "supervisor_goal",
     "nodes",
     "edges",
     "graph",

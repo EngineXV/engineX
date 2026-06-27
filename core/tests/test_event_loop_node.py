@@ -773,14 +773,14 @@ class TestClientFacingExpectingWork:
 
     @pytest.mark.asyncio
     async def test_auto_block_without_missing_outputs(self, runtime, memory):
-        """Text-only with no missing outputs should still auto-block (queen monitoring).
+        """Text-only with no missing outputs should still auto-block (supervisor monitoring).
 
-        Simulates: queen node with no required outputs outputs "monitoring..."
+        Simulates: supervisor node with no required outputs outputs "monitoring..."
         -> should auto-block and wait for event, not spin in judge loop.
         """
         spec = NodeSpec(
-            id="queen",
-            name="Queen",
+            id="supervisor",
+            name="Supervisor",
             description="orchestrator",
             node_type="event_loop",
             output_keys=[],

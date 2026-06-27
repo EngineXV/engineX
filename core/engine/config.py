@@ -26,6 +26,13 @@ def get_engine_config() -> dict[str, Any]:
         return {}
 
 
+def get_pipeline_stages_config() -> list[dict[str, Any]]:
+    """Return declarative pipeline stage specs from configuration."""
+    pipeline = get_engine_config().get("pipeline", {})
+    stages = pipeline.get("stages", [])
+    return stages if isinstance(stages, list) else []
+
+
 # ---------------------------------------------------------------------------
 # Derived helpers
 # ---------------------------------------------------------------------------

@@ -15,6 +15,7 @@ class SessionStatus(StrEnum):
 
     ACTIVE = "active"  # Currently executing
     PAUSED = "paused"  # Waiting for resume (client input, pause node)
+    PENDING_HUMAN_APPROVAL = "pending_human_approval"  # Waiting for explicit HITL approval
     COMPLETED = "completed"  # Finished successfully
     FAILED = "failed"  # Finished with error
     CANCELLED = "cancelled"  # User/system cancelled
@@ -170,7 +171,9 @@ class SessionState(BaseModel):
         now = datetime.now().isoformat()
 
         # Determine status based on execution result
-        if result.paused_at:
+        if result.session_state.get("status") == SessionStatus.PENDING_HUMAN_APPROVAL:
+            status = SessionStatus.PENDING_HUMAN_APPROVAL
+        elif result.paused_at:
             status = SessionStatus.PAUSED
         elif result.success:
             status = SessionStatus.COMPLETED
@@ -226,9 +229,79 @@ class SessionState(BaseModel):
             or (self.progress.path[-1] if self.progress.path else None)
         )
         return {
+            "status": self.status,
             "paused_at": resume_from,
             "resume_from": resume_from,
             "memory": self.memory,
             "execution_path": self.progress.path,
             "node_visit_counts": self.progress.node_visit_counts,
         }
+
+
+class BillingCodeMapping(BaseModel):
+    """Proposed medical billing code mapped from clinical documentation."""
+
+    code: str
+    code_system: str  # ICD-11, CPT, HCPCS, etc.
+    description: str = ""
+    procedure: str = ""
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    financial_risk: float = Field(default=0.0, ge=0.0, le=1.0)
+    modifiers: list[str] = Field(default_factory=list)
+    diagnosis_pointers: list[str] = Field(default_factory=list)
+    source_spans: list[dict[str, Any]] = Field(default_factory=list)
+    validation_flags: list[str] = Field(default_factory=list)
+    carrier_rules_checked: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = {"extra": "allow"}
+
+
+class BillingConfidenceVector(BaseModel):
+    """Confidence dimensions used for audit and routing decisions."""
+
+    extraction: float = Field(default=1.0, ge=0.0, le=1.0)
+    code_match: float = Field(default=1.0, ge=0.0, le=1.0)
+    modifier_match: float = Field(default=1.0, ge=0.0, le=1.0)
+    carrier_compliance: float = Field(default=1.0, ge=0.0, le=1.0)
+
+    model_config = {"extra": "allow"}
+
+    @computed_field
+    @property
+    def minimum(self) -> float:
+        """Lowest confidence dimension."""
+        return min(
+            self.extraction,
+            self.code_match,
+            self.modifier_match,
+            self.carrier_compliance,
+        )
+
+
+class BillingHumanOverrideLog(BaseModel):
+    """Auditable record of a human billing auditor decision."""
+
+    auditor_id: str
+    action: str  # approve, reject, modify
+    reason: str = ""
+    original_code: BillingCodeMapping | None = None
+    approved_code: BillingCodeMapping | None = None
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = {"extra": "allow"}
+
+
+class MedicalBillingState(SessionState):
+    """Session state for HITL medical billing and insurance coding audits."""
+
+    clinical_text: str = ""
+    extracted_procedures: list[dict[str, Any]] = Field(default_factory=list)
+    proposed_codes: list[BillingCodeMapping] = Field(default_factory=list)
+    confidence_vectors: dict[str, BillingConfidenceVector] = Field(default_factory=dict)
+    validation_flags: list[dict[str, Any]] = Field(default_factory=list)
+    human_override_logs: list[BillingHumanOverrideLog] = Field(default_factory=list)
+    approval_payload: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = {"extra": "allow"}

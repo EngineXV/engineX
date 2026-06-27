@@ -2,6 +2,13 @@
 
 from engine.schemas.decision import Decision, DecisionEvaluation, Option, Outcome
 from engine.schemas.run import Problem, Run, RunSummary
+from engine.schemas.session_state import (
+    BillingCodeMapping,
+    BillingConfidenceVector,
+    BillingHumanOverrideLog,
+    MedicalBillingState,
+    SessionStatus,
+)
 
 __all__ = [
     "Decision",
@@ -11,4 +18,9 @@ __all__ = [
     "Run",
     "RunSummary",
     "Problem",
+    "SessionStatus",
+    "BillingCodeMapping",
+    "BillingConfidenceVector",
+    "BillingHumanOverrideLog",
+    "MedicalBillingState",
 ]

@@ -80,6 +80,7 @@ tmp/
 temp/
 exports/*
 agent_logs/
-docs/HIVE_COMPLETE_GUIDE.md
+# Local-only documentation (not published to the public repo)
+docs/
 .agent-builder-sessions/*
 screenshots/*

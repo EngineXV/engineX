@@ -6,6 +6,8 @@ from typing import Any
 
 from engine.runner.tool_registry import tool
 
+_correction_attempts = 0
+
 
 @tool(description="Fetch broker transactions from last hour.")
 def fetch_broker_transactions() -> dict[str, Any]:
@@ -52,13 +54,14 @@ def normalize_transactions() -> dict[str, Any]:
         }
     ]
 
-    return {
-        "structured_transactions": transactions
-    }
+    return {"structured_transactions": transactions}
 
 
 @tool(description="Validate transaction reconciliation.")
 def validate_transactions() -> dict[str, Any]:
+    global _correction_attempts
+
+    # Demo: fee mismatch survives one auto-correction cycle, then needs human review.
     transactions = [
         {
             "transaction_id": "TXN001",
@@ -66,7 +69,7 @@ def validate_transactions() -> dict[str, Any]:
             "investor_id": "INV001",
             "input_amount": 1000,
             "output_amount": 950,
-            "fees": 50,
+            "fees": 60 if _correction_attempts == 0 else 55,
         }
     ]
 
@@ -81,17 +84,25 @@ def validate_transactions() -> dict[str, Any]:
                     "transaction_id": txn["transaction_id"],
                     "expected_input": expected_input,
                     "actual_input": txn["input_amount"],
+                    "reason": "fee_mismatch",
                 }
             )
 
+    validation_passed = len(discrepancies) == 0
+    requires_human_review = not validation_passed and _correction_attempts >= 1
+
     return {
-        "validation_passed": len(discrepancies) == 0,
+        "validation_passed": validation_passed,
         "discrepancies": discrepancies,
+        "requires_human_review": requires_human_review,
     }
 
 
 @tool(description="Correct transaction discrepancies.")
 def correct_transactions() -> dict[str, Any]:
+    global _correction_attempts
+    _correction_attempts += 1
+
     corrected_transactions = [
         {
             "transaction_id": "TXN001",
@@ -99,12 +110,13 @@ def correct_transactions() -> dict[str, Any]:
             "investor_id": "INV001",
             "input_amount": 1000,
             "output_amount": 950,
-            "fees": 50,
+            "fees": 55,
         }
     ]
 
     return {
-        "corrected_transactions": corrected_transactions
+        "corrected_transactions": corrected_transactions,
+        "correction_attempted": True,
     }
 
 

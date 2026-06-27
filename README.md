@@ -147,7 +147,9 @@ Configuration and credentials are managed in `~/.engine/`.
 | Doc | Audience |
 |-----|----------|
 | [ENGINEX_COMPLETE_GUIDE.md](docs/ENGINEX_COMPLETE_GUIDE.md) | Product overview, diagrams, code map |
+| [GOALS.md](docs/GOALS.md) | Goal vs node criteria, four feedback mechanisms |
 | [CLIENT_DEPLOYMENT_GUIDE.md](docs/CLIENT_DEPLOYMENT_GUIDE.md) | Client cloud install — headless vs dashboard |
+| [MULTI_TENANT.md](docs/MULTI_TENANT.md) | Multi-tenant SaaS design (Phase 2 — not in OSS) |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Engineering architecture summary |
 | [docs/TICKET_STATUS.md](docs/TICKET_STATUS.md) | GitHub / internal ticket audit (post PR #9–#12) |
 

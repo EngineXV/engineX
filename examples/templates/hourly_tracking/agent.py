@@ -9,6 +9,7 @@ from .nodes import (
     process_transactions_node,
     validate_transactions_node,
     correct_transactions_node,
+    human_review_node,
     store_results_node,
 )
 
@@ -40,6 +41,7 @@ nodes = [
     process_transactions_node,
     validate_transactions_node,
     correct_transactions_node,
+    human_review_node,
     store_results_node,
 ]
 
@@ -64,6 +66,14 @@ edges = [
         target="store_results",
         condition=EdgeCondition.CONDITIONAL,
         condition_expr="validation_passed == True",
+        priority=3,
+    ),
+    EdgeSpec(
+        id="validate-to-human",
+        source="validate_transactions",
+        target="human_review",
+        condition=EdgeCondition.CONDITIONAL,
+        condition_expr="requires_human_review == True",
         priority=2,
     ),
     EdgeSpec(
@@ -71,7 +81,7 @@ edges = [
         source="validate_transactions",
         target="correct_transactions",
         condition=EdgeCondition.CONDITIONAL,
-        condition_expr="validation_passed == False",
+        condition_expr="validation_passed == False and requires_human_review != True",
         priority=1,
     ),
     EdgeSpec(
@@ -81,19 +91,23 @@ edges = [
         condition=EdgeCondition.ON_SUCCESS,
         priority=1,
     ),
+    EdgeSpec(
+        id="human-to-store",
+        source="human_review",
+        target="store_results",
+        condition=EdgeCondition.CONDITIONAL,
+        condition_expr="human_approved == True",
+        priority=1,
+    ),
 ]
 
 entry_node = "fetch_transactions"
 
-entry_points = {
-    "start": "fetch_transactions"
-}
+entry_points = {"start": "fetch_transactions"}
 
-pause_nodes = []
+pause_nodes = ["human_review"]
 
-terminal_nodes = [
-    "store_results"
-]
+terminal_nodes = ["store_results"]
 
 async_entry_points = [
     AsyncEntryPointSpec(

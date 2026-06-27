@@ -80,6 +80,7 @@ validate_transactions_node = NodeSpec(
     output_keys=[
         "validation_passed",
         "discrepancies_json",
+        "requires_human_review",
     ],
     system_prompt="""\
 Call validate_transactions().
@@ -88,6 +89,7 @@ Copy outputs:
 
 validation_passed
 discrepancies
+requires_human_review
 
 set_output(
     "validation_passed",
@@ -97,6 +99,11 @@ set_output(
 set_output(
     "discrepancies_json",
     discrepancies
+)
+
+set_output(
+    "requires_human_review",
+    requires_human_review
 )
 
 Finish.
@@ -134,6 +141,42 @@ Finish.
 """,
     tools=[
         "correct_transactions",
+    ],
+)
+
+human_review_node = NodeSpec(
+    id="human_review",
+    name="Human Review",
+    description="Operator approves unresolved reconciliation exceptions.",
+    node_type="event_loop",
+    client_facing=True,
+    input_keys=[
+        "structured_transactions_json",
+        "discrepancies_json",
+    ],
+    output_keys=[
+        "human_approved",
+        "reviewer_notes",
+        "structured_transactions_json",
+    ],
+    system_prompt="""\
+Present discrepancies_json and structured_transactions_json to the operator.
+
+Explain what auto-correction attempted and why human approval is required.
+
+Ask the operator to approve with adjusted values or reject for rework.
+
+When approved:
+- set_output("human_approved", True)
+- set_output("reviewer_notes", "<operator rationale>")
+- set_output("structured_transactions_json", "<approved transactions JSON>")
+
+When rejected:
+- set_output("human_approved", False)
+- set_output("reviewer_notes", "<what to fix>")
+""",
+    tools=[
+        "set_output",
     ],
 )
 

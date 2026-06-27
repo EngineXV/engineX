@@ -4,29 +4,34 @@ Hourly reconciliation workflow for broker and investor transactions.
 
 ## Workflow
 
-Fetch Transactions
-↓
-Process Transactions
-↓
-Validate Transactions
-↓
-Validation Passed?
-
-YES → Store Results
-
-NO → Correct Transactions
-        ↓
-     Validate Transactions
+```text
+Fetch → Process → Validate ──pass──► Store
+                    │
+                    ├── auto-fix loop ──► Correct → Validate
+                    │
+                    └── exception ──► Human Review (HITL) ──approved──► Store
+```
 
 ## Features
 
-- Hourly execution via AsyncEntryPointSpec
+- Hourly execution via `AsyncEntryPointSpec`
 - Multi-source transaction ingestion
 - Structured transaction normalization
 - Deterministic financial validation
 - Auto-correction feedback loop
+- **Human review** (`pause_nodes=["human_review"]`) when auto-fix cannot resolve discrepancies
 - Verified result storage
 
-## Validation Rule
+## Validation rule
 
-input_amount = output_amount + fees
+`input_amount = output_amount + fees`
+
+## Run
+
+```bash
+./engine validate examples/templates/hourly_tracking
+./engine run examples/templates/hourly_tracking --tui
+./engine serve   # approve exceptions in the dashboard
+```
+
+For HITL demos without waiting for the timer, use `support_triage` or `agreement_analysis`.

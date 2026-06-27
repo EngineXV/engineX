@@ -1,7 +1,7 @@
 # EngineX Ticket Audit — Post PR #9 / #11 / #12
 
-**Audit date:** 2026-06-14  
-**Code baseline:** `main` @ `79f2ac4`  
+**Audit date:** 2026-06-14 (updated)  
+**Code baseline:** `main` + local changes (deep_research, hourly_tracking HITL, GOALS.md, MULTI_TENANT.md)  
 **Repos:** [EngineXV/engineX](https://github.com/EngineXV/engineX) (public) · [EngineXV/engineX-internal](https://github.com/EngineXV/engineX-internal) (private GTM)
 
 This document tracks whether open tickets and diagrams match the product after OSS platform polish.
@@ -13,8 +13,8 @@ This document tracks whether open tickets and diagrams match the product after O
 | Area | Status |
 |------|--------|
 | **Engineering merged** | PR #9 (hourly tracking), #11 (supervisors), #12 (OAuth, ops, checkpoints, GCU) |
-| **Docs updated locally** | `ENGINEX_COMPLETE_GUIDE.md`, `CLIENT_DEPLOYMENT_GUIDE.md`, `TICKET_STATUS.md`, templates README |
-| **Still open (engineering)** | #10 Goals/docs tests · #4 multi-tenant · #5 desktop |
+| **Docs updated locally** | `ENGINEX_COMPLETE_GUIDE.md`, `CLIENT_DEPLOYMENT_GUIDE.md`, `GOALS.md`, `MULTI_TENANT.md`, `TICKET_STATUS.md`, templates README |
+| **Still open (engineering)** | #10 (GOALS.md done — close after commit) · #4 multi-tenant (design doc only — implementation Phase 2) · #5 desktop |
 | **Still open (GTM internal)** | All 8 internal tickets — business deliverables, not code |
 
 ---
@@ -25,7 +25,7 @@ This document tracks whether open tickets and diagrams match the product after O
 
 | # | Title | Code status | Ticket / diagram notes |
 |---|-------|-------------|------------------------|
-| **#2** | Hourly Tracking Agent | **Done** — `examples/templates/hourly_tracking/`, PR #9 merged | Architecture diagram still accurate. Deliverable checkboxes in issue body are stale (all shipped). |
+| **#2** | Hourly Tracking Agent | **Done** — `examples/templates/hourly_tracking/`, PR #9 merged; v1.1 adds `pause_nodes` HITL for unresolved exceptions | Architecture diagram still accurate. |
 | **#1** | LLM Auto-Correction | **Done in runtime** — judge RETRY in `event_loop/node.py`, not separate `EvaluationNode` | Closed correctly. Diagram showing standalone EvaluationNode is **outdated** — judge runs inside EventLoopNode. |
 | **#3, #6, #7** | Phase 3 agents | **wontfix** | Diagrams reference `hitl.py` + "Resolution Handshake Node" — partially valid (`graph/hitl.py` exists) but overspecifies unbuilt agent scaffolding. OK as backlog/wontfix. |
 
@@ -33,9 +33,9 @@ This document tracks whether open tickets and diagrams match the product after O
 
 | # | Title | Up to date? | Action needed |
 |---|-------|-------------|---------------|
-| **#4** | Multi-Tenant Architecture | **Yes** — accurately describes single-tenant OSS today | No code change. Diagrams correct. Still Phase 2. |
+| **#4** | Multi-Tenant Architecture | **Yes** — accurately describes single-tenant OSS today | **`docs/MULTI_TENANT.md`** added (design spec). No OSS implementation — Phase 2 / Engine Cloud. |
 | **#5** | Desktop Agents | **Mostly yes** — run-mode table accurate | **Minor update:** add Ops console + checkpoint API on server (PR #12) as built server-side capabilities. Desktop connector still not built. |
-| **#10** | Goal vs node criteria docs | **Partially stale** | Deliverables incomplete: no `docs/GOALS.md` yet. Issue body diagrams are **accurate**. Content largely duplicated in `ENGINEX_COMPLETE_GUIDE.md` §6–8. Need: dedicated GOALS.md, tests, Level 2 template example. |
+| **#10** | Goal vs node criteria docs | **Mostly done** | **`docs/GOALS.md`** + README link shipped. Tests and Level 2 examples already in tree. Close #10 after commit. |
 
 ### PRs (reference)
 
@@ -101,8 +101,8 @@ This document tracks whether open tickets and diagrams match the product after O
 
 ### Engineering (public)
 
-1. **#10** — Extract issue body → `docs/GOALS.md`, link from README, add retry tests, one `success_criteria` template example.
-2. **#2** — Add closing comment listing merged PR #9 + template path (issue already closed).
+1. **#10** — Close after `docs/GOALS.md` lands on `main`.
+2. **#4** — Design doc at `docs/MULTI_TENANT.md`; implementation remains Phase 2.
 3. **#5** — Comment: server-side ops/checkpoints/OAuth shipped; desktop connector still Phase 3.
 
 ### GTM (internal)
@@ -118,7 +118,8 @@ This document tracks whether open tickets and diagrams match the product after O
 | File | Purpose |
 |------|---------|
 | `docs/CLIENT_DEPLOYMENT_GUIDE.md` | Client install ticket / handoff |
+| `docs/GOALS.md` | Goal vs node criteria (#10) |
+| `docs/MULTI_TENANT.md` | Multi-tenant design spec (#4) |
 | `docs/TICKET_STATUS.md` | This audit |
 | `docs/ENGINEX_COMPLETE_GUIDE.md` | Updated gaps + naming |
-
-Commit these to keep tickets and docs in sync on GitHub.
+| `examples/templates/deep_research/` | Deep research template |

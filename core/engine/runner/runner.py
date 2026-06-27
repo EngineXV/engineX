@@ -440,21 +440,28 @@ class AgentRunner:
             if self._llm is None:
                 has_llm_nodes = any(node.node_type == "event_loop" for node in self.graph.nodes)
                 if has_llm_nodes:
-                    from engine.credentials.models import CredentialError
+                    if self.skip_credential_validation:
+                        from engine.llm.mock import MockLLMProvider
 
-                    if self._is_local_model(self.model):
-                        raise CredentialError(
-                            f"Failed to initialize LLM for local model '{self.model}'. "
-                            f"Ensure your local LLM server is running "
-                            f"(e.g. 'ollama serve' for Ollama)."
+                        self._llm = MockLLMProvider(model=self.model)
+                    else:
+                        from engine.credentials.models import CredentialError
+
+                        if self._is_local_model(self.model):
+                            raise CredentialError(
+                                f"Failed to initialize LLM for local model '{self.model}'. "
+                                f"Ensure your local LLM server is running "
+                                f"(e.g. 'ollama serve' for Ollama)."
+                            )
+                        api_key_env = self._get_api_key_env_var(self.model)
+                        hint = (
+                            f"Set it with: export {api_key_env}=your-api-key"
+                            if api_key_env
+                            else "Configure an API key for your LLM provider."
                         )
-                    api_key_env = self._get_api_key_env_var(self.model)
-                    hint = (
-                        f"Set it with: export {api_key_env}=your-api-key"
-                        if api_key_env
-                        else "Configure an API key for your LLM provider."
-                    )
-                    raise CredentialError(f"LLM API key not found for model '{self.model}'. {hint}")
+                        raise CredentialError(
+                            f"LLM API key not found for model '{self.model}'. {hint}"
+                        )
 
         # For event_loop nodes: auto-register file tools MCP server, then expand tool lists
         has_loop_nodes = any(node.node_type == "event_loop" for node in self.graph.nodes)

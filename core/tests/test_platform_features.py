@@ -72,4 +72,3 @@ def test_google_calendar_provider_authorize_url():
     url = provider.get_authorization_url(state="abc", redirect_uri="http://localhost/cb")
     assert "accounts.google.com" in url
     assert "calendar" in url
-

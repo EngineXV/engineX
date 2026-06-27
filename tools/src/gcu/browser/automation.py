@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from .bridge import get_bridge
 from . import playwright_backend as pw
+from .bridge import get_bridge
 
 
 def extension_connected() -> bool:

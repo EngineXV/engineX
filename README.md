@@ -142,6 +142,19 @@ Here is a list of commonly used EngineX commands:
 
 Configuration and credentials are managed in `~/.engine/`.
 
+## Documentation
+
+| Doc | Audience |
+|-----|----------|
+| [ENGINEX_COMPLETE_GUIDE.md](docs/ENGINEX_COMPLETE_GUIDE.md) | Product overview, diagrams, code map |
+| [CLIENT_DEPLOYMENT_GUIDE.md](docs/CLIENT_DEPLOYMENT_GUIDE.md) | Client cloud install — headless vs dashboard |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Engineering architecture summary |
+| [docs/TICKET_STATUS.md](docs/TICKET_STATUS.md) | GitHub / internal ticket audit (post PR #9–#12) |
+
+```bash
+./engine serve   # Dashboard at http://127.0.0.1:8787
+```
+
 ## Architecture Overview
 
 EngineX is built around a modular and scalable architecture that leverages graphs for defining agent workflows, event-loop nodes for efficient processing, and human-in-the-loop mechanisms for robust control. It supports features like checkpoints for state management and secure credential handling, all accessible via a powerful CLI and a comprehensive web dashboard. The system is designed to facilitate the development and deployment of production-ready agentic workflows.

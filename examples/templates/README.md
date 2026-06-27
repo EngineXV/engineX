@@ -3,6 +3,8 @@
 | Template | Description |
 |----------|-------------|
 | [agreement_analysis](agreement_analysis/) | HITL workflow: intake → extract → approval → audit |
+| [log_monitor](log_monitor/) | Always-on Grafana polling → LLM triage → Slack/PagerDuty alerts (`--daemon`) |
+| [hourly_tracking](hourly_tracking/) | Hourly timesheet reconciliation with validate → fix loop |
 | [meeting_scheduler](meeting_scheduler/) | Calendar booking: intake → schedule → confirm (loop) |
 | [supervised_agreement_analysis](supervised_agreement_analysis/) | **Supervisor** over the agreement analysis worker |
 | [supervisors/](supervisors/) | **Department supervisors** — Technology, Legal, Marketing, and more |

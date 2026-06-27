@@ -144,7 +144,7 @@ class GraphOverview(Vertical):
         if is_active:
             sym = "[bold green]●[/bold green]"
         elif is_done:
-            sym = "[dim]✓[/dim]"
+            sym = "[dim]ok[/dim]"
         elif is_terminal:
             sym = "[yellow]■[/yellow]"
         else:
@@ -467,7 +467,7 @@ class GraphOverview(Vertical):
                     display.write(f"     [dim]{schedule_label}[/dim]")
 
             elif ep.trigger_type == "event":
-                display.write(f"  [yellow]⚡[/yellow] {ep.name} [dim]→ {ep.entry_node}[/dim]")
+                display.write(f"  [yellow][/yellow] {ep.name} [dim]→ {ep.entry_node}[/dim]")
                 event_types = ep.trigger_config.get("event_types", [])
                 if event_types:
                     display.write(f"     [dim]events: {', '.join(event_types)}[/dim]")

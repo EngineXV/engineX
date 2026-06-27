@@ -578,9 +578,8 @@ class TestMedicalBillingWorkflowE2E:
 
         procedures = MockEHRExtractor.extract_procedures(clinical_text)
         state.extracted_procedures = procedures
-        print(
-            f"✓ Extracted {len(procedures)} procedures: {[p['procedure_name'] for p in procedures]}"
-        )
+        proc_names = [p["procedure_name"] for p in procedures]
+        print(f"Extracted {len(procedures)} procedures: {proc_names}")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # PHASE 2: CODE EXTRACTION & MAPPING
@@ -603,7 +602,7 @@ class TestMedicalBillingWorkflowE2E:
                 modifier_match=0.87,
                 carrier_compliance=0.89,
             )
-        print(f"✓ Assigned confidence vectors to {len(proposed_codes)} codes")
+        print(f"OK: Assigned confidence vectors to {len(proposed_codes)} codes")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # PHASE 3: COMPLIANCE VALIDATION
@@ -617,8 +616,8 @@ class TestMedicalBillingWorkflowE2E:
         print(f"  Warnings: {len(validation['warnings'])}")
         if validation["warnings"]:
             for w in validation["warnings"][:2]:
-                print(f"    ⚠ {w}")
-        print("✓ Validation complete")
+                print(f"    WARN: {w}")
+        print("OK: Validation complete")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # PHASE 4: HITL INTERCEPT CHECK
@@ -636,13 +635,13 @@ class TestMedicalBillingWorkflowE2E:
         )
 
         if reviewed_state.status == SessionStatus.PENDING_HUMAN_APPROVAL:
-            print("  ⚠ HITL INTERCEPT TRIGGERED")
+            print("  WARN: HITL INTERCEPT TRIGGERED")
             review_items = reviewed_state.approval_payload.get("review_items", [])
             print(f"  Items Requiring Review: {len(review_items)}")
             for item in review_items:
                 print(f"    Code {item['code']['code']}: {', '.join(item['reasons'])}")
         else:
-            print("  ✓ No HITL intercept needed - codes approved for processing")
+            print("  OK: No HITL intercept needed - codes approved for processing")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # PHASE 5: HUMAN AUDITOR REVIEW (simulated)
@@ -667,7 +666,7 @@ class TestMedicalBillingWorkflowE2E:
         print(f"  Auditor: {resolution.auditor_id}")
         print(f"  Action: {resolution.action.upper()}")
         print(f"  Reason: {resolution.reason[:60]}...")
-        print("✓ Auditor review complete - resuming execution")
+        print("OK: Auditor review complete - resuming execution")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # PHASE 6: AUDIT TRAIL & PERSISTENCE
@@ -688,16 +687,16 @@ class TestMedicalBillingWorkflowE2E:
         print(f"  Claim ID: {audit_record['claim_id']}")
         print(f"  Codes Stored: {len(audit_record['proposed_codes'])}")
         print(f"  Override Logs: {len(audit_record['override_logs'])}")
-        print("✓ Audit trail persisted to storage")
+        print("OK: Audit trail persisted to storage")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # VERIFICATION & RECONCILIATION
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         print("\n[VERIFICATION] Reconciliation Checks")
-        print(f"  ✓ Session Status: {final_state.status}")
-        print(f"  ✓ Execution Not Paused: {final_state.progress.paused_at is None}")
-        print(f"  ✓ Audit Trail: {len(final_state.human_override_logs)} override logs")
-        print(f"  ✓ Memory Snapshot: {len(final_state.memory)} keys")
+        print(f"  OK: Session Status: {final_state.status}")
+        print(f"  OK: Execution Not Paused: {final_state.progress.paused_at is None}")
+        print(f"  OK: Audit Trail: {len(final_state.human_override_logs)} override logs")
+        print(f"  OK: Memory Snapshot: {len(final_state.memory)} keys")
 
         # Final assertions
         assert final_state.status == SessionStatus.ACTIVE
@@ -706,5 +705,5 @@ class TestMedicalBillingWorkflowE2E:
         assert len(final_state.human_override_logs) >= 0
 
         print("\n" + "=" * 70)
-        print("✅ COMPLETE WORKFLOW SUCCESS")
+        print("- COMPLETE WORKFLOW SUCCESS")
         print("=" * 70)

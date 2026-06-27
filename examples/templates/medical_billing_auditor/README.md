@@ -47,12 +47,12 @@ Compliance Validation
 
 ## Key Features
 
-✅ **Self-Correcting Loop** — Auto-correction for minor matching issues  
-✅ **Confidence Scoring** — Multi-dimensional confidence vectors (extraction, code_match, modifier_match, carrier_compliance)  
-✅ **Risk Assessment** — Financial risk scoring for claim items  
-✅ **HITL Safety Net** — Explicit human authorization for high-uncertainty or high-risk codes  
-✅ **Audit Trail** — Complete record of all human approvals and code modifications  
-✅ **Checkpoint Recovery** — Pause/resume capability with state persistence  
+- **Self-Correcting Loop** — Auto-correction for minor matching issues  
+- **Confidence Scoring** — Multi-dimensional confidence vectors (extraction, code_match, modifier_match, carrier_compliance)  
+- **Risk Assessment** — Financial risk scoring for claim items  
+- **HITL Safety Net** — Explicit human authorization for high-uncertainty or high-risk codes  
+- **Audit Trail** — Complete record of all human approvals and code modifications  
+- **Checkpoint Recovery** — Pause/resume capability with state persistence  
 
 ## State Definition: `MedicalBillingState`
 
@@ -76,10 +76,10 @@ A proposed claim item is escalated for human review (`PENDING_HUMAN_APPROVAL`) i
 
 ## Definition of Done (Acceptance Criteria)
 
-✅ Framework cleanly intercepts high-risk proposed claim items without crashing  
-✅ State details accurately serialized to checkpoint storage while awaiting human approval  
-✅ API boundary updates session state from user interaction input, allowing resumed graph runs  
-✅ Unit tests confirm low-certainty proposed codes trigger appropriate human review pathway  
+- Framework cleanly intercepts high-risk proposed claim items without crashing  
+- State details accurately serialized to checkpoint storage while awaiting human approval  
+- API boundary updates session state from user interaction input, allowing resumed graph runs  
+- Unit tests confirm low-certainty proposed codes trigger appropriate human review pathway  
 
 ## Running the Agent
 

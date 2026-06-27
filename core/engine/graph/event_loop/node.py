@@ -1628,7 +1628,7 @@ class EventLoopNode(NodeProtocol):
                     # --- Framework-level subagent delegation ---
                     # Queue for parallel execution in Phase 2
                     logger.info(
-                        "🔄 LLM requesting subagent delegation: agent_id='%s', task='%s'",
+                        "LLM requesting subagent delegation: agent_id='%s', task='%s'",
                         tc.tool_input.get("agent_id", "?"),
                         (tc.tool_input.get("task", "")[:100] + "...")
                         if len(tc.tool_input.get("task", "")) > 100
@@ -3471,7 +3471,7 @@ class EventLoopNode(NodeProtocol):
         # Log subagent invocation start
         logger.info(
             "\n" + "=" * 60 + "\n"
-            "🤖 SUBAGENT INVOCATION\n"
+            "SUBAGENT INVOCATION\n"
             "=" * 60 + "\n"
             "Parent Node: %s\n"
             "Subagent ID: %s\n"
@@ -3605,7 +3605,7 @@ class EventLoopNode(NodeProtocol):
             )
 
         logger.info(
-            "📦 Subagent '%s' configuration:\n"
+            "Subagent '%s' configuration:\n"
             "   - System prompt: %s\n"
             "   - Tools available (%d): %s\n"
             "   - Memory keys inherited: %s",
@@ -3694,14 +3694,14 @@ class EventLoopNode(NodeProtocol):
         )
 
         try:
-            logger.info("🚀 Starting subagent '%s' execution...", agent_id)
+            logger.info("Starting subagent '%s' execution...", agent_id)
             start_time = time.time()
             result = await subagent_node.execute(subagent_ctx)
             latency_ms = int((time.time() - start_time) * 1000)
 
             logger.info(
                 "\n" + "-" * 60 + "\n"
-                "✅ SUBAGENT '%s' COMPLETED\n"
+                "- SUBAGENT '%s' COMPLETED\n"
                 "-" * 60 + "\n"
                 "Success: %s\n"
                 "Latency: %dms\n"
@@ -3739,7 +3739,7 @@ class EventLoopNode(NodeProtocol):
 
         except Exception as e:
             logger.exception(
-                "\n" + "!" * 60 + "\n❌ SUBAGENT '%s' FAILED\nError: %s\n" + "!" * 60,
+                "\n" + "!" * 60 + "\nERROR: SUBAGENT '%s' FAILED\nError: %s\n" + "!" * 60,
                 agent_id,
                 str(e),
             )

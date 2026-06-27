@@ -587,7 +587,7 @@ class ChatRepl(Vertical):
             if "execution_path" in state and state["execution_path"]:
                 self._write_history("\n[bold]Execution Path:[/bold]")
                 for node_id in state["execution_path"]:
-                    self._write_history(f"  ✓ {node_id}")
+                    self._write_history(f"  OK: {node_id}")
 
             # Checkpoints
             checkpoint_dir = session_dir / "checkpoints"
@@ -609,7 +609,7 @@ class ChatRepl(Vertical):
                             current_node = cp_data.get("current_node", "unknown")
                             is_clean = cp_data.get("is_clean", False)
 
-                            clean_marker = "✓" if is_clean else "⚠"
+                            clean_marker = "ok" if is_clean else "WARN"
                             self._write_history(f"  {i}. {clean_marker} [cyan]{cp_id}[/cyan]")
                             self._write_history(f"     Type: {cp_type}, Node: {current_node}")
                         except Exception:
@@ -676,7 +676,7 @@ class ChatRepl(Vertical):
                 resume_info = "Retrying with same input"
 
             # Display resume info
-            self._write_history(f"[bold cyan]🔄 Resuming session[/bold cyan] {session_id}")
+            self._write_history(f"[bold cyan]Resuming session[/bold cyan] {session_id}")
             self._write_history(f"   {resume_info}")
             if paused_at:
                 self._write_history("   [dim](Using session state, not checkpoint)[/dim]")
@@ -721,7 +721,7 @@ class ChatRepl(Vertical):
                 self._current_exec_id = exec_id
 
                 self._write_history(
-                    f"[green]✓[/green] Resume started (execution: {exec_id[:12]}...)"
+                    f"[green]ok[/green] Resume started (execution: {exec_id[:12]}...)"
                 )
                 self._write_history("  Agent is continuing from where it stopped...")
                 # Enable Pause button now that execution is running
@@ -811,7 +811,7 @@ class ChatRepl(Vertical):
                 self._current_exec_id = exec_id
 
                 self._write_history(
-                    f"[green]✓[/green] Recovery started (execution: {exec_id[:12]}...)"
+                    f"[green]ok[/green] Recovery started (execution: {exec_id[:12]}...)"
                 )
                 self._write_history("  Agent is continuing from checkpoint...")
                 # Enable Pause button now that execution is running
@@ -955,15 +955,13 @@ class ChatRepl(Vertical):
             if self._resume_checkpoint:
                 # Use /recover for checkpoint-based recovery
                 history.write(
-                    "\n[bold cyan]🔄 Auto-recovering from checkpoint "
+                    "\n[bold cyan]Auto-recovering from checkpoint "
                     "(--resume-session + --checkpoint)[/bold cyan]"
                 )
                 self.call_later(self._cmd_recover, self._resume_session, self._resume_checkpoint)
             else:
                 # Use /resume for session state resume
-                history.write(
-                    "\n[bold cyan]🔄 Auto-resuming session (--resume-session)[/bold cyan]"
-                )
+                history.write("\n[bold cyan]Auto-resuming session (--resume-session)[/bold cyan]")
                 self.call_later(self._cmd_resume, self._resume_session)
             return  # Skip normal startup messages
 
@@ -1449,9 +1447,9 @@ class ChatRepl(Vertical):
 
     def handle_goal_achieved(self, data: dict[str, Any]) -> None:
         """Show goal achievement prominently"""
-        self._write_history("[bold green]★ Goal achieved![/bold green]")
+        self._write_history("[bold green]Goal achieved![/bold green]")
 
     def handle_constraint_violation(self, data: dict[str, Any]) -> None:
         """Show constraint violation as a warning"""
         desc = data.get("description", "Unknown constraint")
-        self._write_history(f"[bold red]⚠ Constraint violation:[/bold red] {desc}")
+        self._write_history(f"[bold red]WARN: Constraint violation:[/bold red] {desc}")

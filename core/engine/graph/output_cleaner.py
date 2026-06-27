@@ -94,12 +94,14 @@ class OutputCleaner:
                         api_key=api_key,
                         model=config.fast_model,
                     )
-                    logger.info(f"✓ Initialized OutputCleaner with {config.fast_model}")
+                    logger.info(f"OK: Initialized OutputCleaner with {config.fast_model}")
                 else:
-                    logger.warning("⚠ CEREBRAS_API_KEY not found, output cleaning will be disabled")
+                    logger.warning(
+                        "WARN: CEREBRAS_API_KEY not found, output cleaning will be disabled"
+                    )
                     self.llm = None
             except ImportError:
-                logger.warning("⚠ LiteLLMProvider not available, output cleaning disabled")
+                logger.warning("WARN: LiteLLMProvider not available, output cleaning disabled")
                 self.llm = None
         else:
             self.llm = None
@@ -166,7 +168,7 @@ class OutputCleaner:
 
         if not is_valid and self.config.log_cleanings:
             logger.warning(
-                f"⚠ Output validation failed for {source_node_id} → {target_node_spec.id}: "
+                f"WARN: Output validation failed for {source_node_id} → {target_node_spec.id}: "
                 f"{len(errors)} error(s), {len(warnings)} warning(s)"
             )
 
@@ -185,7 +187,7 @@ class OutputCleaner:
     ) -> dict[str, Any]:
         """Use heuristics and fast LLM to clean malformed output"""
         if not self.config.enabled:
-            logger.warning("⚠ Output cleansing disabled in config")
+            logger.warning("WARN: Output cleansing disabled in config")
             return output
 
         # --- PHASE 1: Fast Heuristic Repair (Avoids LLM call) ---
@@ -209,12 +211,12 @@ class OutputCleaner:
 
         # If we fixed something, re-validate manually to see if it's enough
         if heuristic_fixed:
-            logger.info("⚡ Heuristic repair applied (nested JSON expansion)")
+            logger.info("Heuristic repair applied (nested JSON expansion)")
             return fixed_output
 
         # --- PHASE 2: LLM-based Repair ---
         if not self.llm:
-            logger.warning("⚠ No LLM provider available for cleansing")
+            logger.warning("WARN: No LLM provider available for cleansing")
             return output
 
         # Build schema description for target node
@@ -244,7 +246,7 @@ Return ONLY valid JSON matching the expected schema. No explanations, no markdow
         try:
             if self.config.log_cleanings:
                 logger.info(
-                    f"🧹 Cleaning output from '{source_node_id}' using {self.config.fast_model}"
+                    f"Cleaning output from '{source_node_id}' using {self.config.fast_model}"
                 )
 
             response = await self.llm.acomplete(
@@ -269,18 +271,18 @@ Return ONLY valid JSON matching the expected schema. No explanations, no markdow
                 self.cleansing_count += 1
                 if self.config.log_cleanings:
                     logger.info(
-                        f"✓ Output cleaned successfully (total cleanings: {self.cleansing_count})"
+                        f"OK: Output cleaned successfully (total cleanings: {self.cleansing_count})"
                     )
                 return cleaned
             else:
-                logger.warning(f"⚠ Cleaned output is not a dict: {type(cleaned)}")
+                logger.warning(f"WARN: Cleaned output is not a dict: {type(cleaned)}")
                 if self.config.fallback_to_raw:
                     return output
                 else:
                     raise ValueError(f"Cleaning produced {type(cleaned)}, expected dict")
 
         except json.JSONDecodeError as e:
-            logger.error(f"✗ Failed to parse cleaned JSON: {e}")
+            logger.error(f"FAIL: Failed to parse cleaned JSON: {e}")
             if self.config.fallback_to_raw:
                 logger.info("↩ Falling back to raw output")
                 return output
@@ -288,7 +290,7 @@ Return ONLY valid JSON matching the expected schema. No explanations, no markdow
                 raise
 
         except Exception as e:
-            logger.error(f"✗ Output cleaning failed: {e}")
+            logger.error(f"FAIL: Output cleaning failed: {e}")
             if self.config.fallback_to_raw:
                 logger.info("↩ Falling back to raw output")
                 return output

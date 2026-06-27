@@ -264,7 +264,7 @@ class SharedMemory:
                 # Long strings that look like code are suspicious
                 if self._contains_code_indicators(value):
                     logger.warning(
-                        f"⚠ Suspicious write to key '{key}': appears to be code "
+                        f"WARN: Suspicious write to key '{key}': appears to be code "
                         f"({len(value)} chars). Consider using validate=False if intended."
                     )
                     raise MemoryWriteError(
@@ -293,7 +293,7 @@ class SharedMemory:
                 if len(value) > 5000:
                     if self._contains_code_indicators(value):
                         logger.warning(
-                            f"⚠ Suspicious write to key '{key}': appears to be code "
+                            f"WARN: Suspicious write to key '{key}': appears to be code "
                             f"({len(value)} chars). Consider using validate=False if intended."
                         )
                         raise MemoryWriteError(
@@ -477,10 +477,10 @@ class NodeResult:
     def to_summary(self, node_spec: Any = None) -> str:
         """Generate a human-readable summary of this node's execution and output"""
         if not self.success:
-            return f"❌ Failed: {self.error}"
+            return f"ERROR: Failed: {self.error}"
 
         if not self.output:
-            return "✓ Completed (no output)"
+            return "OK: Completed (no output)"
 
         # Use Haiku to generate intelligent summary
         import os
@@ -489,7 +489,7 @@ class NodeResult:
 
         if not api_key:
             # Fallback: simple key-value listing
-            parts = [f"✓ Completed with {len(self.output)} outputs:"]
+            parts = [f"OK: Completed with {len(self.output)} outputs:"]
             for key, value in list(self.output.items())[:5]:  # Limit to 5 keys
                 value_str = str(value)[:100]
                 if len(str(value)) > 100:
@@ -524,11 +524,11 @@ class NodeResult:
             )
 
             summary = message.content[0].text.strip()
-            return f"✓ {summary}"
+            return f"OK: {summary}"
 
         except Exception:
             # Fallback on error
-            parts = [f"✓ Completed with {len(self.output)} outputs:"]
+            parts = [f"OK: Completed with {len(self.output)} outputs:"]
             for key, value in list(self.output.items())[:3]:
                 value_str = str(value)[:80]
                 if len(str(value)) > 80:

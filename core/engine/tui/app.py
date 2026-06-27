@@ -68,9 +68,9 @@ class StatusBar(Container):
         elif self._state == "running":
             parts.append("[bold green]● running[/bold green]")
         elif self._state == "completed":
-            parts.append("[green]✓ done[/green]")
+            parts.append("[green]OK: done[/green]")
         elif self._state == "failed":
-            parts.append("[bold red]✗ failed[/bold red]")
+            parts.append("[bold red]FAIL: failed[/bold red]")
 
         if self._active_node:
             node_str = f"[cyan]{self._active_node}[/cyan]"

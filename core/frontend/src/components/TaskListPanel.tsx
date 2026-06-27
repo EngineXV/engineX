@@ -71,7 +71,7 @@ export default function TaskListPanel({ tasks, loading, error, title, onToggle }
                 )
               }
             >
-              {task.status === "completed" ? "✓" : ""}
+              {task.status === "completed" ? "ok" : ""}
             </button>
             <div className="task-body">
               <div className="task-subject">{task.active_form || task.subject}</div>

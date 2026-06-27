@@ -286,7 +286,7 @@ class AgentPickerScreen(ModalScreen[str | None]):
                                 _render_get_started_option(
                                     "Test and run example agents",
                                     "Try pre-built example agents to learn how Engine works",
-                                    "📚",
+                                    "→",
                                 ),
                                 id="action:run_examples",
                             )
@@ -296,7 +296,7 @@ class AgentPickerScreen(ModalScreen[str | None]):
                                 _render_get_started_option(
                                     "Test and run existing agent",
                                     "Load and run an agent you've already built (from exports/)",
-                                    "🚀",
+                                    "",
                                 ),
                                 id="action:run_existing",
                             )
@@ -306,7 +306,7 @@ class AgentPickerScreen(ModalScreen[str | None]):
                                 _render_get_started_option(
                                     "Build or edit agent",
                                     "Create a new agent or modify an existing one",
-                                    "🛠️ ",
+                                    "",
                                 ),
                                 id="action:build_edit",
                             )

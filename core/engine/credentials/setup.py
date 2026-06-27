@@ -142,7 +142,7 @@ class CredentialSetupSession:
         errors: list[str] = []
 
         if not self.missing:
-            self._print(f"\n{Colors.GREEN}✓ All credentials are already configured!{Colors.NC}\n")
+            self._print(f"\n{Colors.GREEN}OK: All credentials are already configured!{Colors.NC}\n")
             return SetupResult(success=True)
 
         self._print_header()
@@ -210,7 +210,7 @@ class CredentialSetupSession:
         try:
             generate_and_save_credential_key()
             self._print(
-                f"{Colors.GREEN}✓ Encryption key saved to "
+                f"{Colors.GREEN}OK: Encryption key saved to "
                 f"~/.engine/secrets/credential_key{Colors.NC}"
             )
             return True
@@ -322,9 +322,9 @@ class CredentialSetupSession:
         health_result = self._run_health_check(cred, api_key)
         if health_result is not None:
             if health_result["valid"]:
-                self._print(f"{Colors.GREEN}✓ {health_result['message']}{Colors.NC}")
+                self._print(f"{Colors.GREEN}OK: {health_result['message']}{Colors.NC}")
             else:
-                self._print(f"{Colors.YELLOW}⚠ {health_result['message']}{Colors.NC}")
+                self._print(f"{Colors.YELLOW}WARN: {health_result['message']}{Colors.NC}")
                 confirm = self._input("Continue anyway? [y/N]: ").strip().lower()
                 if confirm != "y":
                     return False
@@ -372,7 +372,9 @@ class CredentialSetupSession:
             # Check if the credential was synced
             cred_id = cred.credential_id or cred.credential_name
             if store.is_available(cred_id):
-                self._print(f"{Colors.GREEN}✓ {cred.credential_name} synced from Engine{Colors.NC}")
+                self._print(
+                    f"{Colors.GREEN}OK: {cred.credential_name} synced from Engine{Colors.NC}"
+                )
                 # Export to current session
                 try:
                     value = store.get_key(cred_id, cred.credential_key)
@@ -383,7 +385,7 @@ class CredentialSetupSession:
                 return True
             else:
                 self._print(
-                    f"{Colors.YELLOW}⚠ {cred.credential_name} not found in "
+                    f"{Colors.YELLOW}WARN: {cred.credential_name} not found in "
                     f"Engine account.{Colors.NC}"
                 )
                 self._print("Please connect this integration on https://engine.localhost first.")
@@ -424,13 +426,13 @@ class CredentialSetupSession:
                 keys={key_name: CredentialKey(name=key_name, value=SecretStr(value))},
             )
             store.save_credential(cred_obj)
-            self._print(f"{Colors.GREEN}✓ Stored in ~/.engine/credentials/{Colors.NC}")
+            self._print(f"{Colors.GREEN}OK: Stored in ~/.engine/credentials/{Colors.NC}")
         except Exception as e:
-            self._print(f"{Colors.YELLOW}⚠ Could not store in credential store: {e}{Colors.NC}")
+            self._print(f"{Colors.YELLOW}WARN: Could not store in credential store: {e}{Colors.NC}")
 
         # Export to current session
         os.environ[cred.env_var] = value
-        self._print(f"{Colors.GREEN}✓ Exported to current session{Colors.NC}")
+        self._print(f"{Colors.GREEN}OK: Exported to current session{Colors.NC}")
 
     def _print_summary(self, configured: list[str], skipped: list[str], errors: list[str]) -> None:
         """Print final summary"""
@@ -440,7 +442,7 @@ class CredentialSetupSession:
         self._print(f"{Colors.YELLOW}{'=' * 60}{Colors.NC}")
 
         if configured:
-            self._print(f"\n{Colors.GREEN}✓ Configured:{Colors.NC}")
+            self._print(f"\n{Colors.GREEN}OK: Configured:{Colors.NC}")
             for name in configured:
                 self._print(f"    • {name}")
 
@@ -450,7 +452,7 @@ class CredentialSetupSession:
                 self._print(f"    • {name}")
 
         if errors:
-            self._print(f"\n{Colors.RED}✗ Errors:{Colors.NC}")
+            self._print(f"\n{Colors.RED}FAIL: Errors:{Colors.NC}")
             for err in errors:
                 self._print(f"    • {err}")
 

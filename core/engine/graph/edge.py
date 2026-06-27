@@ -133,7 +133,7 @@ class EdgeSpec(BaseModel):
             )
             return result
         except Exception as e:
-            logger.warning(f"      ⚠ Condition evaluation failed: {self.condition_expr}")
+            logger.warning(f"      WARN: Condition evaluation failed: {self.condition_expr}")
             logger.warning(f"         Error: {e}")
             logger.warning(f"         Available context keys: {list(context.keys())}")
             return False
@@ -191,14 +191,14 @@ Respond with ONLY a JSON object:
                 reasoning = data.get("reasoning", "")
 
                 # Log the decision (using basic print for now)
-                logger.info(f"      🤔 LLM routing decision: {'PROCEED' if proceed else 'SKIP'}")
+                logger.info(f"      LLM routing decision: {'PROCEED' if proceed else 'SKIP'}")
                 logger.info(f"         Reason: {reasoning}")
 
                 return proceed
 
         except Exception as e:
             # Fallback: proceed on success
-            logger.warning(f"      ⚠ LLM routing failed, defaulting to on_success: {e}")
+            logger.warning(f"      WARN: LLM routing failed, defaulting to on_success: {e}")
             return source_success
 
         return source_success

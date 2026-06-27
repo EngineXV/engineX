@@ -143,7 +143,7 @@ class Decision(BaseModel):
 
     def summary_for_builder(self) -> str:
         """Generate a one-line summary for Builder to quickly understand"""
-        status = "✓" if self.was_successful else "✗"
+        status = "ok" if self.was_successful else "fail"
         quality = ""
         if self.evaluation:
             quality = f" [quality: {self.evaluation.outcome_quality:.1f}]"

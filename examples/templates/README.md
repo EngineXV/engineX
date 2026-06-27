@@ -11,6 +11,7 @@
 | [supervisors/](supervisors/) | **Department supervisors** — Technology, Legal, Marketing, and more |
 | [support_triage](support_triage/) | Support message triage with human-approved draft replies |
 | [invoice_review](invoice_review/) | Invoice extraction with finance approval and audit |
+| [medical_billing_auditor](medical_billing_auditor/) | Healthcare: EHR intake → code extraction → compliance → HITL → audit |
 
 ```bash
 ./engine validate examples/templates/agreement_analysis

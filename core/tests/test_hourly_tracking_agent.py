@@ -6,7 +6,7 @@ def test_graph_loads():
 
 
 def test_node_count():
-    assert len(graph.nodes) == 5
+    assert len(graph.nodes) == 6
 
 
 def test_feedback_loop_exists():

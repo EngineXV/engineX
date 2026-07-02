@@ -22,6 +22,16 @@ Fetch → Process → Validate ──pass──► Store
 - **Human review** (`pause_nodes=["human_review"]`) when auto-fix cannot resolve discrepancies
 - Verified result storage
 
+## Architecture
+
+The agent is implemented as a directed workflow graph with:
+
+- **Entry Node:** `fetch_transactions`
+- **Processing Nodes:** Fetch, Process, Validate, Correct, Store
+- **Conditional Routing:** Validation determines whether execution proceeds to storage or enters the auto-correction loop.
+- **Terminal Node:** `store_results`
+- **Scheduler:** `AsyncEntryPointSpec` triggers execution every 60 minutes.
+
 ## Validation rule
 
 `input_amount = output_amount + fees`

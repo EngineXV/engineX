@@ -7,6 +7,8 @@ def test_graph_loads():
 
 def test_node_count():
     assert len(graph.nodes) == 6
+    assert "human_review" in [node.id for node in graph.nodes]
+    assert graph.pause_nodes == ["human_review"]
 
 
 def test_feedback_loop_exists():

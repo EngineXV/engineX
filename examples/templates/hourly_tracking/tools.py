@@ -9,8 +9,17 @@ from engine.runner.tool_registry import tool
 _correction_attempts = 0
 
 
+@tool(description="Reset correction attempt state for a new run.")
+def reset_correction_state() -> dict[str, Any]:
+    global _correction_attempts
+    _correction_attempts = 0
+    return {"correction_attempts_reset": True}
+
+
 @tool(description="Fetch broker transactions from last hour.")
 def fetch_broker_transactions() -> dict[str, Any]:
+    reset_correction_state()
+
     return {
         "transactions": [
             {

@@ -84,3 +84,5 @@ agent_logs/
 docs/
 .agent-builder-sessions/*
 screenshots/*
+.chroma_db/
+investigation/

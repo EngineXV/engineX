@@ -1,0 +1,87 @@
+"""Tests for the vector store abstraction and tool."""
+
+import json
+import tempfile
+from pathlib import Path
+from typing import Sequence
+
+import pytest
+from chromadb.api.types import EmbeddingFunction
+
+pytest.importorskip("chromadb")
+
+from engine.vector.chroma import ChromaVectorStore
+from engine.vector.models import VectorDocument
+from tools.vector_search import vector_search  # noqa: E402
+
+
+class DummyEmbeddingFunction(EmbeddingFunction):
+    """Returns a fixed embedding for any input — no network, instant."""
+
+    def __init__(self) -> None:
+        pass
+
+    def name(self) -> str:
+        return "dummy"
+
+    def get_config(self) -> dict:
+        return {}
+
+    def __call__(self, input: Sequence[str]) -> list[list[float]]:
+        return [[0.0] * 384 for _ in input]
+
+
+@pytest.fixture
+def temp_store(tmp_path: Path):
+    """Create a ChromaVectorStore with a temporary directory and no real embeddings."""
+    store = ChromaVectorStore(
+        collection_name="test",
+        persist_directory=str(tmp_path / "chroma"),
+        embedding_function=DummyEmbeddingFunction(),
+    )
+    yield store
+
+
+class TestChromaVectorStore:
+    def test_add_and_search(self, temp_store):
+        docs = [
+            VectorDocument(id="1", content="Hello world"),
+            VectorDocument(id="2", content="Goodbye"),
+        ]
+        temp_store.add(docs)
+        results = temp_store.search("hello", top_k=1)
+        # With dummy embeddings, similarity is arbitrary — just check
+        # that we get a valid SearchResult back.
+        assert len(results) == 1
+        assert results[0].id in {"1", "2"}
+        assert isinstance(results[0].content, str)
+        assert 0.0 <= results[0].score <= 1.0
+
+    def test_search_with_metadata_filter(self, temp_store):
+        docs = [
+            VectorDocument(id="a", content="legal doc", metadata={"type": "legal"}),
+            VectorDocument(id="b", content="marketing pdf", metadata={"type": "marketing"}),
+        ]
+        temp_store.add(docs)
+        results = temp_store.search("doc", top_k=2, where={"type": "legal"})
+        assert len(results) == 1
+        assert results[0].id == "a"
+
+    def test_delete(self, temp_store):
+        docs = [VectorDocument(id="x", content="to delete")]
+        temp_store.add(docs)
+        temp_store.delete(["x"])
+        results = temp_store.search("delete")
+        assert results == []
+
+
+class TestVectorSearchTool:
+    def test_tool_returns_json(self, temp_store, monkeypatch):
+        monkeypatch.setattr("tools.vector_search._store", temp_store)
+        docs = [VectorDocument(id="99", content="specific data")]
+        temp_store.add(docs)
+
+        result_json = vector_search("data", top_k=1)
+        result = json.loads(result_json)
+        assert isinstance(result, list)
+        assert result[0]["id"] == "99"

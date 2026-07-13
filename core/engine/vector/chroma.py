@@ -27,14 +27,11 @@ class ChromaVectorStore(VectorStore):
     ):
         if chromadb is None:
             raise ImportError(
-                "chromadb is required for ChromaVectorStore. "
-                "Install it with `uv add chromadb`."
+                "chromadb is required for ChromaVectorStore. Install it with `uv add chromadb`."
             )
         cfg = get_engine_config().get("vector_store", {})
         self.collection_name = collection_name or cfg.get("collection_name", "enginex")
-        self.persist_directory = persist_directory or cfg.get(
-            "persist_directory", "./.chroma_db"
-        )
+        self.persist_directory = persist_directory or cfg.get("persist_directory", "./.chroma_db")
 
         if embedding_function is not None:
             self._embedding_function = embedding_function

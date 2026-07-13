@@ -82,9 +82,7 @@ class TestChromaVectorStore:
 
 class TestVectorSearchTool:
     def test_tool_returns_json(self, temp_store, monkeypatch):
-        monkeypatch.setattr(
-            "engine.tools.vector_search._store", temp_store
-        )
+        monkeypatch.setattr("engine.tools.vector_search._store", temp_store)
         docs = [VectorDocument(id="99", content="specific data")]
         temp_store.add(docs)
 

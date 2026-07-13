@@ -80,9 +80,9 @@ class AgentRunner:
             self._storage_path = storage_path
             self._temp_dir = None
         else:
-            # Use persistent storage in ~/.engine/agents/{agent_name}/
-            home = Path.home()
-            default_storage = home / ".engine" / "agents" / agent_path.name
+            # Use persistent storage in $ENGINE_HOME/agents/{agent_name}/ (fallback: ~/.engine/)
+            engine_home = Path(os.environ.get("ENGINE_HOME", str(Path.home() / ".engine")))
+            default_storage = engine_home / "agents" / agent_path.name
             default_storage.mkdir(parents=True, exist_ok=True)
             self._storage_path = default_storage
             self._temp_dir = None

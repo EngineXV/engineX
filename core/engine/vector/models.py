@@ -22,7 +22,3 @@ class SearchResult:
     content: str
     score: float
     metadata: dict[str, Any] = field(default_factory=dict)
-    # Optional fields for future chunk-level resolution
-    collection: str | None = None
-    document_id: str | None = None
-    chunk_id: str | None = None

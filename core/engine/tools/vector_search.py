@@ -26,7 +26,6 @@ def vector_search(
     where: str = "{}",
 ) -> str:
     """Search the vector store.
-
     Returns a JSON array of results.
     """
     try:
@@ -52,9 +51,6 @@ def vector_search(
                 "content": r.content,
                 "score": round(r.score, 4),
                 "metadata": r.metadata,
-                "collection": r.collection,
-                "document_id": r.document_id,
-                "chunk_id": r.chunk_id,
             }
             for r in results
         ],

@@ -54,6 +54,11 @@ class TestChromaVectorStore:
         assert isinstance(results[0].content, str)
         assert 0.0 <= results[0].score <= 1.0
 
+    def test_search_empty_collection(self, temp_store):
+        """Searching an empty collection should return no results."""
+        results = temp_store.search("anything")
+        assert results == []
+
     def test_search_with_metadata_filter(self, temp_store):
         docs = [
             VectorDocument(id="a", content="legal doc", metadata={"type": "legal"}),
@@ -87,6 +92,3 @@ class TestVectorSearchTool:
         result = json.loads(result_json)
         assert isinstance(result, list)
         assert result[0]["id"] == "99"
-        # Optional fields should be present but None
-        assert "collection" in result[0]
-        assert result[0]["collection"] is None

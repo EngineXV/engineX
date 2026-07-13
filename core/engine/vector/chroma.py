@@ -4,7 +4,7 @@ import logging
 from collections.abc import Sequence
 from typing import Any
 
-from engine.vector.config import get_vector_store_config
+from engine.config import get_engine_config
 from engine.vector.models import SearchResult, VectorDocument
 from engine.vector.provider import VectorStore
 
@@ -30,7 +30,7 @@ class ChromaVectorStore(VectorStore):
                 "chromadb is required for ChromaVectorStore. "
                 "Install it with `uv add chromadb`."
             )
-        cfg = get_vector_store_config()
+        cfg = get_engine_config().get("vector_store", {})
         self.collection_name = collection_name or cfg.get("collection_name", "enginex")
         self.persist_directory = persist_directory or cfg.get(
             "persist_directory", "./.chroma_db"
@@ -91,7 +91,7 @@ class ChromaVectorStore(VectorStore):
         metadatas = results.get("metadatas", [[]])[0]
 
         out: list[SearchResult] = []
-        for doc_id, content, dist, meta in zip(ids, documents, distances, metadatas):
+        for doc_id, content, dist, meta in zip(ids, documents, distances, metadatas, strict=True):
             score = 1.0 - float(dist) if dist is not None else 0.0
             out.append(
                 SearchResult(
@@ -105,3 +105,13 @@ class ChromaVectorStore(VectorStore):
 
     def delete(self, ids: list[str]) -> None:
         self._collection.delete(ids=ids)
+
+    def health(self) -> bool:
+        """Check that the Chroma database is reachable."""
+        try:
+            # A simple heartbeat: list collections
+            self._client.list_collections()
+            return True
+        except Exception:
+            logger.exception("Chroma health check failed")
+            return False

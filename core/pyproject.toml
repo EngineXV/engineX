@@ -12,6 +12,7 @@ dependencies = [
   "fastmcp>=2.0.0",
   "textual>=1.0.0",
   "tools",
+  "chromadb>=1.5.9",
 ]
 
 [project.optional-dependencies]

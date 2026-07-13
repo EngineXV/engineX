@@ -1,0 +1,1189 @@
+========== TOOL REGISTRATION ==========
+examples/templates/hourly_tracking/tools.py:7:from engine.runner.tool_registry import tool
+examples/templates/hourly_tracking/tools.py:12:@tool(description="Fetch broker transactions from last hour.")
+examples/templates/hourly_tracking/tools.py:28:@tool(description="Fetch investor logs from last hour.")
+examples/templates/hourly_tracking/tools.py:44:@tool(description="Normalize raw transaction data.")
+examples/templates/hourly_tracking/tools.py:60:@tool(description="Validate transaction reconciliation.")
+examples/templates/hourly_tracking/tools.py:101:@tool(description="Correct transaction discrepancies.")
+examples/templates/hourly_tracking/tools.py:123:@tool(description="Store verified transaction results.")
+core/tests/test_event_loop_node.py:675:            runtime, spec, memory, llm, tools=[Tool(name="search", description="", parameters={})]
+core/tests/test_event_loop_node.py:876:            tools=[Tool(name="save_data", description="save", parameters={})],
+core/tests/test_event_loop_node.py:948:            tools=[Tool(name="save_data", description="save", parameters={})],
+core/tests/test_event_loop_node.py:997:            tools=[Tool(name="search", description="Search", parameters={})],
+core/tests/test_event_loop_node.py:1698:            tools=[Tool(name="search", description="s", parameters={})],
+core/tests/test_event_loop_node.py:1752:            tools=[Tool(name="search", description="s", parameters={})],
+core/tests/test_event_loop_node.py:1803:            tools=[Tool(name="search", description="s", parameters={})],
+core/tests/test_event_loop_node.py:1891:            tools=[Tool(name="search", description="s", parameters={})],
+core/tests/test_event_loop_node.py:1952:            tools=[Tool(name="failing_tool", description="s", parameters={})],
+core/tests/test_tool_registry.py:12:from engine.runner.tool_registry import ToolRegistry
+core/tests/test_tool_registry.py:28:            "bad_tool": Tool(
+core/tests/test_tool_registry.py:67:            "empty_tool": Tool(
+core/tests/test_continuous_conversation.py:120:    return Tool(
+core/tests/test_litellm_streaming.py:78:WEATHER_TOOL = Tool(
+core/tests/test_litellm_streaming.py:93:SEARCH_TOOL = Tool(
+core/tests/test_litellm_streaming.py:112:CALCULATOR_TOOL = Tool(
+core/tests/test_litellm_provider.py:137:            Tool(
+core/tests/test_litellm_provider.py:164:        tool = Tool(
+examples/templates/log_monitor/tools.py:9:from engine.runner.tool_registry import tool
+examples/templates/log_monitor/tools.py:22:@tool(description="Validate production config and integration health before monitoring.")
+examples/templates/log_monitor/tools.py:34:@tool(description="Run one monitoring tick: Grafana fetch, dedup, and rule-based scoring.")
+examples/templates/log_monitor/tools.py:39:@tool(description="Send a Slack alert for an incident.")
+examples/templates/log_monitor/tools.py:44:@tool(description="Trigger PagerDuty for SEVERE incidents.")
+examples/templates/log_monitor/tools.py:49:@tool(description="Create a Jira ticket for an incident.")
+examples/templates/log_monitor/tools.py:54:@tool(description="Record learning outcome for fingerprint tuning and mute window.")
+examples/templates/log_monitor/tools.py:66:@tool(description="Parse incidents JSON and return dispatch plan with alert targets.")
+core/tests/test_event_loop_integration.py:440:    search_tool = Tool(
+examples/templates/deep_research/tools.py:14:from engine.runner.tool_registry import tool
+examples/templates/deep_research/tools.py:70:@tool(
+examples/templates/deep_research/tools.py:126:@tool(description="Fetch a URL and return extracted page text.")
+examples/templates/deep_research/tools.py:170:@tool(description="Save text content to a file in the agent data directory.")
+examples/templates/deep_research/tools.py:190:@tool(description="Append text to a file in the agent data directory.")
+examples/templates/deep_research/tools.py:211:@tool(description="Load a slice of a file from the agent data directory.")
+examples/templates/deep_research/tools.py:243:@tool(description="List files in the agent data directory.")
+examples/templates/deep_research/tools.py:261:@tool(description="Return a file URI for the user (optionally open in browser).")
+core/engine/tools/supervisor_runtime.py:308:        runner.register_tool(fn.__name__, fn)
+core/engine/graph/executor.py:644:            from engine.runner.tool_registry import ToolRegistry
+core/engine/graph/executor.py:1659:                from engine.runner.tool_registry import ToolRegistry
+core/engine/graph/event_loop/node.py:1950:        return Tool(
+core/engine/graph/event_loop/node.py:2018:        return Tool(
+core/engine/graph/event_loop/node.py:2047:        return Tool(
+core/engine/graph/event_loop/node.py:2078:        return Tool(
+core/engine/skills/runtime_tools.py:12:def register_skill_tools(tool_registry: Any, *, repo_root: Path | None = None) -> None:
+core/engine/skills/runtime_tools.py:31:    tool_registry.register_function(
+core/engine/runner/__init__.py:11:from engine.runner.tool_registry import ToolRegistry, tool
+core/engine/runner/runner.py:27:from engine.runner.tool_registry import ToolRegistry
+core/engine/runner/runner.py:95:        self._tool_registry = ToolRegistry()
+core/engine/runner/runner.py:114:            self._tool_registry.discover_from_module(tools_path)
+core/engine/runner/runner.py:290:    def register_tool(
+core/engine/runner/runner.py:300:            self._tool_registry.register(name, tool_or_func, executor)
+core/engine/runner/runner.py:303:            self._tool_registry.register_function(tool_or_func, name=name)
+core/engine/runner/runner.py:305:    def register_tools_from_module(self, module_path: Path) -> int:
+core/engine/runner/runner.py:307:        return self._tool_registry.discover_from_module(module_path)
+core/engine/runner/runner.py:321:        return self._tool_registry.register_mcp_server(server_config)
+core/engine/runner/runner.py:325:        self._tool_registry.load_mcp_config(config_path)
+core/engine/runner/runner.py:344:        self._tool_registry.set_session_context(
+core/engine/runner/runner.py:476:            files_tool_names = self._tool_registry.get_server_tool_names(FILES_MCP_SERVER_NAME)
+core/engine/runner/runner.py:482:                self._tool_registry.register_mcp_server(files_config)
+core/engine/runner/runner.py:483:                files_tool_names = self._tool_registry.get_server_tool_names(FILES_MCP_SERVER_NAME)
+core/engine/runner/runner.py:496:            register_skill_tools(self._tool_registry, repo_root=_repo_root)
+core/engine/runner/runner.py:502:        tools = list(self._tool_registry.get_tools().values())
+core/engine/runner/runner.py:503:        tool_executor = self._tool_registry.get_executor()
+core/engine/runner/runner.py:970:            if not self._tool_registry.has_tool(tool_name):
+core/engine/runner/runner.py:1069:        self._tool_registry.cleanup()
+core/engine/runner/mcp_client.py:258:                tool = MCPTool(
+core/engine/runner/tool_registry.py:66:        self._tools[name] = RegisteredTool(tool=tool, executor=executor)
+core/engine/runner/tool_registry.py:105:        tool = Tool(
+core/engine/runner/tool_registry.py:182:        # Check for @tool decorated functions
+core/engine/runner/tool_registry.py:438:        tool = Tool(
+core/engine/runner/cli.py:732:            status = "ok" if runner._tool_registry.has_tool(tool) else "fail"
+
+========== TOOL EXECUTION ==========
+core/engine/runtime/event_bus.py:87:    TOOL_CALL_STARTED = "tool_call_started"
+core/engine/runtime/event_bus.py:88:    TOOL_CALL_COMPLETED = "tool_call_completed"
+core/engine/runtime/event_bus.py:573:    async def emit_tool_call_started(
+core/engine/runtime/event_bus.py:597:    async def emit_tool_call_completed(
+core/engine/runtime/runtime_logger.py:56:        tool_calls: list[dict[str, Any]] | None = None,
+core/engine/runtime/runtime_logger.py:67:        if tool_calls is None:
+core/engine/runtime/runtime_logger.py:68:            tool_calls = []
+core/engine/runtime/runtime_logger.py:71:        for tc in tool_calls:
+core/engine/runtime/runtime_logger.py:95:            tool_calls=call_logs,
+core/engine/runtime/runtime_log_schemas.py:33:    tool_calls: list[ToolCallLog] = Field(default_factory=list)
+core/engine/runtime/llm_debug_logger.py:44:    tool_calls: list[dict[str, Any]],
+core/engine/runtime/llm_debug_logger.py:65:            "tool_calls": tool_calls,
+core/engine/tui/app.py:847:                    self.graph_view.handle_tool_call(
+core/engine/tui/app.py:853:                    self.graph_view.handle_tool_call(
+core/engine/runner/tool_registry.py:15:from engine.llm.provider import Tool, ToolResult, ToolUse
+core/engine/runner/tool_registry.py:145:                            tool_use = ToolUse(
+core/engine/runner/tool_registry.py:151:                            if isinstance(result, ToolResult):
+core/engine/runner/tool_registry.py:152:                                # ToolResult.content is expected to be JSON, but tools may
+core/engine/runner/tool_registry.py:200:    def get_executor(self) -> Callable[[ToolUse], ToolResult]:
+core/engine/runner/tool_registry.py:203:        def _wrap_result(tool_use_id: str, result: Any) -> ToolResult:
+core/engine/runner/tool_registry.py:204:            if isinstance(result, ToolResult):
+core/engine/runner/tool_registry.py:206:            return ToolResult(
+core/engine/runner/tool_registry.py:212:        def executor(tool_use: ToolUse) -> ToolResult:
+core/engine/runner/tool_registry.py:214:                return ToolResult(
+core/engine/runner/tool_registry.py:232:                            return ToolResult(
+core/engine/runner/tool_registry.py:242:                return ToolResult(
+core/engine/runner/tool_registry.py:395:                            result = client_ref.call_tool(tool_name, merged_inputs)
+core/engine/tui/widgets/graph_view.py:528:    def handle_tool_call(self, node_id: str, tool_name: str, *, started: bool) -> None:
+core/engine/runner/mcp_client.py:328:    def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
+core/engine/runner/mcp_client.py:337:            return self._run_async(self._call_tool_stdio_async(tool_name, arguments))
+core/engine/runner/mcp_client.py:339:            return self._call_tool_http(tool_name, arguments)
+core/engine/runner/mcp_client.py:341:    async def _call_tool_stdio_async(self, tool_name: str, arguments: dict[str, Any]) -> Any:
+core/engine/runner/mcp_client.py:347:        result = await self._session.call_tool(tool_name, arguments=arguments)
+core/engine/runner/mcp_client.py:372:    def _call_tool_http(self, tool_name: str, arguments: dict[str, Any]) -> Any:
+core/engine/llm/__init__.py:13:    ToolResultEvent,
+core/engine/llm/__init__.py:23:    "ToolResultEvent",
+core/engine/llm/stream_events.py:30:    type: Literal["tool_call"] = "tool_call"
+core/engine/llm/stream_events.py:37:class ToolResultEvent:
+core/engine/llm/stream_events.py:86:    | ToolResultEvent
+core/engine/llm/provider.py:33:class ToolUse:
+core/engine/llm/provider.py:42:class ToolResult:
+core/engine/llm/litellm.py:266:                has_tool_calls = bool(response.choices and response.choices[0].message.tool_calls)
+core/engine/llm/litellm.py:267:                if not content and not has_tool_calls:
+core/engine/llm/litellm.py:467:                has_tool_calls = bool(response.choices and response.choices[0].message.tool_calls)
+core/engine/llm/litellm.py:468:                if not content and not has_tool_calls:
+core/engine/llm/litellm.py:679:        # Remove ghost empty assistant messages (content="" and no tool_calls).
+core/engine/llm/litellm.py:687:                m.get("role") == "assistant" and not m.get("content") and not m.get("tool_calls")
+core/engine/llm/litellm.py:718:            tool_calls_acc: dict[int, dict[str, str]] = {}
+core/engine/llm/litellm.py:749:                    if delta and delta.tool_calls:
+core/engine/llm/litellm.py:750:                        for tc in delta.tool_calls:
+core/engine/llm/litellm.py:757:                                    (k for k, v in tool_calls_acc.items() if v["id"] == tc.id),
+core/engine/llm/litellm.py:762:                                elif idx in tool_calls_acc and tool_calls_acc[idx]["id"] not in (
+core/engine/llm/litellm.py:767:                                    idx = max(tool_calls_acc.keys()) + 1
+core/engine/llm/litellm.py:773:                            if idx not in tool_calls_acc:
+core/engine/llm/litellm.py:774:                                tool_calls_acc[idx] = {"id": "", "name": "", "arguments": ""}
+core/engine/llm/litellm.py:776:                                tool_calls_acc[idx]["id"] = tc.id
+core/engine/llm/litellm.py:779:                                    tool_calls_acc[idx]["name"] = tc.function.name
+core/engine/llm/litellm.py:781:                                    tool_calls_acc[idx]["arguments"] += tc.function.arguments
+core/engine/llm/litellm.py:786:                        for _idx, tc_data in sorted(tool_calls_acc.items()):
+core/engine/llm/litellm.py:819:                has_content = accumulated_text or tool_calls_acc
+core/engine/llm/litellm.py:926:        tool_calls: list[dict[str, Any]] = []
+core/engine/llm/litellm.py:936:                tool_calls.append(
+core/engine/llm/litellm.py:959:            raw_response={"tool_calls": tool_calls} if tool_calls else None,
+core/engine/graph/executor.py:248:        from engine.graph.conversation import extract_tool_call_history
+core/engine/graph/executor.py:260:            elif m.role == "assistant" and m.tool_calls:
+core/engine/graph/executor.py:261:                names = [tc.get("function", {}).get("name", "?") for tc in m.tool_calls]
+core/engine/graph/executor.py:323:            tool_history = extract_tool_call_history(messages)
+core/engine/graph/executor.py:1804:                    max_tool_calls_per_turn=lc.get("max_tool_calls_per_turn", 30),
+core/engine/graph/executor.py:1805:                    tool_call_overflow_margin=lc.get("tool_call_overflow_margin", 0.5),
+core/engine/schemas/decision.py:28:    action_type: str  # "tool_call", "generate", "delegate"
+core/engine/graph/conversation_judge.py:93:        # For assistant messages with empty content but tool_calls,
+core/engine/graph/conversation_judge.py:96:            tool_calls = getattr(msg, "tool_calls", None)
+core/engine/graph/conversation_judge.py:97:            if tool_calls:
+core/engine/graph/conversation_judge.py:99:                for tc in tool_calls:
+core/engine/graph/event_loop/node.py:28:from engine.llm.provider import Tool, ToolResult, ToolUse
+core/engine/graph/event_loop/node.py:49:        tool_executor: Callable[[ToolUse], ToolResult | Awaitable[ToolResult]] | None = None,
+core/engine/graph/event_loop/node.py:371:                        logged_tool_calls,
+core/engine/graph/event_loop/node.py:410:                        tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:701:                        tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:737:            # Use logged_tool_calls (persists across inner iterations) and
+core/engine/graph/event_loop/node.py:742:            mcp_tool_calls = [
+core/engine/graph/event_loop/node.py:744:                for tc in logged_tool_calls
+core/engine/graph/event_loop/node.py:747:            if mcp_tool_calls:
+core/engine/graph/event_loop/node.py:748:                fps = self._fingerprint_tool_calls(mcp_tool_calls)
+core/engine/graph/event_loop/node.py:868:                                    tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:892:                            tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:946:                            tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:1006:                                tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:1036:                        tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:1101:                            tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:1125:                        tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:1168:                        tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:1210:                        tool_calls=logged_tool_calls,
+core/engine/graph/event_loop/node.py:1329:        tool_call_count = 0
+core/engine/graph/event_loop/node.py:1338:        logged_tool_calls: list[dict] = []
+core/engine/graph/event_loop/node.py:1368:            tool_calls: list[ToolCallEvent] = []
+core/engine/graph/event_loop/node.py:1376:                _tc: list[ToolCallEvent] = tool_calls,  # noqa: B006
+core/engine/graph/event_loop/node.py:1434:            if _stream_error and not accumulated_text and not tool_calls:
+core/engine/graph/event_loop/node.py:1441:                "[%s] LLM response: text=%r tool_calls=%s stop=%s model=%s",
+core/engine/graph/event_loop/node.py:1444:                [tc.tool_name for tc in tool_calls] if tool_calls else "[]",
+core/engine/graph/event_loop/node.py:1451:            if tool_calls:
+core/engine/graph/event_loop/node.py:1461:                    for tc in tool_calls
+core/engine/graph/event_loop/node.py:1470:                    tool_calls=tc_dicts,
+core/engine/graph/event_loop/node.py:1474:            if not tool_calls:
+core/engine/graph/event_loop/node.py:1480:                    logged_tool_calls,
+core/engine/graph/event_loop/node.py:1492:                self._config.max_tool_calls_per_turn * (1 + self._config.tool_call_overflow_margin)
+core/engine/graph/event_loop/node.py:1497:            results_by_id: dict[str, ToolResult] = {}
+core/engine/graph/event_loop/node.py:1504:            for tc in tool_calls:
+core/engine/graph/event_loop/node.py:1505:                tool_call_count += 1
+core/engine/graph/event_loop/node.py:1506:                if tool_call_count > hard_limit:
+core/engine/graph/event_loop/node.py:1520:                    "[%s] tool_call: %s(%s)",
+core/engine/graph/event_loop/node.py:1531:                    result = ToolResult(
+core/engine/graph/event_loop/node.py:1553:                    logged_tool_calls.append(
+core/engine/graph/event_loop/node.py:1591:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1620:                    result = ToolResult(
+core/engine/graph/event_loop/node.py:1668:                    result = ToolResult(
+core/engine/graph/event_loop/node.py:1678:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1701:                ) -> tuple[ToolResult | BaseException, str, float]:
+core/engine/graph/event_loop/node.py:1706:                        _r = await self._execute_tool(_tc)
+core/engine/graph/event_loop/node.py:1734:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1750:                ) -> tuple[ToolResult | BaseException, str, float]:
+core/engine/graph/event_loop/node.py:1781:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1794:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1800:                    logged_tool_calls.append(
+core/engine/graph/event_loop/node.py:1813:            for tc in tool_calls[:executed_in_batch]:
+core/engine/graph/event_loop/node.py:1834:                    logged_tool_calls.append(tool_entry)
+core/engine/graph/event_loop/node.py:1853:            # the assistant message contains tool_calls that have no
+core/engine/graph/event_loop/node.py:1857:                skipped = tool_calls[executed_in_batch:]
+core/engine/graph/event_loop/node.py:1885:                    logged_tool_calls.append(discard_entry)
+core/engine/graph/event_loop/node.py:1908:                    logged_tool_calls,
+core/engine/graph/event_loop/node.py:1936:                    logged_tool_calls,
+core/engine/graph/event_loop/node.py:2127:    ) -> ToolResult:
+core/engine/graph/event_loop/node.py:2128:        """Handle set_output tool call. Returns ToolResult (sync)"""
+core/engine/graph/event_loop/node.py:2172:            return ToolResult(
+core/engine/graph/event_loop/node.py:2178:        return ToolResult(
+core/engine/graph/event_loop/node.py:2276:                "tool_calls": tool_results,
+core/engine/graph/event_loop/node.py:2367:    def _extract_tool_call_history(
+core/engine/graph/event_loop/node.py:2372:        from engine.graph.conversation import extract_tool_call_history
+core/engine/graph/event_loop/node.py:2374:        return extract_tool_call_history(conversation.messages, max_entries=max_entries)
+core/engine/graph/event_loop/node.py:2465:    def _fingerprint_tool_calls(
+core/engine/graph/event_loop/node.py:2503:    async def _execute_tool(self, tc: ToolCallEvent) -> ToolResult:
+core/engine/graph/event_loop/node.py:2506:            return ToolResult(
+core/engine/graph/event_loop/node.py:2511:        tool_use = ToolUse(id=tc.tool_use_id, name=tc.tool_name, input=tc.tool_input)
+core/engine/graph/event_loop/node.py:2581:        result: ToolResult,
+core/engine/graph/event_loop/node.py:2583:    ) -> ToolResult:
+core/engine/graph/event_loop/node.py:2611:            return ToolResult(
+core/engine/graph/event_loop/node.py:2661:            return ToolResult(
+core/engine/graph/event_loop/node.py:2682:            return ToolResult(
+core/engine/graph/event_loop/node.py:2799:        from engine.graph.conversation import extract_tool_call_history
+core/engine/graph/event_loop/node.py:2851:            tool_history = extract_tool_call_history(messages)
+core/engine/graph/event_loop/node.py:2887:            elif m.role == "assistant" and m.tool_calls:
+core/engine/graph/event_loop/node.py:2888:                names = [tc.get("function", {}).get("name", "?") for tc in m.tool_calls]
+core/engine/graph/event_loop/node.py:3089:            tool_history = self._extract_tool_call_history(conversation)
+core/engine/graph/event_loop/node.py:3393:            await self._event_bus.emit_tool_call_started(
+core/engine/graph/event_loop/node.py:3413:            await self._event_bus.emit_tool_call_completed(
+core/engine/graph/event_loop/node.py:3467:    ) -> ToolResult:
+core/engine/graph/event_loop/node.py:3468:        """Execute a subagent and return the result as a ToolResult"""
+core/engine/graph/event_loop/node.py:3486:            return ToolResult(
+core/engine/graph/event_loop/node.py:3685:                max_tool_calls_per_turn=self._config.max_tool_calls_per_turn,
+core/engine/graph/event_loop/node.py:3686:                tool_call_overflow_margin=self._config.tool_call_overflow_margin,
+core/engine/graph/event_loop/node.py:3734:            return ToolResult(
+core/engine/graph/event_loop/node.py:3755:            return ToolResult(
+core/engine/graph/event_loop/config.py:16:    max_tool_calls_per_turn: int = 30
+core/engine/graph/event_loop/config.py:22:    tool_call_overflow_margin: float = 0.5
+core/engine/graph/conversation.py:20:    tool_calls: list[dict[str, Any]] | None = None
+core/engine/graph/conversation.py:35:            if self.tool_calls:
+core/engine/graph/conversation.py:36:                d["tool_calls"] = self.tool_calls
+core/engine/graph/conversation.py:43:            "tool_call_id": self.tool_use_id,
+core/engine/graph/conversation.py:56:        if self.tool_calls is not None:
+core/engine/graph/conversation.py:57:            d["tool_calls"] = self.tool_calls
+core/engine/graph/conversation.py:76:            tool_calls=data.get("tool_calls"),
+core/engine/graph/conversation.py:90:_TC_ARG_LIMIT = 200  # max chars per tool_call argument after compaction
+core/engine/graph/conversation.py:93:def _compact_tool_calls(tool_calls: list[dict[str, Any]]) -> list[dict[str, Any]]:
+core/engine/graph/conversation.py:94:    """Truncate tool_call arguments to save context tokens during compaction"""
+core/engine/graph/conversation.py:96:    for tc in tool_calls:
+core/engine/graph/conversation.py:134:def extract_tool_call_history(messages: list[Message], max_entries: int = 30) -> str:
+core/engine/graph/conversation.py:136:    tool_calls_detail: dict[str, list[str]] = {}
+core/engine/graph/conversation.py:151:        if msg.role == "assistant" and msg.tool_calls:
+core/engine/graph/conversation.py:152:            for tc in msg.tool_calls:
+core/engine/graph/conversation.py:161:                tool_calls_detail.setdefault(name, []).append(summary)
+core/engine/graph/conversation.py:173:    if tool_calls_detail:
+core/engine/graph/conversation.py:175:        for name, inputs in list(tool_calls_detail.items())[:max_entries]:
+core/engine/graph/conversation.py:350:        tool_calls: list[dict[str, Any]] | None = None,
+core/engine/graph/conversation.py:356:            tool_calls=tool_calls,
+core/engine/graph/conversation.py:388:        return self._repair_orphaned_tool_calls(msgs)
+core/engine/graph/conversation.py:391:    def _repair_orphaned_tool_calls(
+core/engine/graph/conversation.py:394:        """Ensure tool_call / tool_result pairs are consistent"""
+core/engine/graph/conversation.py:395:        # Pass 1: collect all tool_call IDs from assistant messages so we
+core/engine/graph/conversation.py:397:        all_tool_call_ids: set[str] = set()
+core/engine/graph/conversation.py:400:                for tc in m.get("tool_calls") or []:
+core/engine/graph/conversation.py:403:                        all_tool_call_ids.add(tc_id)
+core/engine/graph/conversation.py:409:            # Drop tool-result messages whose tool_call_id has no matching
+core/engine/graph/conversation.py:412:                tid = m.get("tool_call_id")
+core/engine/graph/conversation.py:413:                if tid and tid not in all_tool_call_ids:
+core/engine/graph/conversation.py:417:            tool_calls = m.get("tool_calls")
+core/engine/graph/conversation.py:418:            if m.get("role") != "assistant" or not tool_calls:
+core/engine/graph/conversation.py:424:                    tid = msgs[j].get("tool_call_id")
+core/engine/graph/conversation.py:430:            for tc in tool_calls:
+core/engine/graph/conversation.py:436:                            "tool_call_id": tc_id,
+core/engine/graph/conversation.py:449:            if m.tool_calls:
+core/engine/graph/conversation.py:450:                for tc in m.tool_calls:
+core/engine/graph/conversation.py:561:                tool_calls=msg.tool_calls,
+core/engine/graph/conversation.py:684:            # We need to track tool_call IDs to pair assistant messages with
+core/engine/graph/conversation.py:691:                if msg.role != "assistant" or not msg.tool_calls:
+core/engine/graph/conversation.py:694:                    tc.get("function", {}).get("name") == "set_output" for tc in msg.tool_calls
+core/engine/graph/conversation.py:696:                tc_ids = {tc.get("id", "") for tc in msg.tool_calls}
+core/engine/graph/conversation.py:715:                elif msg.role == "assistant" and msg.tool_calls:
+core/engine/graph/conversation.py:716:                    tc_ids = {tc.get("id", "") for tc in msg.tool_calls}
+core/engine/graph/conversation.py:719:                        compact_tcs = _compact_tool_calls(msg.tool_calls)
+core/engine/graph/conversation.py:725:                                tool_calls=compact_tcs,
+core/engine/graph/conversation.py:745:                elif msg.role == "assistant" and msg.tool_calls:
+core/engine/graph/conversation.py:746:                    compact_tcs = _compact_tool_calls(msg.tool_calls)
+core/engine/graph/conversation.py:752:                            tool_calls=compact_tcs,
+core/engine/graph/conversation.py:794:            tool_history = extract_tool_call_history(collapsed_msgs)
+core/engine/graph/edge.py:315:        description="EventLoopNode configuration (max_iterations, max_tool_calls_per_turn, etc.)",
+
+========== CONFIGURATION ==========
+core/engine/pipeline/registry.py:1:"""Pipeline stage registry and config-driven construction."""
+core/engine/pipeline/registry.py:32:    """Instantiate a single stage from a config spec."""
+core/engine/pipeline/registry.py:38:    config = spec.get("config", {})
+core/engine/pipeline/registry.py:39:    stage = cls(**config)
+core/engine/pipeline/registry.py:45:def build_pipeline_from_config(stages_config: list[dict[str, Any]]) -> PipelineRunner:
+core/engine/pipeline/registry.py:48:    stages = [build_stage(spec) for spec in stages_config]
+core/engine/pipeline/__init__.py:3:from engine.pipeline.registry import build_pipeline_from_config, register
+core/engine/pipeline/__init__.py:18:    "build_pipeline_from_config",
+core/engine/config.py:1:"""Shared Engine configuration utilities"""
+core/engine/config.py:12:# Low-level config file access
+core/engine/config.py:15:ENGINE_CONFIG_FILE = Path.home() / ".engine" / "configuration.json"
+core/engine/config.py:18:def get_engine_config() -> dict[str, Any]:
+core/engine/config.py:19:    """Load engine configuration from ~/.engine/configuration.json"""
+core/engine/config.py:30:    {"type": "input_validation", "order": 100, "config": {}},
+core/engine/config.py:31:    {"type": "rate_limit", "order": 200, "config": {"max_requests_per_minute": 120}},
+core/engine/config.py:35:def get_pipeline_stages_config() -> list[dict[str, Any]]:
+core/engine/config.py:36:    """Return declarative pipeline stage specs from configuration."""
+core/engine/config.py:37:    pipeline = get_engine_config().get("pipeline", {})
+core/engine/config.py:51:    llm = get_engine_config().get("llm", {})
+core/engine/config.py:67:    """Return the configured max_tokens, falling back to DEFAULT_MAX_TOKENS"""
+core/engine/config.py:68:    return get_engine_config().get("llm", {}).get("max_tokens", DEFAULT_MAX_TOKENS)
+core/engine/config.py:73:    llm = get_engine_config().get("llm", {})
+core/engine/config.py:105:    """Return the api_base URL for OpenAI-compatible endpoints, if configured"""
+core/engine/config.py:106:    llm = get_engine_config().get("llm", {})
+core/engine/config.py:115:    llm = get_engine_config().get("llm", {})
+core/engine/config.py:152:    """Agent runtime configuration loaded from ~/.engine/configuration.json"""
+core/engine/tui/app.py:375:        if runner.requires_account_selection and runner._configure_for_account:
+core/engine/tui/app.py:449:            if runner._configure_for_account:
+core/engine/tui/app.py:450:                runner._configure_for_account(runner, selected)
+core/engine/tui/widgets/graph_view.py:451:                cron_expr = ep.trigger_config.get("cron")
+core/engine/tui/widgets/graph_view.py:452:                interval = ep.trigger_config.get("interval_minutes", "?")
+core/engine/tui/widgets/graph_view.py:471:                event_types = ep.trigger_config.get("event_types", [])
+core/engine/schemas/session_state.py:32:    model_config = {"extra": "allow"}
+core/engine/schemas/session_state.py:54:    model_config = {"extra": "allow"}
+core/engine/schemas/session_state.py:64:    model_config = {"extra": "allow"}
+core/engine/schemas/session_state.py:77:    model_config = {"extra": "allow"}
+core/engine/schemas/session_state.py:130:    model_config = {"extra": "allow"}
+core/engine/schemas/session_state.py:257:    model_config = {"extra": "allow"}
+core/engine/schemas/session_state.py:268:    model_config = {"extra": "allow"}
+core/engine/schemas/session_state.py:293:    model_config = {"extra": "allow"}
+core/engine/schemas/session_state.py:307:    model_config = {"extra": "allow"}
+core/engine/schemas/decision.py:38:    model_config = {"extra": "allow"}
+core/engine/schemas/decision.py:58:    model_config = {"extra": "allow"}
+core/engine/schemas/decision.py:82:    model_config = {"extra": "allow"}
+core/engine/schemas/decision.py:119:    model_config = {"extra": "allow"}
+core/engine/schemas/checkpoint.py:37:    model_config = {"extra": "allow"}
+core/engine/schemas/checkpoint.py:89:    model_config = {"extra": "allow"}
+core/engine/schemas/checkpoint.py:113:    model_config = {"extra": "allow"}
+core/engine/schemas/run.py:33:    model_config = {"extra": "allow"}
+core/engine/schemas/run.py:56:    model_config = {"extra": "allow"}
+core/engine/schemas/run.py:87:    model_config = {"extra": "allow"}
+core/engine/schemas/run.py:205:    model_config = {"extra": "allow"}
+core/engine/runner/preload_validation.py:81:                "Credential setup incomplete. Run again after configuring the required credentials."
+core/engine/tui/screens/agent_picker.py:138:            # config.py is source of truth for name/description
+core/engine/tui/screens/agent_picker.py:140:            config_fallback_name = path.name.replace("_", " ").title()
+core/engine/tui/screens/agent_picker.py:141:            used_config = name != config_fallback_name
+core/engine/tui/screens/agent_picker.py:144:            if not used_config:
+core/engine/tui/screens/agent_picker.py:145:                # config.py didn't provide values, fall back to agent.json
+core/engine/tui/screens/credential_setup.py:1:"""Credential setup ModalScreen for configuring missing agent credentials"""
+core/engine/tui/screens/credential_setup.py:17:    """Modal screen for configuring missing agent credentials"""
+core/engine/tui/screens/credential_setup.py:149:        configured = 0
+core/engine/tui/screens/credential_setup.py:159:                configured += 1  # ENGINE_OAUTH_API_KEY itself counts as configured
+core/engine/tui/screens/credential_setup.py:175:                configured += 1
+core/engine/tui/screens/credential_setup.py:179:        if configured > 0:
+core/engine/tui/screens/credential_setup.py:182:            self.notify("No credentials configured", severity="warning", timeout=3)
+core/engine/runner/loader.py:98:                trigger_config=aep_data.get("trigger_config", {}),
+core/engine/graph/output_cleaner.py:74:    def __init__(self, config: CleansingConfig, llm_provider=None):
+core/engine/graph/output_cleaner.py:76:        self.config = config
+core/engine/graph/output_cleaner.py:84:        elif config.enabled:
+core/engine/graph/output_cleaner.py:95:                        model=config.fast_model,
+core/engine/graph/output_cleaner.py:97:                    logger.info(f"OK: Initialized OutputCleaner with {config.fast_model}")
+core/engine/graph/output_cleaner.py:169:        if not is_valid and self.config.log_cleanings:
+core/engine/graph/output_cleaner.py:189:        if not self.config.enabled:
+core/engine/graph/output_cleaner.py:190:            logger.warning("WARN: Output cleansing disabled in config")
+core/engine/graph/output_cleaner.py:247:            if self.config.log_cleanings:
+core/engine/graph/output_cleaner.py:249:                    f"Cleaning output from '{source_node_id}' using {self.config.fast_model}"
+core/engine/graph/output_cleaner.py:272:                if self.config.log_cleanings:
+core/engine/graph/output_cleaner.py:279:                if self.config.fallback_to_raw:
+core/engine/graph/output_cleaner.py:286:            if self.config.fallback_to_raw:
+core/engine/graph/output_cleaner.py:294:            if self.config.fallback_to_raw:
+core/engine/runner/server_cli.py:48:        for cache_file in frontend_dir.glob("tsconfig*.tsbuildinfo"):
+core/engine/runner/server_cli.py:117:    from engine.observability import configure_logging
+core/engine/runner/server_cli.py:122:    configure_logging(level="DEBUG" if getattr(args, "debug", False) else "INFO")
+core/engine/graph/node.py:225:    model_config = {"extra": "allow", "arbitrary_types_allowed": True}
+core/engine/graph/node.py:399:    # LLM configuration
+core/engine/graph/medical_billing.py:59:    model_config = {"extra": "allow"}
+core/engine/graph/medical_billing.py:76:    model_config = {"extra": "allow"}
+core/engine/graph/medical_billing.py:96:    model_config = {"extra": "allow"}
+core/engine/observability/otel.py:11:_configured = False
+core/engine/observability/otel.py:14:def configure_otel_if_enabled() -> dict[str, Any]:
+core/engine/observability/otel.py:16:    global _configured
+core/engine/observability/otel.py:21:    if _configured:
+core/engine/observability/otel.py:22:        return {"enabled": True, "endpoint": endpoint, "status": "already_configured"}
+core/engine/observability/otel.py:50:    _configured = True
+core/engine/runtime/execution_stream.py:13:from engine.graph.checkpoint_config import CheckpointConfig
+core/engine/runtime/execution_stream.py:87:    trigger_config: dict[str, Any] = field(default_factory=dict)
+core/engine/runtime/execution_stream.py:134:        checkpoint_config: CheckpointConfig | None = None,
+core/engine/runtime/execution_stream.py:156:        self._checkpoint_config = checkpoint_config
+core/engine/runtime/execution_stream.py:414:    # Includes both configuration/environment errors and deterministic node
+core/engine/runtime/execution_stream.py:428:        "configuration error",
+core/engine/runtime/execution_stream.py:536:                        loop_config=self.graph.loop_config,
+core/engine/runtime/execution_stream.py:550:                        checkpoint_config=self._checkpoint_config,
+core/engine/runtime/execution_stream.py:890:            loop_config=self.graph.loop_config,
+core/engine/server/routes_ops.py:8:from engine.observability.otel import configure_otel_if_enabled
+core/engine/server/routes_ops.py:17:    otel = configure_otel_if_enabled()
+core/engine/observability/logging.py:126:def configure_logging(
+core/engine/observability/logging.py:160:    # When in JSON mode, configure known third-party loggers to use JSON formatter
+core/engine/server/routes_oauth.py:28:    configured = os.environ.get("ENGINE_OAUTH_REDIRECT_URI")
+core/engine/server/routes_oauth.py:29:    if configured:
+core/engine/server/routes_oauth.py:30:        return configured.rsplit("/", 1)[0] + "/api/oauth/callback"
+core/engine/server/routes_oauth.py:77:                "error": "oauth_not_configured",
+core/engine/server/routes_oauth.py:79:                    f"OAuth for '{provider_name}' is not configured. "
+core/engine/observability/__init__.py:5:    configure_logging,
+core/engine/observability/__init__.py:11:    "configure_logging",
+core/engine/server/routes_credentials.py:245:        {"error": "OAuth resync is not configured for Engine", "accounts_by_provider": {}},
+core/engine/runner/mcp_client.py:48:    def __init__(self, config: MCPServerConfig):
+core/engine/runner/mcp_client.py:50:        self.config = config
+core/engine/runner/mcp_client.py:113:        if self.config.transport == "stdio":
+core/engine/runner/mcp_client.py:115:        elif self.config.transport == "http":
+core/engine/runner/mcp_client.py:118:            raise ValueError(f"Unsupported transport: {self.config.transport}")
+core/engine/runner/mcp_client.py:126:        if not self.config.command:
+core/engine/runner/mcp_client.py:136:            merged_env = {**os.environ, **(self.config.env or {})}
+core/engine/runner/mcp_client.py:138:                command=self.config.command,
+core/engine/runner/mcp_client.py:139:                args=self.config.args,
+core/engine/runner/mcp_client.py:141:                cwd=self.config.cwd,
+core/engine/runner/mcp_client.py:222:            logger.info(f"Connected to MCP server '{self.config.name}' via STDIO (persistent)")
+core/engine/runner/mcp_client.py:228:        if not self.config.url:
+core/engine/runner/mcp_client.py:232:            base_url=self.config.url,
+core/engine/runner/mcp_client.py:233:            headers=self.config.headers,
+core/engine/runner/mcp_client.py:242:                f"Connected to MCP server '{self.config.name}' via HTTP at {self.config.url}"
+core/engine/runner/mcp_client.py:245:            logger.warning(f"Health check failed for MCP server '{self.config.name}': {e}")
+core/engine/runner/mcp_client.py:251:            if self.config.transport == "stdio":
+core/engine/runner/mcp_client.py:262:                    server_name=self.config.name,
+core/engine/runner/mcp_client.py:268:                f"Discovered {len(self._tools)} tools from '{self.config.name}': {tool_names}"
+core/engine/runner/mcp_client.py:271:            logger.error(f"Failed to discover tools from '{self.config.name}': {e}")
+core/engine/runner/mcp_client.py:336:        if self.config.transport == "stdio":
+core/engine/runner/mcp_client.py:502:        logger.info(f"Disconnected from MCP server '{self.config.name}'")
+core/engine/server/routes.py:12:from engine.config import get_preferred_model
+core/engine/server/routes.py:78:async def handle_config(_request: web.Request) -> web.Response:
+core/engine/server/routes.py:292:    app.router.add_get("/api/config", handle_config)
+core/engine/runtime/agent_runtime.py:12:from engine.graph.checkpoint_config import CheckpointConfig
+core/engine/runtime/agent_runtime.py:67:        config: AgentRuntimeConfig | None = None,
+core/engine/runtime/agent_runtime.py:69:        checkpoint_config: CheckpointConfig | None = None,
+core/engine/runtime/agent_runtime.py:80:        self._config = config or AgentRuntimeConfig()
+core/engine/runtime/agent_runtime.py:82:        self._checkpoint_config = checkpoint_config
+core/engine/runtime/agent_runtime.py:99:            cache_ttl=self._config.cache_ttl,
+core/engine/runtime/agent_runtime.py:100:            batch_interval=self._config.batch_interval,
+core/engine/runtime/agent_runtime.py:108:        self._event_bus = event_bus or EventBus(max_history=self._config.max_history)
+core/engine/runtime/agent_runtime.py:138:        # Trigger middleware pipeline (built from config on start if unset)
+core/engine/runtime/agent_runtime.py:192:                    result_retention_max=self._config.execution_result_max,
+core/engine/runtime/agent_runtime.py:193:                    result_retention_ttl_seconds=self._config.execution_result_ttl_seconds,
+core/engine/runtime/agent_runtime.py:196:                    checkpoint_config=self._checkpoint_config,
+core/engine/runtime/agent_runtime.py:212:                tc = spec.trigger_config
+core/engine/runtime/agent_runtime.py:217:                        "but no event_types in trigger_config"
+core/engine/runtime/agent_runtime.py:221:                # Capture ep_id and config in closure
+core/engine/runtime/agent_runtime.py:274:                tc = spec.trigger_config
+core/engine/runtime/agent_runtime.py:289:                            "Entry point '%s' has invalid cron config: %s",
+core/engine/runtime/agent_runtime.py:571:                        "but no 'cron' or valid 'interval_minutes' in trigger_config",
+core/engine/runtime/agent_runtime.py:658:        """Build and initialize trigger middleware from config when needed."""
+core/engine/runtime/agent_runtime.py:661:        from engine.config import get_pipeline_stages_config
+core/engine/runtime/agent_runtime.py:662:        from engine.pipeline.registry import build_pipeline_from_config
+core/engine/runtime/agent_runtime.py:664:        stages_config = get_pipeline_stages_config()
+core/engine/runtime/agent_runtime.py:665:        if stages_config:
+core/engine/runtime/agent_runtime.py:666:            self._pipeline = build_pipeline_from_config(stages_config)
+core/engine/runtime/agent_runtime.py:677:        """Run configured middleware stages before execution."""
+core/engine/runtime/agent_runtime.py:775:                result_retention_max=self._config.execution_result_max,
+core/engine/runtime/agent_runtime.py:776:                result_retention_ttl_seconds=self._config.execution_result_ttl_seconds,
+core/engine/runtime/agent_runtime.py:779:                checkpoint_config=self._checkpoint_config,
+core/engine/runtime/agent_runtime.py:796:            tc = spec.trigger_config
+core/engine/runtime/agent_runtime.py:801:                    "but no event_types in trigger_config",
+core/engine/runtime/agent_runtime.py:861:            tc = spec.trigger_config
+core/engine/runtime/agent_runtime.py:1414:    config: AgentRuntimeConfig | None = None,
+core/engine/runtime/agent_runtime.py:1417:    checkpoint_config: CheckpointConfig | None = None,
+core/engine/runtime/agent_runtime.py:1425:    """Create and configure an AgentRuntime with entry points"""
+core/engine/runtime/agent_runtime.py:1440:        config=config,
+core/engine/runtime/agent_runtime.py:1442:        checkpoint_config=checkpoint_config,
+core/engine/runner/cli.py:74:        help="Require live Grafana + Slack config (fail fast if missing)",
+core/engine/runner/cli.py:332:            from log_monitor.lib.config import validate_production_config
+core/engine/runner/cli.py:334:            errors = validate_production_config(require_live=True)
+core/engine/runner/cli.py:338:            print("Production config errors:", file=sys.stderr)
+core/engine/runner/cli.py:1273:    """Extract name and description from a Python-based agent's config.py"""
+core/engine/runner/cli.py:1276:    config_path = agent_path / "config.py"
+core/engine/runner/cli.py:1280:    if not config_path.exists():
+core/engine/runner/cli.py:1284:        with open(config_path) as f:
+core/engine/runner/tool_registry.py:52:        self._mcp_config_path: Path | None = None  # Path used for initial load
+core/engine/runner/tool_registry.py:277:    def load_mcp_config(self, config_path: Path) -> None:
+core/engine/runner/tool_registry.py:278:        """Load and register MCP servers from a config file"""
+core/engine/runner/tool_registry.py:279:        # Remember config path for potential resync later
+core/engine/runner/tool_registry.py:280:        self._mcp_config_path = Path(config_path)
+core/engine/runner/tool_registry.py:283:            with open(config_path) as f:
+core/engine/runner/tool_registry.py:284:                config = json.load(f)
+core/engine/runner/tool_registry.py:286:            logger.warning(f"Failed to load MCP config from {config_path}: {e}")
+core/engine/runner/tool_registry.py:289:        base_dir = config_path.parent
+core/engine/runner/tool_registry.py:294:        server_list = config.get("servers", [])
+core/engine/runner/tool_registry.py:295:        if not server_list and "servers" not in config:
+core/engine/runner/tool_registry.py:297:            server_list = [{"name": name, **cfg} for name, cfg in config.items()]
+core/engine/runner/tool_registry.py:299:        for server_config in server_list:
+core/engine/runner/tool_registry.py:300:            cwd = server_config.get("cwd")
+core/engine/runner/tool_registry.py:302:                server_config["cwd"] = str((base_dir / cwd).resolve())
+core/engine/runner/tool_registry.py:304:            cmd = server_config.get("command")
+core/engine/runner/tool_registry.py:308:                server_config = dict(server_config, command=sys.executable)
+core/engine/runner/tool_registry.py:313:                    self.register_mcp_server(server_config)
+core/engine/runner/tool_registry.py:323:                name = server_config.get("name", "unknown")
+core/engine/runner/tool_registry.py:332:        server_config: dict[str, Any],
+core/engine/runner/tool_registry.py:338:            # Build config object
+core/engine/runner/tool_registry.py:339:            config = MCPServerConfig(
+core/engine/runner/tool_registry.py:340:                name=server_config["name"],
+core/engine/runner/tool_registry.py:341:                transport=server_config["transport"],
+core/engine/runner/tool_registry.py:342:                command=server_config.get("command"),
+core/engine/runner/tool_registry.py:343:                args=server_config.get("args", []),
+core/engine/runner/tool_registry.py:344:                env=server_config.get("env", {}),
+core/engine/runner/tool_registry.py:345:                cwd=server_config.get("cwd"),
+core/engine/runner/tool_registry.py:346:                url=server_config.get("url"),
+core/engine/runner/tool_registry.py:347:                headers=server_config.get("headers", {}),
+core/engine/runner/tool_registry.py:348:                description=server_config.get("description", ""),
+core/engine/runner/tool_registry.py:352:            client = MCPClient(config)
+core/engine/runner/tool_registry.py:359:            server_name = server_config["name"]
+core/engine/runner/tool_registry.py:418:            logger.info(f"Registered {count} tools from MCP server '{config.name}'")
+core/engine/runner/tool_registry.py:506:        if not self._mcp_clients or self._mcp_config_path is None:
+core/engine/runner/tool_registry.py:540:        self.load_mcp_config(self._mcp_config_path)
+core/engine/graph/executor.py:10:from engine.graph.checkpoint_config import CheckpointConfig
+core/engine/graph/executor.py:107:        cleansing_config: CleansingConfig | None = None,
+core/engine/graph/executor.py:109:        parallel_config: ParallelExecutionConfig | None = None,
+core/engine/graph/executor.py:115:        loop_config: dict[str, Any] | None = None,
+core/engine/graph/executor.py:135:        self._loop_config = loop_config or {}
+core/engine/graph/executor.py:142:        self.cleansing_config = cleansing_config or CleansingConfig()
+core/engine/graph/executor.py:144:            config=self.cleansing_config,
+core/engine/graph/executor.py:150:        self._parallel_config = parallel_config or ParallelExecutionConfig()
+core/engine/graph/executor.py:358:        checkpoint_config: "CheckpointConfig | None" = None,
+core/engine/graph/executor.py:401:        if checkpoint_config and checkpoint_config.enabled and self._storage_path:
+core/engine/graph/executor.py:829:                    and checkpoint_config
+core/engine/graph/executor.py:830:                    and checkpoint_config.should_checkpoint_node_start()
+core/engine/graph/executor.py:840:                    if checkpoint_config.async_checkpoint:
+core/engine/graph/executor.py:1245:                            and checkpoint_config
+core/engine/graph/executor.py:1246:                            and checkpoint_config.should_checkpoint_node_complete()
+core/engine/graph/executor.py:1257:                            if checkpoint_config.async_checkpoint:
+core/engine/graph/executor.py:1265:                            and checkpoint_config
+core/engine/graph/executor.py:1266:                            and checkpoint_config.should_prune_checkpoints(len(path))
+core/engine/graph/executor.py:1270:                                    max_age_days=checkpoint_config.checkpoint_max_age_days
+core/engine/graph/executor.py:1776:            # Custom configs can still be pre-registered via node_registry.
+core/engine/graph/executor.py:1787:            # Auto-configure spillover directory for large tool results.
+core/engine/graph/executor.py:1797:            lc = self._loop_config
+core/engine/graph/executor.py:1802:                config=LoopConfig(
+core/engine/graph/executor.py:1849:                if self.cleansing_config.enabled and target_node_spec:
+core/engine/graph/executor.py:2033:                if self.cleansing_config.enabled and node_spec:
+core/engine/graph/executor.py:2184:        # Handle failures based on config
+core/engine/graph/executor.py:2187:            if self._parallel_config.on_branch_failure == "fail_all":
+core/engine/graph/executor.py:2189:            elif self._parallel_config.on_branch_failure == "continue_others":
+core/engine/cli.py:8:def _configure_paths() -> None:
+core/engine/cli.py:26:    _configure_paths()
+core/engine/graph/checkpoint_config.py:45:# Default configuration for most agents
+core/engine/graph/checkpoint_config.py:56:# Minimal configuration (only checkpoint at node completion)
+core/engine/graph/checkpoint_config.py:67:# Disabled configuration (no checkpointing)
+core/engine/graph/goal.py:38:    model_config = {"extra": "allow"}
+core/engine/graph/goal.py:56:    model_config = {"extra": "allow"}
+core/engine/graph/goal.py:100:    model_config = {"extra": "allow"}
+core/engine/graph/edge.py:54:    model_config = {"extra": "allow"}
+core/engine/graph/edge.py:237:    trigger_config: dict[str, Any] = Field(
+core/engine/graph/edge.py:239:        description="Trigger-specific configuration (e.g., webhook URL, timer interval)",
+core/engine/graph/edge.py:253:    model_config = {"extra": "allow"}
+core/engine/graph/edge.py:312:    # EventLoopNode configuration (from configure_loop)
+core/engine/graph/edge.py:313:    loop_config: dict[str, Any] = Field(
+core/engine/graph/edge.py:315:        description="EventLoopNode configuration (max_iterations, max_tool_calls_per_turn, etc.)",
+core/engine/graph/edge.py:341:    model_config = {"extra": "allow"}
+core/engine/graph/edge.py:346:        """Resolve max_tokens from the global config store"""
+core/engine/graph/edge.py:348:            from engine.config import get_max_tokens
+core/engine/runner/runner.py:9:from engine.config import get_engine_config, get_preferred_model
+core/engine/runner/runner.py:40:        """Resolve the default model from ~/.engine/configuration.json"""
+core/engine/runner/runner.py:52:        runtime_config: "AgentRuntimeConfig | None" = None,
+core/engine/runner/runner.py:56:        configure_for_account: Callable | None = None,
+core/engine/runner/runner.py:67:        self.runtime_config = runtime_config
+core/engine/runner/runner.py:71:        self._configure_for_account = configure_for_account
+core/engine/runner/runner.py:90:        # Load ENGINE_CREDENTIAL_KEY from shell config if not in env.
+core/engine/runner/runner.py:122:        mcp_config_path = agent_path / "mcp_servers.json"
+core/engine/runner/runner.py:123:        if mcp_config_path.exists():
+core/engine/runner/runner.py:124:            self._load_mcp_servers_from_config(mcp_config_path)
+core/engine/runner/runner.py:189:            # Read model and max_tokens from agent's config if not explicitly provided
+core/engine/runner/runner.py:190:            agent_config = getattr(agent_module, "default_config", None)
+core/engine/runner/runner.py:192:                if agent_config and hasattr(agent_config, "model"):
+core/engine/runner/runner.py:193:                    model = agent_config.model
+core/engine/runner/runner.py:195:            if agent_config and hasattr(agent_config, "max_tokens"):
+core/engine/runner/runner.py:196:                max_tokens = agent_config.max_tokens
+core/engine/runner/runner.py:198:                engine_config = get_engine_config()
+core/engine/runner/runner.py:199:                max_tokens = engine_config.get("llm", {}).get("max_tokens", DEFAULT_MAX_TOKENS)
+core/engine/runner/runner.py:220:                "loop_config": getattr(agent_module, "loop_config", {}),
+core/engine/runner/runner.py:232:            # Read runtime config (webhook settings, etc.) if defined
+core/engine/runner/runner.py:233:            agent_runtime_config = getattr(agent_module, "runtime_config", None)
+core/engine/runner/runner.py:240:            configure_fn = getattr(agent_module, "configure_for_account", None)
+core/engine/runner/runner.py:251:                runtime_config=agent_runtime_config,
+core/engine/runner/runner.py:255:                configure_for_account=configure_fn,
+core/engine/runner/runner.py:313:        **config_kwargs,
+core/engine/runner/runner.py:316:        server_config = {
+core/engine/runner/runner.py:319:            **config_kwargs,
+core/engine/runner/runner.py:321:        return self._tool_registry.register_mcp_server(server_config)
+core/engine/runner/runner.py:323:    def _load_mcp_servers_from_config(self, config_path: Path) -> None:
+core/engine/runner/runner.py:324:        """Load and register MCP servers from a configuration file"""
+core/engine/runner/runner.py:325:        self._tool_registry.load_mcp_config(config_path)
+core/engine/runner/runner.py:334:        from engine.observability import configure_logging
+core/engine/runner/runner.py:336:        configure_logging(level="INFO", format="auto")
+core/engine/runner/runner.py:360:            # Check if a subscription mode is configured
+core/engine/runner/runner.py:361:            config = get_engine_config()
+core/engine/runner/runner.py:362:            llm_config = config.get("llm", {})
+core/engine/runner/runner.py:363:            use_claude_code = llm_config.get("use_claude_code_subscription", False)
+core/engine/runner/runner.py:364:            use_codex = llm_config.get("use_codex_subscription", False)
+core/engine/runner/runner.py:365:            api_base = llm_config.get("api_base")
+core/engine/runner/runner.py:372:                    print("Warning: Claude Code subscription configured but no token found.")
+core/engine/runner/runner.py:378:                    print("Warning: Codex subscription configured but no token found.")
+core/engine/runner/runner.py:419:                    # First check api_key_env_var from config (set by quickstart)
+core/engine/runner/runner.py:420:                    api_key_env = llm_config.get("api_key_env_var") or self._get_api_key_env_var(
+core/engine/runner/runner.py:444:            # Fail fast if the agent needs an LLM but none was configured
+core/engine/runner/runner.py:479:                files_config = dict(FILES_MCP_SERVER_CONFIG)
+core/engine/runner/runner.py:481:                files_config["cwd"] = str(_repo_root / "tools")
+core/engine/runner/runner.py:482:                self._tool_registry.register_mcp_server(files_config)
+core/engine/runner/runner.py:623:                trigger_config=async_ep.trigger_config,
+core/engine/runner/runner.py:650:        from engine.graph.checkpoint_config import CheckpointConfig
+core/engine/runner/runner.py:652:        checkpoint_config = CheckpointConfig(
+core/engine/runner/runner.py:660:        # Handle runtime_config - only pass through if it's actually an AgentRuntimeConfig.
+core/engine/runner/runner.py:663:        runtime_config = None
+core/engine/runner/runner.py:664:        if self.runtime_config is not None:
+core/engine/runner/runner.py:667:            if isinstance(self.runtime_config, AgentRuntimeConfig):
+core/engine/runner/runner.py:668:                runtime_config = self.runtime_config
+core/engine/runner/runner.py:679:            checkpoint_config=checkpoint_config,
+core/engine/runner/runner.py:680:            config=runtime_config,
+core/engine/runner/runner.py:1052:                trigger_config=aep.trigger_config,
+core/engine/graph/files.py:18:"""Default stdio config for the file tools MCP server."""
+core/engine/server/app.py:64:    from engine.observability.otel import configure_otel_if_enabled
+core/engine/server/app.py:66:    configure_otel_if_enabled()
+core/engine/graph/event_loop/config.py:1:"""Loop configuration and output accumulation for event-loop nodes"""
+core/engine/graph/event_loop/__init__.py:3:from engine.graph.event_loop.config import LoopConfig, OutputAccumulator
+core/engine/credentials/key_storage.py:24:    """Load ENGINE_CREDENTIAL_KEY with priority: env > file > shell config"""
+core/engine/credentials/key_storage.py:36:    # 3. Shell config fallback (backward compat for old installs)
+core/engine/credentials/key_storage.py:37:    key = _read_from_shell_config(CREDENTIAL_KEY_ENV_VAR)
+core/engine/credentials/key_storage.py:74:    """env > encrypted store > shell config"""
+core/engine/credentials/key_storage.py:86:    # 3. Shell config fallback (backward compat)
+core/engine/credentials/key_storage.py:87:    key = _read_from_shell_config(ENGINE_OAUTH_ENV_VAR)
+core/engine/credentials/key_storage.py:128:def _read_from_shell_config(env_var: str) -> str | None:
+core/engine/credentials/key_storage.py:131:        from engine_tools.credentials.shell_config import check_env_var_in_shell_config
+core/engine/credentials/key_storage.py:133:        found, value = check_env_var_in_shell_config(env_var)
+core/engine/credentials/setup.py:38:    """A credential that needs to be configured"""
+core/engine/credentials/setup.py:79:    """Whether all required credentials were configured"""
+core/engine/credentials/setup.py:81:    configured: list[str] = field(default_factory=list)
+core/engine/credentials/setup.py:140:        configured: list[str] = []
+core/engine/credentials/setup.py:145:            self._print(f"\n{Colors.GREEN}OK: All credentials are already configured!{Colors.NC}\n")
+core/engine/credentials/setup.py:161:                    configured.append(cred.credential_name)
+core/engine/credentials/setup.py:171:        self._print_summary(configured, skipped, errors)
+core/engine/credentials/setup.py:175:            configured=configured,
+core/engine/credentials/setup.py:195:        self._print(f"  {len(self.missing)} credential(s) need to be configured:")
+core/engine/credentials/setup.py:222:        """Set up a single credential. Returns True if configured"""
+core/engine/credentials/setup.py:437:    def _print_summary(self, configured: list[str], skipped: list[str], errors: list[str]) -> None:
+core/engine/credentials/setup.py:444:        if configured:
+core/engine/credentials/setup.py:446:            for name in configured:
+core/engine/credentials/setup.py:460:            self._print(f"\n{Colors.GREEN}All credentials configured successfully!{Colors.NC}")
+core/engine/credentials/setup.py:462:            self._print(f"\n{Colors.YELLOW}Note: Skipped credentials must be configured ")
+core/engine/credentials/oauth2/provider.py:1:"""OAuth2 types and configuration"""
+core/engine/credentials/oauth2/provider.py:98:    # Request configuration
+core/engine/credentials/oauth2/provider.py:106:        """Validate configuration"""
+core/engine/credentials/oauth2/zoho_provider.py:4:Pre-configured for Zoho's OAuth2 endpoints and CRM scopes.
+core/engine/credentials/oauth2/zoho_provider.py:47:    Zoho CRM OAuth2 provider with pre-configured endpoints.
+core/engine/credentials/oauth2/zoho_provider.py:50:    - Pre-configured token and authorization URLs (region-aware)
+core/engine/credentials/oauth2/zoho_provider.py:92:        config = OAuth2Config(
+core/engine/credentials/oauth2/zoho_provider.py:101:        super().__init__(config, provider_id="zoho_crm_oauth2")
+core/engine/credentials/oauth2/zoho_provider.py:145:                timeout=self.config.request_timeout,
+core/engine/credentials/models.py:44:    model_config = {"extra": "allow"}
+core/engine/credentials/models.py:106:    model_config = {"extra": "allow"}
+core/engine/credentials/models.py:222:    model_config = {"extra": "allow"}
+core/engine/credentials/validation.py:38:    # Step 2: ENGINE_OAUTH_API_KEY (uses encrypted store, then shell config fallback)
+core/engine/credentials/validation.py:41:    # Step 3: Load remaining LLM/tool API keys from shell config
+core/engine/credentials/validation.py:43:        from engine_tools.credentials.shell_config import check_env_var_in_shell_config
+core/engine/credentials/validation.py:54:                    found, value = check_env_var_in_shell_config(var_name)
+core/engine/credentials/validation.py:57:                        logger.debug("Loaded %s from shell config", var_name)
+core/engine/graph/event_loop/node.py:18:from engine.graph.event_loop.config import LoopConfig, OutputAccumulator
+core/engine/graph/event_loop/node.py:48:        config: LoopConfig | None = None,
+core/engine/graph/event_loop/node.py:54:        self._config = config or LoopConfig()
+core/engine/graph/event_loop/node.py:200:                if self._config.spillover_dir:
+core/engine/graph/event_loop/node.py:201:                    _adapt_path = Path(self._config.spillover_dir) / "adapt.md"
+core/engine/graph/event_loop/node.py:223:                    max_history_tokens=self._config.max_history_tokens,
+core/engine/graph/event_loop/node.py:301:        for iteration in range(start_iteration, self._config.max_iterations):
+core/engine/graph/event_loop/node.py:430:                        and _stream_retry_count < self._config.max_stream_retries
+core/engine/graph/event_loop/node.py:434:                            self._config.stream_retry_backoff_base
+core/engine/graph/event_loop/node.py:436:                            self._config.stream_retry_max_delay,
+core/engine/graph/event_loop/node.py:445:                            self._config.max_stream_retries,
+core/engine/graph/event_loop/node.py:453:                                max_retries=self._config.max_stream_retries,
+core/engine/graph/event_loop/node.py:493:                                max_retries=self._config.max_stream_retries,
+core/engine/graph/event_loop/node.py:617:                    if _consecutive_empty_turns >= self._config.stall_detection_threshold:
+core/engine/graph/event_loop/node.py:664:                    if _consecutive_empty_turns >= self._config.stall_detection_threshold:
+core/engine/graph/event_loop/node.py:687:            if len(recent_responses) > self._config.stall_detection_threshold:
+core/engine/graph/event_loop/node.py:727:                        f"Node stalled: {self._config.stall_detection_threshold} "
+core/engine/graph/event_loop/node.py:750:                threshold = self._config.tool_doom_loop_threshold
+core/engine/graph/event_loop/node.py:854:                        if _cf_text_only_streak <= self._config.cf_grace_turns:
+core/engine/graph/event_loop/node.py:866:                                        f"/{self._config.cf_grace_turns})"
+core/engine/graph/event_loop/node.py:1020:                or (iteration + 1) % self._config.judge_every_n_turns == 0
+core/engine/graph/event_loop/node.py:1222:            stream_id, node_id, self._config.max_iterations, execution_id
+core/engine/graph/event_loop/node.py:1231:                error=f"Max iterations ({self._config.max_iterations}) reached without acceptance",
+core/engine/graph/event_loop/node.py:1232:                total_steps=self._config.max_iterations,
+core/engine/graph/event_loop/node.py:1245:            error=(f"Max iterations ({self._config.max_iterations}) reached without acceptance"),
+core/engine/graph/event_loop/node.py:1492:                self._config.max_tool_calls_per_turn * (1 + self._config.tool_call_overflow_margin)
+core/engine/graph/event_loop/node.py:1890:                protect = max(2000, self._config.max_history_tokens // 12)
+core/engine/graph/event_loop/node.py:1899:                        self._config.max_history_tokens,
+core/engine/graph/event_loop/node.py:1916:                protect = max(2000, self._config.max_history_tokens // 12)
+core/engine/graph/event_loop/node.py:2341:                        max_history_tokens=self._config.max_history_tokens,
+core/engine/graph/event_loop/node.py:2409:        if len(recent_responses) < self._config.stall_detection_threshold:
+core/engine/graph/event_loop/node.py:2485:        if not self._config.tool_doom_loop_enabled:
+core/engine/graph/event_loop/node.py:2487:        threshold = self._config.tool_doom_loop_threshold
+core/engine/graph/event_loop/node.py:2508:                content=f"No tool executor configured for '{tc.tool_name}'",
+core/engine/graph/event_loop/node.py:2519:        if not self._config.spillover_dir:
+core/engine/graph/event_loop/node.py:2522:            adapt_path = Path(self._config.spillover_dir) / "adapt.md"
+core/engine/graph/event_loop/node.py:2562:        spill_dir = self._config.spillover_dir
+core/engine/graph/event_loop/node.py:2585:        limit = self._config.max_tool_result_chars
+core/engine/graph/event_loop/node.py:2617:        spill_dir = self._config.spillover_dir
+core/engine/graph/event_loop/node.py:2710:        protect = max(2000, self._config.max_history_tokens // 12)
+core/engine/graph/event_loop/node.py:2727:        spill_dir = self._config.spillover_dir
+core/engine/graph/event_loop/node.py:2820:            summary_budget = max(1024, self._config.max_history_tokens // 2)
+core/engine/graph/event_loop/node.py:2923:        target_tokens = self._config.max_history_tokens // 2
+core/engine/graph/event_loop/node.py:3047:        if self._config.spillover_dir:
+core/engine/graph/event_loop/node.py:3051:                data_dir = Path(self._config.spillover_dir)
+core/engine/graph/event_loop/node.py:3252:                max_iterations=self._config.max_iterations,
+core/engine/graph/event_loop/node.py:3608:            "Subagent '%s' configuration:\n"
+core/engine/graph/event_loop/node.py:3622:        max_iter = min(self._config.max_iterations, 10)
+core/engine/graph/event_loop/node.py:3675:        if self._config.spillover_dir:
+core/engine/graph/event_loop/node.py:3677:                Path(self._config.spillover_dir) / agent_id / subagent_instance
+core/engine/graph/event_loop/node.py:3683:            config=LoopConfig(
+core/engine/graph/event_loop/node.py:3685:                max_tool_calls_per_turn=self._config.max_tool_calls_per_turn,
+core/engine/graph/event_loop/node.py:3686:                tool_call_overflow_margin=self._config.tool_call_overflow_margin,
+core/engine/graph/event_loop/node.py:3687:                max_history_tokens=self._config.max_history_tokens,
+core/engine/graph/event_loop/node.py:3688:                stall_detection_threshold=self._config.stall_detection_threshold,
+core/engine/graph/event_loop/node.py:3689:                max_tool_result_chars=self._config.max_tool_result_chars,
+core/engine/credentials/oauth2/hubspot_provider.py:4:Pre-configured for HubSpot's OAuth2 endpoints and CRM scopes.
+core/engine/credentials/oauth2/hubspot_provider.py:50:    HubSpot OAuth2 provider with pre-configured endpoints.
+core/engine/credentials/oauth2/hubspot_provider.py:53:    - Pre-configured token and authorization URLs
+core/engine/credentials/oauth2/hubspot_provider.py:71:        config = OAuth2Config(
+core/engine/credentials/oauth2/hubspot_provider.py:78:        super().__init__(config, provider_id="hubspot_oauth2")
+core/engine/credentials/store.py:426:        # Check if Engine is configured
+core/engine/credentials/oauth2/google_calendar_provider.py:27:        config = OAuth2Config(
+core/engine/credentials/oauth2/google_calendar_provider.py:34:        super().__init__(config, provider_id="google_calendar_oauth2")
+core/engine/credentials/oauth2/base_provider.py:70:    def __init__(self, config: OAuth2Config, provider_id: str = "oauth2"):
+core/engine/credentials/oauth2/base_provider.py:75:            config: OAuth2 configuration
+core/engine/credentials/oauth2/base_provider.py:78:        self.config = config
+core/engine/credentials/oauth2/base_provider.py:96:                self._client = httpx.Client(timeout=self.config.request_timeout)
+core/engine/credentials/oauth2/base_provider.py:128:            scopes: Requested scopes (defaults to config.default_scopes)
+core/engine/credentials/oauth2/base_provider.py:135:            ValueError: If authorization_url is not configured
+core/engine/credentials/oauth2/base_provider.py:137:        if not self.config.authorization_url:
+core/engine/credentials/oauth2/base_provider.py:138:            raise ValueError("authorization_url not configured for this provider")
+core/engine/credentials/oauth2/base_provider.py:141:            "client_id": self.config.client_id,
+core/engine/credentials/oauth2/base_provider.py:145:            "scope": " ".join(scopes or self.config.default_scopes),
+core/engine/credentials/oauth2/base_provider.py:149:        return f"{self.config.authorization_url}?{urlencode(params)}"
+core/engine/credentials/oauth2/base_provider.py:173:            "client_id": self.config.client_id,
+core/engine/credentials/oauth2/base_provider.py:174:            "client_secret": self.config.client_secret,
+core/engine/credentials/oauth2/base_provider.py:177:            **self.config.extra_token_params,
+core/engine/credentials/oauth2/base_provider.py:194:            scopes: Requested scopes (defaults to config.default_scopes)
+core/engine/credentials/oauth2/base_provider.py:205:            "client_id": self.config.client_id,
+core/engine/credentials/oauth2/base_provider.py:206:            "client_secret": self.config.client_secret,
+core/engine/credentials/oauth2/base_provider.py:207:            **self.config.extra_token_params,
+core/engine/credentials/oauth2/base_provider.py:211:        if scopes or self.config.default_scopes:
+core/engine/credentials/oauth2/base_provider.py:212:            data["scope"] = " ".join(scopes or self.config.default_scopes)
+core/engine/credentials/oauth2/base_provider.py:239:            "client_id": self.config.client_id,
+core/engine/credentials/oauth2/base_provider.py:240:            "client_secret": self.config.client_secret,
+core/engine/credentials/oauth2/base_provider.py:242:            **self.config.extra_token_params,
+core/engine/credentials/oauth2/base_provider.py:266:        if not self.config.revocation_url:
+core/engine/credentials/oauth2/base_provider.py:267:            logger.warning("revocation_url not configured, cannot revoke token")
+core/engine/credentials/oauth2/base_provider.py:273:                self.config.revocation_url,
+core/engine/credentials/oauth2/base_provider.py:277:                    "client_id": self.config.client_id,
+core/engine/credentials/oauth2/base_provider.py:278:                    "client_secret": self.config.client_secret,
+core/engine/credentials/oauth2/base_provider.py:280:                headers={"Accept": "application/json", **self.config.extra_headers},
+core/engine/credentials/oauth2/base_provider.py:408:            **self.config.extra_headers,
+core/engine/credentials/oauth2/base_provider.py:411:        response = client.post(self.config.token_url, data=data, headers=headers)
+core/engine/credentials/oauth2/base_provider.py:450:        placement = self.config.token_placement
+core/engine/credentials/oauth2/base_provider.py:456:            header_name = self.config.custom_header_name or "X-Access-Token"
+core/engine/credentials/oauth2/base_provider.py:460:            return {"params": {self.config.query_param_name: token.access_token}}
+
+========== PROVIDERS ==========
+core/engine/config.py:53:        provider = llm["provider"]
+core/engine/config.py:55:        if provider == "ollama":
+core/engine/config.py:56:            provider = "ollama_chat"
+core/engine/config.py:114:    """Return extra kwargs for LiteLLMProvider (e.g. OAuth headers)"""
+core/engine/tui/screens/credential_setup.py:198:            provider = EngineSyncProvider(client=client)
+core/engine/tui/screens/account_selection.py:71:                provider = acct.get("provider", "unknown")
+core/engine/__init__.py:3:from engine.llm import AnthropicProvider, LLMProvider
+core/engine/__init__.py:19:    "LLMProvider",
+core/engine/observability/otel.py:43:    tracer_provider = TracerProvider(resource=resource)
+core/engine/server/routes_oauth.py:73:    provider = _provider_for(provider_name)
+core/engine/server/routes_oauth.py:116:    provider = _provider_for(provider_name)
+core/engine/llm/model_catalog.py:117:        provider = preset_map.get("provider")
+core/engine/graph/output_cleaner.py:89:                from engine.llm.litellm import LiteLLMProvider
+core/engine/graph/output_cleaner.py:93:                    self.llm = LiteLLMProvider(
+core/engine/graph/output_cleaner.py:104:                logger.warning("WARN: LiteLLMProvider not available, output cleaning disabled")
+core/engine/llm/provider.py:50:class LLMProvider(ABC):
+core/engine/graph/node.py:12:from engine.llm.provider import LLMProvider, Tool
+core/engine/graph/node.py:392:    llm: LLMProvider | None = None
+core/engine/llm/mock.py:8:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/engine/llm/mock.py:17:class MockLLMProvider(LLMProvider):
+core/engine/runtime/agent_runtime.py:25:    from engine.llm.provider import LLMProvider, Tool
+core/engine/runtime/agent_runtime.py:64:        llm: "LLMProvider | None" = None,
+core/engine/runtime/agent_runtime.py:1411:    llm: "LLMProvider | None" = None,
+core/engine/credentials/store.py:71:            provider = self._providers.get(credential.provider_id)
+core/engine/credentials/store.py:271:        provider = self.get_provider_for_credential(credential)
+core/engine/credentials/store.py:288:        provider = self.get_provider_for_credential(credential)
+core/engine/credentials/store.py:296:        provider = self.get_provider_for_credential(credential)
+core/engine/credentials/store.py:445:            provider = EngineSyncProvider(client=client)
+core/engine/llm/litellm.py:19:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/engine/llm/litellm.py:222:class LiteLLMProvider(LLMProvider):
+core/engine/llm/anthropic.py:6:from engine.llm.litellm import LiteLLMProvider
+core/engine/llm/anthropic.py:7:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/engine/llm/anthropic.py:23:class AnthropicProvider(LLMProvider):
+core/engine/llm/anthropic.py:32:        # Delegate to LiteLLMProvider internally.
+core/engine/llm/anthropic.py:41:        self._provider = LiteLLMProvider(
+core/engine/llm/__init__.py:3:from engine.llm.provider import LLMProvider, LLMResponse
+core/engine/llm/__init__.py:17:    "LLMProvider",
+core/engine/llm/__init__.py:38:    from engine.llm.litellm import LiteLLMProvider  # noqa: F401
+core/engine/llm/__init__.py:40:    __all__.append("LiteLLMProvider")
+core/engine/llm/__init__.py:45:    from engine.llm.mock import MockLLMProvider  # noqa: F401
+core/engine/llm/__init__.py:47:    __all__.append("MockLLMProvider")
+core/engine/graph/executor.py:23:from engine.llm.provider import LLMProvider, Tool
+core/engine/graph/executor.py:102:        llm: LLMProvider | None = None,
+core/engine/graph/executor.py:139:        self.dynamic_tools_provider = dynamic_tools_provider
+core/engine/graph/conversation_judge.py:10:from engine.llm.provider import LLMProvider
+core/engine/graph/conversation_judge.py:25:    llm: LLMProvider,
+core/engine/runtime/execution_stream.py:22:    from engine.llm.provider import LLMProvider, Tool
+core/engine/runtime/execution_stream.py:127:        llm: "LLMProvider | None" = None,
+core/engine/credentials/oauth2/zoho_provider.py:8:    provider = ZohoOAuth2Provider(
+core/engine/credentials/oauth2/zoho_provider.py:56:        provider = ZohoOAuth2Provider(
+core/engine/graph/prompt_composer.py:40:            provider = acct.get("provider", "unknown")
+core/engine/graph/prompt_composer.py:61:        provider = acct.get("provider", "unknown")
+core/engine/graph/prompt_composer.py:67:        tools_for_provider = sorted(provider_tools.get(provider, []))
+core/engine/graph/prompt_composer.py:74:            tools_for_provider = relevant_tools
+core/engine/credentials/oauth2/hubspot_provider.py:8:    provider = HubSpotOAuth2Provider(
+core/engine/credentials/oauth2/hubspot_provider.py:58:        provider = HubSpotOAuth2Provider(
+core/engine/credentials/oauth2/base_provider.py:57:        provider = BaseOAuth2Provider(OAuth2Config(
+core/engine/runner/runner.py:19:from engine.llm.provider import LLMProvider, Tool
+core/engine/runner/runner.py:96:        self._llm: LLMProvider | None = None
+core/engine/runner/runner.py:354:            from engine.llm.mock import MockLLMProvider
+core/engine/runner/runner.py:356:            self._llm = MockLLMProvider(model=self.model)
+core/engine/runner/runner.py:358:            from engine.llm.litellm import LiteLLMProvider
+core/engine/runner/runner.py:385:                self._llm = LiteLLMProvider(
+core/engine/runner/runner.py:402:                self._llm = LiteLLMProvider(
+core/engine/runner/runner.py:413:                    self._llm = LiteLLMProvider(
+core/engine/runner/runner.py:424:                        self._llm = LiteLLMProvider(
+core/engine/runner/runner.py:433:                            self._llm = LiteLLMProvider(
+core/engine/runner/runner.py:449:                        from engine.llm.mock import MockLLMProvider
+core/engine/runner/runner.py:451:                        self._llm = MockLLMProvider(model=self.model)
+core/engine/runner/tool_registry.py:464:            provider = spec.engine_oauth_provider
+
+========== RUNTIME ==========
+core/engine/tools/supervisor_runtime.py:20:    from engine.runner import AgentRunner
+core/engine/tools/supervisor_runtime.py:31:    runner: AgentRunner
+core/engine/tools/supervisor_runtime.py:136:    runner: AgentRunner,
+core/engine/pipeline/stages/rate_limit.py:24:        if ctx.session_state:
+core/engine/pipeline/stages/rate_limit.py:25:            session_id = str(ctx.session_state.get("session_id", "default"))
+core/engine/pipeline/stages/rate_limit.py:26:        key = f"{ctx.entry_point_id}:{session_id}"
+core/engine/pipeline/stages/input_validation.py:19:        schema = self._schemas.get(ctx.entry_point_id)
+core/engine/pipeline/stages/input_validation.py:24:            if key not in ctx.input_data:
+core/engine/pipeline/stages/input_validation.py:29:            value = ctx.input_data[key]
+core/engine/pipeline/registry.py:8:from engine.pipeline.runner import PipelineRunner
+core/engine/pipeline/registry.py:45:def build_pipeline_from_config(stages_config: list[dict[str, Any]]) -> PipelineRunner:
+core/engine/pipeline/registry.py:46:    """Build a ``PipelineRunner`` from a declarative stages list."""
+core/engine/pipeline/registry.py:49:    return PipelineRunner(stages)
+core/engine/pipeline/stages/cost_guard.py:19:        estimated = ctx.metadata.get("estimated_cost")
+core/engine/pipeline/runner.py:18:class PipelineRunner:
+core/engine/pipeline/runner.py:19:    """Runs middleware stages on each AgentRuntime trigger."""
+core/engine/pipeline/runner.py:56:            ctx.entry_point_id,
+core/engine/pipeline/runner.py:79:                    ctx.input_data = result.input_data
+core/engine/pipeline/__init__.py:4:from engine.pipeline.runner import PipelineRunner
+core/engine/pipeline/__init__.py:16:    "PipelineRunner",
+core/engine/server/session.py:1:"""Thin session wrapper around AgentRunner + AgentRuntime."""
+core/engine/server/session.py:14:from engine.runner import AgentRunner
+core/engine/server/session.py:49:    runner: AgentRunner
+core/engine/server/session.py:221:        def _load() -> AgentRunner:
+core/engine/server/session.py:225:            runner = AgentRunner.load(
+core/engine/server/session.py:291:            await AgentRunner.setup_as_secondary(worker_path, runtime, graph_id="worker")
+core/engine/server/discovery.py:8:from engine.runner import AgentRunner
+core/engine/server/discovery.py:52:        runner = AgentRunner.load(path, interactive=False, skip_credential_validation=True)
+core/engine/graph/node.py:377:class NodeContext:
+core/engine/graph/node.py:544:    async def execute(self, ctx: NodeContext) -> NodeResult:
+core/engine/graph/node.py:548:    def validate_input(self, ctx: NodeContext) -> list[str]:
+core/engine/graph/node.py:551:        for key in ctx.node_spec.input_keys:
+core/engine/graph/node.py:552:            if key not in ctx.input_data and ctx.memory.read(key) is None:
+core/engine/tui/app.py:16:# AgentRuntime imported lazily where needed to support runtime=None startup.
+core/engine/tui/app.py:233:        self._runner = None  # AgentRunner — needed for cleanup on swap
+core/engine/tui/app.py:331:        from engine.runner import AgentRunner
+core/engine/tui/app.py:356:                AgentRunner.load,
+core/engine/runtime/agent_runtime.py:31:class AgentRuntimeConfig:
+core/engine/runtime/agent_runtime.py:32:    """Configuration for AgentRuntime"""
+core/engine/runtime/agent_runtime.py:56:class AgentRuntime:
+core/engine/runtime/agent_runtime.py:67:        config: AgentRuntimeConfig | None = None,
+core/engine/runtime/agent_runtime.py:80:        self._config = config or AgentRuntimeConfig()
+core/engine/runtime/agent_runtime.py:135:        # Optional greeting shown to user on TUI load (set by AgentRunner)
+core/engine/runtime/agent_runtime.py:589:            logger.info(f"AgentRuntime started with {len(self._streams)} streams")
+core/engine/runtime/agent_runtime.py:623:            logger.info("AgentRuntime stopped")
+core/engine/runtime/agent_runtime.py:693:        return ctx.input_data
+core/engine/runtime/agent_runtime.py:705:            raise RuntimeError("AgentRuntime is not running")
+core/engine/runtime/agent_runtime.py:1414:    config: AgentRuntimeConfig | None = None,
+core/engine/runtime/agent_runtime.py:1424:) -> AgentRuntime:
+core/engine/runtime/agent_runtime.py:1425:    """Create and configure an AgentRuntime with entry points"""
+core/engine/runtime/agent_runtime.py:1433:    runtime = AgentRuntime(
+core/engine/schemas/session_state.py:123:    # Isolation level (from ExecutionContext)
+core/engine/tui/widgets/graph_view.py:11:from engine.runtime.agent_runtime import AgentRuntime
+core/engine/tui/widgets/graph_view.py:47:    def __init__(self, runtime: AgentRuntime):
+core/engine/runtime/execution_stream.py:99:class ExecutionContext:
+core/engine/runtime/execution_stream.py:170:        self._active_executions: dict[str, ExecutionContext] = {}
+core/engine/runtime/execution_stream.py:382:                "Please ensure AgentRuntime is properly initialized.",
+core/engine/runtime/execution_stream.py:392:        ctx = ExecutionContext(
+core/engine/runtime/execution_stream.py:444:    async def _run_execution(self, ctx: ExecutionContext) -> None:
+core/engine/runtime/execution_stream.py:446:        execution_id = ctx.id
+core/engine/runtime/execution_stream.py:451:        _is_shared_session = bool(ctx.session_state and ctx.session_state.get("resume_session_id"))
+core/engine/runtime/execution_stream.py:455:        _current_session_state = ctx.session_state
+core/engine/runtime/execution_stream.py:456:        _current_input_data = ctx.input_data
+core/engine/runtime/execution_stream.py:460:            ctx.status = "running"
+core/engine/runtime/execution_stream.py:468:                        input_data=ctx.input_data,
+core/engine/runtime/execution_stream.py:469:                        correlation_id=ctx.correlation_id,
+core/engine/runtime/execution_stream.py:476:                    isolation=ctx.isolation_level,
+core/engine/runtime/execution_stream.py:486:                    input_data=ctx.input_data,
+core/engine/runtime/execution_stream.py:618:                ctx.completed_at = datetime.now()
+core/engine/runtime/execution_stream.py:619:                ctx.status = "completed" if result.success else "failed"
+core/engine/runtime/execution_stream.py:621:                    ctx.status = "paused"
+core/engine/runtime/execution_stream.py:634:                            correlation_id=ctx.correlation_id,
+core/engine/runtime/execution_stream.py:651:                            correlation_id=ctx.correlation_id,
+core/engine/runtime/execution_stream.py:675:                    ctx.status = "paused"
+core/engine/runtime/execution_stream.py:676:                    ctx.completed_at = datetime.now()
+core/engine/runtime/execution_stream.py:678:                    ctx.status = "cancelled"
+core/engine/runtime/execution_stream.py:711:                            correlation_id=ctx.correlation_id,
+core/engine/runtime/execution_stream.py:717:                ctx.status = "failed"
+core/engine/runtime/execution_stream.py:749:                        correlation_id=ctx.correlation_id,
+core/engine/runtime/execution_stream.py:769:        ctx: ExecutionContext,
+core/engine/runtime/execution_stream.py:791:                if ctx.status == "cancelled" or "cancelled" in error.lower():
+core/engine/runtime/execution_stream.py:806:                    correlation_id=ctx.correlation_id,
+core/engine/runtime/execution_stream.py:807:                    started_at=ctx.started_at.isoformat(),
+core/engine/runtime/execution_stream.py:808:                    input_data=ctx.input_data,
+core/engine/runtime/execution_stream.py:821:                ss = ctx.session_state or {}
+core/engine/runtime/execution_stream.py:832:                    correlation_id=ctx.correlation_id,
+core/engine/runtime/execution_stream.py:838:                        started_at=ctx.started_at.isoformat(),
+core/engine/runtime/execution_stream.py:843:                    input_data=ctx.input_data,
+core/engine/runtime/execution_stream.py:924:    def get_context(self, execution_id: str) -> ExecutionContext | None:
+core/engine/runtime/execution_stream.py:945:        return len([ctx for ctx in self._active_executions.values() if ctx.status == "running"])
+core/engine/runtime/execution_stream.py:951:            statuses[ctx.status] = statuses.get(ctx.status, 0) + 1
+core/engine/runtime/runtime_logger.py:86:        trace_id = ctx.get("trace_id", "")
+core/engine/runtime/runtime_logger.py:87:        execution_id = ctx.get("execution_id", "")
+core/engine/runtime/runtime_logger.py:162:        trace_id = ctx.get("trace_id", "")
+core/engine/runtime/runtime_logger.py:243:            trace_id = ctx.get("trace_id", "")
+core/engine/runtime/runtime_logger.py:244:            execution_id = ctx.get("execution_id", "")
+core/engine/graph/executor.py:15:    NodeContext,
+core/engine/graph/executor.py:1679:    ) -> NodeContext:
+core/engine/graph/executor.py:1709:        return NodeContext(
+core/engine/tui/widgets/chat_repl.py:17:from engine.runtime.agent_runtime import AgentRuntime
+core/engine/tui/widgets/chat_repl.py:150:        runtime: AgentRuntime,
+core/engine/tui/widgets/chat_repl.py:900:            from engine.runner.runner import AgentRunner
+core/engine/tui/widgets/chat_repl.py:902:            graph_id = await AgentRunner.setup_as_secondary(path, self.runtime)
+core/engine/graph/edge.py:278:            "Asynchronous entry points for concurrent execution streams (used with AgentRuntime)"
+core/engine/__init__.py:4:from engine.runner import AgentRunner
+core/engine/__init__.py:18:    "AgentRunner",
+core/engine/runner/server_cli.py:157:        runner = web.AppRunner(app, access_log=None)
+core/engine/runner/__init__.py:1:"""Agent Runner - load and run exported agents"""
+core/engine/runner/__init__.py:10:from engine.runner.runner import AgentRunner
+core/engine/runner/__init__.py:14:    "AgentRunner",
+core/engine/runner/protocol.py:91:    runner: Any  # AgentRunner - using Any to avoid circular import
+core/engine/runner/runner.py:1:"""Agent Runner - loads and runs exported agents"""
+core/engine/runner/runner.py:28:from engine.runtime.agent_runtime import AgentRuntime, AgentRuntimeConfig, create_agent_runtime
+core/engine/runner/runner.py:35:class AgentRunner:
+core/engine/runner/runner.py:52:        runtime_config: "AgentRuntimeConfig | None" = None,
+core/engine/runner/runner.py:60:        """Initialize the runner (use AgentRunner.load() instead)"""
+core/engine/runner/runner.py:99:        # AgentRuntime — unified execution path for all agents
+core/engine/runner/runner.py:100:        self._agent_runtime: AgentRuntime | None = None
+core/engine/runner/runner.py:170:    ) -> "AgentRunner":
+core/engine/runner/runner.py:614:        """Set up multi-entry-point execution using AgentRuntime"""
+core/engine/runner/runner.py:615:        # Convert AsyncEntryPointSpec to EntryPointSpec for AgentRuntime
+core/engine/runner/runner.py:646:        # Create AgentRuntime with all entry points
+core/engine/runner/runner.py:660:        # Handle runtime_config - only pass through if it's actually an AgentRuntimeConfig.
+core/engine/runner/runner.py:662:        # that would crash AgentRuntime if passed through.
+core/engine/runner/runner.py:665:            from engine.runtime.agent_runtime import AgentRuntimeConfig
+core/engine/runner/runner.py:667:            if isinstance(self.runtime_config, AgentRuntimeConfig):
+core/engine/runner/runner.py:724:        """Run using AgentRuntime"""
+core/engine/runner/runner.py:1028:        runtime: AgentRuntime,
+core/engine/runner/runner.py:1084:    async def __aenter__(self) -> "AgentRunner":
+core/engine/graph/__init__.py:21:from engine.graph.node import NodeContext, NodeProtocol, NodeResult, NodeSpec
+core/engine/graph/__init__.py:31:    "NodeContext",
+core/engine/runner/cli.py:326:    from engine.runner import AgentRunner
+core/engine/runner/cli.py:352:            runner = AgentRunner.load(args.agent_path, model=args.model)
+core/engine/runner/cli.py:366:            print("Error: failed to initialize AgentRuntime", file=sys.stderr)
+core/engine/runner/cli.py:398:    from engine.runner import AgentRunner
+core/engine/runner/cli.py:416:                    runner = AgentRunner.load(agent_path, model=model)
+core/engine/runner/cli.py:430:    from engine.runner import AgentRunner
+core/engine/runner/cli.py:479:                # AgentRunner handles credential setup interactively when stdin is a TTY.
+core/engine/runner/cli.py:481:                    runner = AgentRunner.load(
+core/engine/runner/cli.py:533:        # AgentRunner handles credential setup interactively when stdin is a TTY.
+core/engine/runner/cli.py:535:            runner = AgentRunner.load(
+core/engine/runner/cli.py:677:    from engine.runner import AgentRunner
+core/engine/runner/cli.py:680:        runner = AgentRunner.load(args.agent_path)
+core/engine/runner/cli.py:745:    from engine.runner import AgentRunner
+core/engine/runner/cli.py:748:        runner = AgentRunner.load(args.agent_path)
+core/engine/runner/cli.py:782:    from engine.runner import AgentRunner
+core/engine/runner/cli.py:794:                runner = AgentRunner.load(path)
+core/engine/runner/cli.py:968:    from engine.runner import AgentRunner
+core/engine/runner/cli.py:987:        runner = AgentRunner.load(agent_path)
+core/engine/runner/cli.py:1210:    from engine.runner import AgentRunner
+core/engine/runner/cli.py:1214:        # AgentRunner handles credential setup interactively when stdin is a TTY.
+core/engine/runner/cli.py:1216:            runner = AgentRunner.load(
+core/engine/graph/event_loop/node.py:27:from engine.graph.node import NodeContext, NodeProtocol, NodeResult
+core/engine/graph/event_loop/node.py:72:    def validate_input(self, ctx: NodeContext) -> list[str]:
+core/engine/graph/event_loop/node.py:75:        if ctx.llm is None:
+core/engine/graph/event_loop/node.py:83:    async def execute(self, ctx: NodeContext) -> NodeResult:
+core/engine/graph/event_loop/node.py:88:        stream_id = ctx.stream_id or ctx.node_id
+core/engine/graph/event_loop/node.py:89:        node_id = ctx.node_id
+core/engine/graph/event_loop/node.py:90:        execution_id = ctx.execution_id or ""
+core/engine/graph/event_loop/node.py:100:        if ctx.llm is None:
+core/engine/graph/event_loop/node.py:103:            if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:104:                ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:106:                    node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:123:        if _is_continuous and ctx.inherited_conversation is not None:
+core/engine/graph/event_loop/node.py:131:            conversation = ctx.inherited_conversation
+core/engine/graph/event_loop/node.py:135:                ctx.cumulative_output_keys or ctx.node_spec.output_keys or None
+core/engine/graph/event_loop/node.py:166:                    identity_prompt=ctx.identity_prompt or None,
+core/engine/graph/event_loop/node.py:167:                    focus_prompt=ctx.node_spec.system_prompt,
+core/engine/graph/event_loop/node.py:168:                    narrative=ctx.narrative or None,
+core/engine/graph/event_loop/node.py:169:                    accounts_prompt=ctx.accounts_prompt or None,
+core/engine/graph/event_loop/node.py:183:                system_prompt = _with_datetime(ctx.node_spec.system_prompt or "")
+core/engine/graph/event_loop/node.py:185:                if ctx.accounts_prompt:
+core/engine/graph/event_loop/node.py:186:                    system_prompt = f"{system_prompt}\n\n{ctx.accounts_prompt}"
+core/engine/graph/event_loop/node.py:202:                    if not _adapt_path.exists() and ctx.accounts_prompt:
+core/engine/graph/event_loop/node.py:205:                            f"## Identity\n{ctx.accounts_prompt}\n",
+core/engine/graph/event_loop/node.py:224:                    output_keys=ctx.node_spec.output_keys or None,
+core/engine/graph/event_loop/node.py:229:                    conversation.set_current_phase(ctx.node_id)
+core/engine/graph/event_loop/node.py:251:        tools = list(ctx.available_tools)
+core/engine/graph/event_loop/node.py:252:        set_output_tool = self._build_set_output_tool(ctx.node_spec.output_keys)
+core/engine/graph/event_loop/node.py:255:        if ctx.node_spec.client_facing and not ctx.event_triggered:
+core/engine/graph/event_loop/node.py:261:        if not ctx.is_subagent_mode:
+core/engine/graph/event_loop/node.py:262:            sub_agents = getattr(ctx.node_spec, "sub_agents", [])
+core/engine/graph/event_loop/node.py:263:            delegate_tool = self._build_delegate_tool(sub_agents, ctx.node_registry)
+core/engine/graph/event_loop/node.py:268:        if ctx.is_subagent_mode and ctx.report_callback is not None:
+core/engine/graph/event_loop/node.py:276:            ctx.node_spec.client_facing,
+core/engine/graph/event_loop/node.py:287:            and ctx.llm
+core/engine/graph/event_loop/node.py:307:                if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:308:                    ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:310:                        node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:336:            if ctx.dynamic_tools_provider is not None:
+core/engine/graph/event_loop/node.py:345:                tools.extend(ctx.dynamic_tools_provider())
+core/engine/graph/event_loop/node.py:480:                    if ctx.node_spec.client_facing:
+core/engine/graph/event_loop/node.py:513:                    if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:514:                        ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:525:                        ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:527:                            node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:549:                if ctx.node_spec.client_facing and not ctx.event_triggered:
+core/engine/graph/event_loop/node.py:579:                    accumulator, ctx.node_spec.output_keys, ctx.node_spec.nullable_output_keys
+core/engine/graph/event_loop/node.py:586:                has_real_outputs = bool(ctx.node_spec.output_keys)
+core/engine/graph/event_loop/node.py:625:                        if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:626:                            ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:628:                                node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:693:                if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:695:                    ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:707:                    ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:709:                        node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:770:                    if ctx.node_spec.client_facing and not ctx.event_triggered:
+core/engine/graph/event_loop/node.py:811:            if ctx.node_spec.client_facing and not ctx.event_triggered:
+core/engine/graph/event_loop/node.py:816:                    ctx.node_spec.client_facing
+core/engine/graph/event_loop/node.py:821:                        or ctx.node_id == SUPERVISOR_NODE_ID
+core/engine/graph/event_loop/node.py:822:                        or ctx.node_spec.output_keys
+core/engine/graph/event_loop/node.py:846:                            ctx.node_spec.output_keys,
+core/engine/graph/event_loop/node.py:847:                            ctx.node_spec.nullable_output_keys,
+core/engine/graph/event_loop/node.py:856:                            if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:858:                                ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:884:                    if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:886:                        ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:898:                        ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:900:                            node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:938:                    if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:940:                        ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:952:                        ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:954:                            node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:988:                            ctx.node_spec.output_keys,
+core/engine/graph/event_loop/node.py:989:                            ctx.node_spec.nullable_output_keys,
+core/engine/graph/event_loop/node.py:998:                        if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:1000:                            ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:1019:                ctx.is_subagent_mode  # Always evaluate subagents
+core/engine/graph/event_loop/node.py:1028:                if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:1030:                    ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:1077:                    accumulator, ctx.node_spec.output_keys, ctx.node_spec.nullable_output_keys
+core/engine/graph/event_loop/node.py:1093:                    if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:1095:                        ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:1112:                    ctx.memory.write(key, value, validate=False)
+core/engine/graph/event_loop/node.py:1117:                if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:1119:                    ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:1131:                    ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:1133:                        node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:1160:                if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:1162:                    ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:1174:                    ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:1176:                        node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:1202:                if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:1204:                    ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:1225:        if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:1226:            ctx.runtime_logger.log_node_complete(
+core/engine/graph/event_loop/node.py:1228:                node_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:1269:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:1290:                node_id=ctx.node_id,
+core/engine/graph/event_loop/node.py:1291:                node_spec=ctx.node_spec,
+core/engine/graph/event_loop/node.py:1292:                memory=ctx.memory,
+core/engine/graph/event_loop/node.py:1296:                stream_id=ctx.stream_id or ctx.node_id,
+core/engine/graph/event_loop/node.py:1297:                node_id=ctx.node_id,
+core/engine/graph/event_loop/node.py:1299:                execution_id=ctx.execution_id or "",
+core/engine/graph/event_loop/node.py:1318:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:1325:        stream_id = ctx.stream_id or ctx.node_id
+core/engine/graph/event_loop/node.py:1326:        node_id = ctx.node_id
+core/engine/graph/event_loop/node.py:1327:        execution_id = ctx.execution_id or ""
+core/engine/graph/event_loop/node.py:1379:                async for event in ctx.llm.stream(
+core/engine/graph/event_loop/node.py:1383:                    max_tokens=ctx.max_tokens,
+core/engine/graph/event_loop/node.py:1530:                    result = self._handle_set_output(tc.tool_input, ctx.node_spec.output_keys)
+core/engine/graph/event_loop/node.py:1609:                    if ask_user_options is None and ask_user_prompt and ctx.node_spec.client_facing:
+core/engine/graph/event_loop/node.py:1647:                    if ctx.report_callback:
+core/engine/graph/event_loop/node.py:1649:                            response = await ctx.report_callback(
+core/engine/graph/event_loop/node.py:1747:                    _ctx: NodeContext,
+core/engine/graph/event_loop/node.py:2221:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:2227:        stream_id = ctx.stream_id or ctx.node_id
+core/engine/graph/event_loop/node.py:2228:        execution_id = ctx.execution_id or ""
+core/engine/graph/event_loop/node.py:2230:            result = self._handle_set_output(args, ctx.node_spec.output_keys)
+core/engine/graph/event_loop/node.py:2235:            if key not in (ctx.node_spec.output_keys or []):
+core/engine/graph/event_loop/node.py:2236:                for k in ctx.node_spec.output_keys or []:
+core/engine/graph/event_loop/node.py:2241:            if key not in (ctx.node_spec.output_keys or []):
+core/engine/graph/event_loop/node.py:2246:            await self._publish_output_key_set(stream_id, ctx.node_id, key, execution_id)
+core/engine/graph/event_loop/node.py:2249:                ctx.node_id,
+core/engine/graph/event_loop/node.py:2261:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:2281:                "output_keys": ctx.node_spec.output_keys,
+core/engine/graph/event_loop/node.py:2283:                    accumulator, ctx.node_spec.output_keys, ctx.node_spec.nullable_output_keys
+core/engine/graph/event_loop/node.py:2291:                accumulator, ctx.node_spec.output_keys, ctx.node_spec.nullable_output_keys
+core/engine/graph/event_loop/node.py:2300:                output_keys = ctx.node_spec.output_keys or []
+core/engine/graph/event_loop/node.py:2301:                nullable_keys = set(ctx.node_spec.nullable_output_keys or [])
+core/engine/graph/event_loop/node.py:2318:                if not output_keys and ctx.node_spec.client_facing:
+core/engine/graph/event_loop/node.py:2331:                if ctx.node_spec.success_criteria and ctx.llm:
+core/engine/graph/event_loop/node.py:2335:                        llm=ctx.llm,
+core/engine/graph/event_loop/node.py:2337:                        phase_name=ctx.node_spec.name,
+core/engine/graph/event_loop/node.py:2338:                        phase_description=ctx.node_spec.description,
+core/engine/graph/event_loop/node.py:2339:                        success_criteria=ctx.node_spec.success_criteria,
+core/engine/graph/event_loop/node.py:2376:    def _build_initial_message(self, ctx: NodeContext) -> str:
+core/engine/graph/event_loop/node.py:2381:        for key, value in ctx.input_data.items():
+core/engine/graph/event_loop/node.py:2386:        for key in ctx.node_spec.input_keys:
+core/engine/graph/event_loop/node.py:2388:                value = ctx.memory.read(key)
+core/engine/graph/event_loop/node.py:2391:        if ctx.goal_context:
+core/engine/graph/event_loop/node.py:2392:            parts.append(f"\nGoal: {ctx.goal_context}")
+core/engine/graph/event_loop/node.py:2701:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:2753:        if conversation.usage_ratio() > self._LLM_COMPACT_THRESHOLD and ctx.llm is not None:
+core/engine/graph/event_loop/node.py:2793:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:2822:                response = await ctx.llm.acomplete(
+core/engine/graph/event_loop/node.py:2859:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:2897:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:2902:        spec = ctx.node_spec
+core/engine/graph/event_loop/node.py:2945:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:2969:        if ctx.runtime_logger:
+core/engine/graph/event_loop/node.py:2970:            ctx.runtime_logger.log_step(
+core/engine/graph/event_loop/node.py:2971:                node_id=ctx.node_id,
+core/engine/graph/event_loop/node.py:2985:                    stream_id=ctx.stream_id or ctx.node_id,
+core/engine/graph/event_loop/node.py:2986:                    node_id=ctx.node_id,
+core/engine/graph/event_loop/node.py:2997:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:3008:        spec = ctx.node_spec
+core/engine/graph/event_loop/node.py:3016:            value = ctx.input_data.get(key) or ctx.memory.read(key)
+core/engine/graph/event_loop/node.py:3115:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:3126:        phase_filter = None if _is_continuous else ctx.node_id
+core/engine/graph/event_loop/node.py:3164:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:3178:                    "node_id": ctx.node_id,
+core/engine/graph/event_loop/node.py:3216:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:3222:        if ctx.pause_event and ctx.pause_event.is_set():
+core/engine/graph/event_loop/node.py:3228:        pause_requested = ctx.input_data.get("pause_requested", False)
+core/engine/graph/event_loop/node.py:3231:                pause_requested = ctx.memory.read("pause_requested") or False
+core/engine/graph/event_loop/node.py:3258:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:3265:            system_prompt = ctx.node_spec.system_prompt or ""
+core/engine/graph/event_loop/node.py:3271:            tool_names = [t.name for t in ctx.available_tools]
+core/engine/graph/event_loop/node.py:3272:            output_keys = ctx.node_spec.output_keys or []
+core/engine/graph/event_loop/node.py:3284:            response = await ctx.llm.acomplete(
+core/engine/graph/event_loop/node.py:3360:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:3365:            if ctx.node_spec.client_facing:
+core/engine/graph/event_loop/node.py:3462:        ctx: NodeContext,
+core/engine/graph/event_loop/node.py:3469:        from engine.graph.node import NodeContext, SharedMemory
+core/engine/graph/event_loop/node.py:3479:            ctx.node_id,
+core/engine/graph/event_loop/node.py:3485:        if agent_id not in ctx.node_registry:
+core/engine/graph/event_loop/node.py:3498:        subagent_spec = ctx.node_registry[agent_id]
+core/engine/graph/event_loop/node.py:3502:        parent_data = ctx.memory.read_all()
+core/engine/graph/event_loop/node.py:3538:                    stream_id=ctx.node_id,
+core/engine/graph/event_loop/node.py:3539:                    node_id=f"{ctx.node_id}:subagent:{agent_id}",
+core/engine/graph/event_loop/node.py:3543:                    execution_id=ctx.execution_id,
+core/engine/graph/event_loop/node.py:3559:            escalation_id = f"{ctx.node_id}:escalation:{uuid.uuid4().hex[:8]}"
+core/engine/graph/event_loop/node.py:3561:            registry = ctx.shared_node_registry
+core/engine/graph/event_loop/node.py:3567:                    stream_id=ctx.node_id,
+core/engine/graph/event_loop/node.py:3568:                    node_id=ctx.node_id,
+core/engine/graph/event_loop/node.py:3571:                    execution_id=ctx.execution_id,
+core/engine/graph/event_loop/node.py:3575:                    stream_id=ctx.node_id,
+core/engine/graph/event_loop/node.py:3578:                    execution_id=ctx.execution_id,
+core/engine/graph/event_loop/node.py:3586:        # Use the full tool catalog (ctx.all_tools) so subagents can access tools
+core/engine/graph/event_loop/node.py:3589:        # Falls back to ctx.available_tools if all_tools is empty (e.g. in tests).
+core/engine/graph/event_loop/node.py:3591:        tool_source = ctx.all_tools if ctx.all_tools else ctx.available_tools
+core/engine/graph/event_loop/node.py:3623:        subagent_ctx = NodeContext(
+core/engine/graph/event_loop/node.py:3624:            runtime=ctx.runtime,
+core/engine/graph/event_loop/node.py:3625:            node_id=f"{ctx.node_id}:subagent:{agent_id}",
+core/engine/graph/event_loop/node.py:3629:            llm=ctx.llm,
+core/engine/graph/event_loop/node.py:3640:            goal=ctx.goal,
+core/engine/graph/event_loop/node.py:3641:            max_tokens=ctx.max_tokens,
+core/engine/graph/event_loop/node.py:3642:            runtime_logger=ctx.runtime_logger,
+core/engine/graph/event_loop/node.py:3646:            shared_node_registry=ctx.shared_node_registry,  # For escalation routing

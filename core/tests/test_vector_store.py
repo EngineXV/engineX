@@ -1,18 +1,17 @@
 """Tests for the vector store abstraction and tool."""
 
 import json
-import tempfile
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 import pytest
 from chromadb.api.types import EmbeddingFunction
 
 pytest.importorskip("chromadb")
 
+from engine.tools.vector_search import vector_search
 from engine.vector.chroma import ChromaVectorStore
 from engine.vector.models import VectorDocument
-from tools.vector_search import vector_search  # noqa: E402
 
 
 class DummyEmbeddingFunction(EmbeddingFunction):
@@ -50,8 +49,6 @@ class TestChromaVectorStore:
         ]
         temp_store.add(docs)
         results = temp_store.search("hello", top_k=1)
-        # With dummy embeddings, similarity is arbitrary — just check
-        # that we get a valid SearchResult back.
         assert len(results) == 1
         assert results[0].id in {"1", "2"}
         assert isinstance(results[0].content, str)
@@ -74,10 +71,15 @@ class TestChromaVectorStore:
         results = temp_store.search("delete")
         assert results == []
 
+    def test_health(self, temp_store):
+        assert temp_store.health() is True
+
 
 class TestVectorSearchTool:
     def test_tool_returns_json(self, temp_store, monkeypatch):
-        monkeypatch.setattr("tools.vector_search._store", temp_store)
+        monkeypatch.setattr(
+            "engine.tools.vector_search._store", temp_store
+        )
         docs = [VectorDocument(id="99", content="specific data")]
         temp_store.add(docs)
 
@@ -85,3 +87,6 @@ class TestVectorSearchTool:
         result = json.loads(result_json)
         assert isinstance(result, list)
         assert result[0]["id"] == "99"
+        # Optional fields should be present but None
+        assert "collection" in result[0]
+        assert result[0]["collection"] is None

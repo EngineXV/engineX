@@ -50,3 +50,7 @@ class VectorStore(ABC):
     def delete(self, ids: list[str]) -> None:
         """Delete documents by their IDs."""
         ...
+
+    def health(self) -> bool:
+        """Check if the backend is healthy. Override in subclasses."""
+        return True

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -42,7 +43,8 @@ class AgentEntry:
 
 def _get_last_active(agent_name: str) -> str | None:
     """Return the most recent updated_at timestamp across all sessions"""
-    sessions_dir = Path.home() / ".engine" / "agents" / agent_name / "sessions"
+    engine_home = Path(os.environ.get("ENGINE_HOME", str(Path.home() / ".engine")))
+    sessions_dir = engine_home / "agents" / agent_name / "sessions"
     if not sessions_dir.exists():
         return None
     latest: str | None = None
@@ -64,7 +66,8 @@ def _get_last_active(agent_name: str) -> str | None:
 
 def _count_sessions(agent_name: str) -> int:
     """Count session directories under"""
-    sessions_dir = Path.home() / ".engine" / "agents" / agent_name / "sessions"
+    engine_home = Path(os.environ.get("ENGINE_HOME", str(Path.home() / ".engine")))
+    sessions_dir = engine_home / "agents" / agent_name / "sessions"
     if not sessions_dir.exists():
         return 0
     return sum(1 for d in sessions_dir.iterdir() if d.is_dir() and d.name.startswith("session_"))

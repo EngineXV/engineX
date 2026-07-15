@@ -243,7 +243,9 @@ def _load_resume_state(
 ) -> dict | None:
     """Load session or checkpoint state for headless resume"""
     agent_name = Path(agent_path).name
-    agent_work_dir = Path.home() / ".engine" / "agents" / agent_name
+    import os
+    engine_home = Path(os.environ.get("ENGINE_HOME", str(Path.home() / ".engine")))
+    agent_work_dir = engine_home / "agents" / agent_name
     session_dir = agent_work_dir / "sessions" / session_id
 
     if not session_dir.exists():

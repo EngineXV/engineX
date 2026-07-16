@@ -28,14 +28,16 @@ class LLMResponseCache:
         system: str,
         tools: list[dict[str, Any]] | None,
         model: str,
+        **extra: Any,
     ) -> str:
         """Create a deterministic hash from the request parameters."""
-        payload = {
+        payload: dict[str, Any] = {
             "messages": messages,
             "system": system,
             "tools": tools,
             "model": model,
         }
+        payload.update(extra)
         raw = json.dumps(payload, sort_keys=True, default=str)
         return hashlib.sha256(raw.encode()).hexdigest()
 
@@ -45,8 +47,9 @@ class LLMResponseCache:
         system: str,
         tools: list[dict[str, Any]] | None,
         model: str,
+        **extra: Any,
     ) -> CacheEntry | None:
-        key = self._fingerprint(messages, system, tools, model)
+        key = self._fingerprint(messages, system, tools, model, **extra)
         with self._lock:
             return self._store.get(key)
 
@@ -59,8 +62,9 @@ class LLMResponseCache:
         response: dict[str, Any],
         input_tokens: int,
         output_tokens: int,
+        **extra: Any,
     ) -> None:
-        key = self._fingerprint(messages, system, tools, model)
+        key = self._fingerprint(messages, system, tools, model, **extra)
         entry = CacheEntry(
             response=response,
             model=model,

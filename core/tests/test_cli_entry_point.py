@@ -84,6 +84,16 @@ class TestEngineModule:
         assert result.returncode == 0
         assert "agents" in result.stdout.lower() or "directory" in result.stdout.lower()
 
+    def test_module_config_validate_help(self, project_root):
+        result = subprocess.run(
+            [sys.executable, "-m", "engine", "config", "validate", "--help"],
+            capture_output=True,
+            text=True,
+            cwd=str(project_root / "core"),
+        )
+        assert result.returncode == 0
+        assert "configuration" in result.stdout.lower()
+
 
 class TestEngineEntryPoint:
     """Test the ``engine`` console_scripts entry point.

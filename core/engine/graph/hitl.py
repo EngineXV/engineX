@@ -16,6 +16,7 @@ from engine.schemas.session_state import (
     SessionStatus,
 )
 from engine.storage.checkpoint_store import CheckpointStore
+from engine.config import get_hitl_thresholds
 
 
 class ApprovalDecision(StrEnum):
@@ -47,9 +48,10 @@ class MedicalBillingReviewReason(StrEnum):
 class MedicalBillingReviewThresholds(BaseModel):
     """Thresholds for medical billing HITL escalation."""
 
-    minimum_confidence: float = Field(default=0.75, ge=0.0, le=1.0)
-    maximum_financial_risk: float = Field(default=0.80, ge=0.0, le=1.0)
-    critical_flag_prefixes: tuple[str, ...] = ("critical", "fatal", "deny")
+    _defaults = get_hitl_thresholds()
+    minimum_confidence: float = Field(default=_defaults.get("minimum_confidence", 0.75), ge=0.0, le=1.0)
+    maximum_financial_risk: float = Field(default=_defaults.get("maximum_financial_risk", 0.80), ge=0.0, le=1.0)
+    critical_flag_prefixes: tuple[str, ...] = tuple(_defaults.get("critical_flag_prefixes", ("critical", "fatal", "deny")))
 
 
 class MedicalBillingReviewItem(BaseModel):

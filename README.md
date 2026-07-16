@@ -113,6 +113,8 @@ Set default in `~/.engine/configuration.json`:
 
 Or per run: `./engine run <agent> --model ollama/qwen2.5:7b --tui`
 
+Shared runtime settings live in `~/.engine/configuration.json`. See [docs/configuration.md](docs/configuration.md) for the full knob list and [examples/deploy/configuration.example.json](examples/deploy/configuration.example.json) for a copyable template.
+
 ## Project Layout
 
 ```

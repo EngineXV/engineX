@@ -15,6 +15,7 @@ from typing import Any
 
 from engine.graph.constants import SUPERVISOR_NODE_ID
 from engine.graph.conversation import ConversationStore, NodeConversation
+from engine.config import get_feature_flag
 from engine.graph.event_loop.config import LoopConfig, OutputAccumulator
 from engine.graph.event_loop.errors import _is_context_too_large_error
 from engine.graph.event_loop.judge import (
@@ -2482,7 +2483,7 @@ class EventLoopNode(NodeProtocol):
         recent_tool_fingerprints: list[list[tuple[str, str]]],
     ) -> tuple[bool, str]:
         """Detect doom loop: N consecutive turns with identical tool calls"""
-        if not self._config.tool_doom_loop_enabled:
+        if not self._config.tool_doom_loop_enabled or not get_feature_flag("guardrails_enabled"):
             return False, ""
         threshold = self._config.tool_doom_loop_threshold
         if len(recent_tool_fingerprints) < threshold:

@@ -219,6 +219,7 @@ def _is_stream_transient_error(exc: BaseException) -> bool:
     return isinstance(exc, transient_types)
 
 
+from engine.llm.cache import LLMResponseCache
 class LiteLLMProvider(LLMProvider):
     """LiteLLM-based LLM provider for multi-provider support"""
 
@@ -249,6 +250,8 @@ class LiteLLMProvider(LLMProvider):
         # override the mode.  The responses_api_bridge in litellm handles
         # converting Chat Completions requests to Responses API format.
 
+        self._cache = LLMResponseCache()  # LLM response cache
+        self._cache = LLMResponseCache()  # LLM response cache
     def _completion_with_rate_limit_retry(
         self, max_retries: int | None = None, **kwargs: Any
     ) -> Any:
@@ -372,6 +375,19 @@ class LiteLLMProvider(LLMProvider):
         max_retries: int | None = None,
     ) -> LLMResponse:
         """Generate a completion using LiteLLM"""
+        # --- cache check ---
+        cache_entry = self._cache.get(
+            messages=messages, system=system, tools=tools, model=self.model,
+            max_tokens=max_tokens, response_format=response_format,
+            json_mode=json_mode, max_retries=max_retries,
+        )
+        if cache_entry:
+            return LLMResponse(
+                content=cache_entry.response.get('content', ''),
+                model=cache_entry.model,
+                input_tokens=cache_entry.input_tokens,
+                output_tokens=cache_entry.output_tokens,
+            )
         # Codex ChatGPT backend requires streaming — delegate to the unified
         # async streaming path which properly handles tool calls.
         if self._codex_backend:
@@ -426,6 +442,14 @@ class LiteLLMProvider(LLMProvider):
 
         # Make the call
         response = self._completion_with_rate_limit_retry(max_retries=max_retries, **kwargs)
+        # --- store in cache ---
+        self._cache.set(
+            messages=messages, system=system, tools=tools, model=response.model,
+            response={'content': response.content},
+            input_tokens=response.input_tokens, output_tokens=response.output_tokens,
+            max_tokens=max_tokens, response_format=response_format,
+            json_mode=json_mode, max_retries=max_retries,
+        )
 
         # Extract content
         content = response.choices[0].message.content or ""
@@ -568,6 +592,19 @@ class LiteLLMProvider(LLMProvider):
         max_retries: int | None = None,
     ) -> LLMResponse:
         """Async version of complete(). Uses litellm.acompletion — non-blocking"""
+        # --- cache check ---
+        cache_entry = self._cache.get(
+            messages=messages, system=system, tools=tools, model=self.model,
+            max_tokens=max_tokens, response_format=response_format,
+            json_mode=json_mode, max_retries=max_retries,
+        )
+        if cache_entry:
+            return LLMResponse(
+                content=cache_entry.response.get('content', ''),
+                model=cache_entry.model,
+                input_tokens=cache_entry.input_tokens,
+                output_tokens=cache_entry.output_tokens,
+            )
         # Codex ChatGPT backend requires streaming — route through stream() which
         # already handles Codex quirks and has proper tool call accumulation.
         if self._codex_backend:
@@ -916,6 +953,7 @@ class LiteLLMProvider(LLMProvider):
     ) -> LLMResponse:
         """Consume a stream() iterator and collect it into a single LLMResponse"""
         from engine.llm.stream_events import (
+from engine.llm.cache import LLMResponseCache  # LLM response cache
             FinishEvent,
             StreamErrorEvent,
             TextDeltaEvent,

@@ -223,7 +223,7 @@ def validate_engine_config() -> EngineConfigValidation:
                         f"(line {exc.lineno}, column {exc.colno})"
                     )
                 ],
-                )
+            )
         except OSError as exc:
             return EngineConfigValidation(
                 valid=False, errors=[f"Could not read {ENGINE_CONFIG_FILE}: {exc}"]

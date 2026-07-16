@@ -7,11 +7,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from engine.config import (
+    get_feature_flag,
+    get_max_history_tokens,
+    get_max_tool_calls_per_turn,
+    get_tool_doom_loop_threshold,
+)
 from engine.graph.checkpoint_config import CheckpointConfig
 from engine.graph.constants import LEGACY_RUN_ID
 from engine.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
 from engine.graph.goal import Goal
-from engine.config import get_feature_flag, get_max_history_tokens, get_max_tool_calls_per_turn, get_tool_doom_loop_threshold
 from engine.graph.node import (
     NodeContext,
     NodeProtocol,
@@ -1802,12 +1807,16 @@ class GraphExecutor:
                 judge=None,  # implicit judge: accept when output_keys are filled
                 config=LoopConfig(
                     max_iterations=lc.get("max_iterations", default_max_iter),
-                    max_tool_calls_per_turn=lc.get("max_tool_calls_per_turn", get_max_tool_calls_per_turn()),
+                    max_tool_calls_per_turn=lc.get(
+                        "max_tool_calls_per_turn", get_max_tool_calls_per_turn()
+                    ),
                     tool_call_overflow_margin=lc.get("tool_call_overflow_margin", 0.5),
                     stall_detection_threshold=lc.get("stall_detection_threshold", 3),
                     max_history_tokens=lc.get("max_history_tokens", get_max_history_tokens()),
                     max_tool_result_chars=lc.get("max_tool_result_chars", 30_000),
-                    tool_doom_loop_threshold=lc.get("tool_doom_loop_threshold", get_tool_doom_loop_threshold()),
+                    tool_doom_loop_threshold=lc.get(
+                        "tool_doom_loop_threshold", get_tool_doom_loop_threshold()
+                    ),
                     spillover_dir=spillover,
                 ),
                 tool_executor=self.tool_executor,

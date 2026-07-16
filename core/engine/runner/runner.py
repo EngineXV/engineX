@@ -226,7 +226,19 @@ class AgentRunner:
                 "max_retries_per_node": config_override.get("max_retries_per_node", 3),
                 "loop_config": {
                     **getattr(agent_module, "loop_config", {}),
-                    **{k: v for k, v in config_override.items() if k in {"max_iterations", "max_tool_calls_per_turn", "max_history_tokens", "cost_budget", "context_policy"} and v is not None},
+                    **{
+                        k: v
+                        for k, v in config_override.items()
+                        if k
+                        in {
+                            "max_iterations",
+                            "max_tool_calls_per_turn",
+                            "max_history_tokens",
+                            "cost_budget",
+                            "context_policy",
+                        }
+                        and v is not None
+                    },
                 },
             }
             # Only pass optional fields if explicitly defined by the agent module

@@ -23,9 +23,27 @@ goal = Goal(
 
 nodes = [intake_node, extract_node, approval_node, audit_node]
 edges = [
-    EdgeSpec(id="e1", source="intake", target="extract", condition=EdgeCondition.ON_SUCCESS, priority=1),
-    EdgeSpec(id="e2", source="extract", target="approval", condition=EdgeCondition.ON_SUCCESS, priority=1),
-    EdgeSpec(id="e3", source="approval", target="audit", condition=EdgeCondition.ON_SUCCESS, priority=1),
+    EdgeSpec(
+        id="e1",
+        source="intake",
+        target="extract",
+        condition=EdgeCondition.ON_SUCCESS,
+        priority=1,
+    ),
+    EdgeSpec(
+        id="e2",
+        source="extract",
+        target="approval",
+        condition=EdgeCondition.ON_SUCCESS,
+        priority=1,
+    ),
+    EdgeSpec(
+        id="e3",
+        source="approval",
+        target="audit",
+        condition=EdgeCondition.ON_SUCCESS,
+        priority=1,
+    ),
 ]
 
 graph = GraphSpec(

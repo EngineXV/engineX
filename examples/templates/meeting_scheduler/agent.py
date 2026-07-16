@@ -95,9 +95,7 @@ pause_nodes = []
 terminal_nodes = []
 
 conversation_mode = "continuous"
-identity_prompt = (
-    "You are a helpful meeting scheduler assistant that manages calendar availability and sends confirmations."
-)
+identity_prompt = "You are a helpful meeting scheduler assistant that manages calendar availability and sends confirmations."
 loop_config = {
     "max_iterations": 100,
     "max_tool_calls_per_turn": 20,

@@ -13,12 +13,12 @@ class CostGuardStage(PipelineStage):
 
     order = 300
 
-    def __init__(self, max_cost_per_request: float = 1.0) -> None:
-        cost_guard = get_engine_config().get("pipeline", {}).get("cost_guard", {})
-        if isinstance(cost_guard, dict) and isinstance(cost_guard.get("max_cost_per_request"), (int, float)):
-            self._budget = float(cost_guard["max_cost_per_request"])
+    def __init__(self, max_cost_per_request: float | None = None) -> None:
+        if max_cost_per_request is not None:
+            self._budget = float(max_cost_per_request)
         else:
-            self._budget = max_cost_per_request
+            cost_guard = get_engine_config().get("pipeline", {}).get("cost_guard", {})
+            self._budget = float(cost_guard.get("max_cost_per_request", 1.0))
 
     async def process(self, ctx: PipelineContext) -> PipelineResult:
         estimated = ctx.metadata.get("estimated_cost")

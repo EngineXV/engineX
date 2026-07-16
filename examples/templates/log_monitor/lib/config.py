@@ -35,7 +35,9 @@ def _int_env(name: str, default: int) -> int:
 
 def load_config() -> LogMonitorConfig:
     keywords_raw = os.environ.get("LOG_MONITOR_KEYWORDS", "error,exception,fatal,panic")
-    keywords = tuple(part.strip().lower() for part in keywords_raw.split(",") if part.strip())
+    keywords = tuple(
+        part.strip().lower() for part in keywords_raw.split(",") if part.strip()
+    )
     return LogMonitorConfig(
         grafana_url=os.environ.get("GRAFANA_URL", "").rstrip("/"),
         grafana_token=os.environ.get("GRAFANA_API_TOKEN", ""),
@@ -50,8 +52,10 @@ def load_config() -> LogMonitorConfig:
         mute_minutes=_int_env("LOG_MONITOR_MUTE_MINUTES", 30),
         alert_cooldown_minutes=_int_env("LOG_MONITOR_ALERT_COOLDOWN_MINUTES", 15),
         keywords=keywords or ("error", "exception", "fatal", "panic"),
-        daemon_mode=os.environ.get("LOG_MONITOR_DAEMON", "").lower() in {"1", "true", "yes"},
-        allow_mock=os.environ.get("LOG_MONITOR_ALLOW_MOCK", "").lower() in {"1", "true", "yes"},
+        daemon_mode=os.environ.get("LOG_MONITOR_DAEMON", "").lower()
+        in {"1", "true", "yes"},
+        allow_mock=os.environ.get("LOG_MONITOR_ALLOW_MOCK", "").lower()
+        in {"1", "true", "yes"},
     )
 
 
@@ -86,6 +90,8 @@ def validate_production_config(*, require_live: bool = False) -> list[str]:
 
     llm_key = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
     if not llm_key:
-        errors.append("ANTHROPIC_API_KEY or OPENAI_API_KEY is required for LLM triage nodes")
+        errors.append(
+            "ANTHROPIC_API_KEY or OPENAI_API_KEY is required for LLM triage nodes"
+        )
 
     return errors

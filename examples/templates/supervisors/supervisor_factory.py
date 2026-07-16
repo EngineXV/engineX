@@ -7,10 +7,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from engine.graph.constants import SUPERVISOR_NODE_ID
-from engine.graph import Constraint, EdgeCondition, EdgeSpec, Goal, NodeSpec, SuccessCriterion
+from engine.graph import (
+    Constraint,
+    EdgeCondition,
+    EdgeSpec,
+    Goal,
+    NodeSpec,
+    SuccessCriterion,
+)
 from engine.graph.edge import GraphSpec
 
 if TYPE_CHECKING:
+
     @dataclass
     class SupervisorMetadata:
         name: str

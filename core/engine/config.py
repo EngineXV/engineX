@@ -133,7 +133,9 @@ def _env_overrides() -> dict[str, Any]:
     if os.environ.get("ENGINE_EXECUTION_MAX_TOOL_CALLS_PER_TURN") is not None:
         execution["max_tool_calls_per_turn"] = _int_env("ENGINE_EXECUTION_MAX_TOOL_CALLS_PER_TURN")
     if os.environ.get("ENGINE_EXECUTION_TOOL_DOOM_LOOP_THRESHOLD") is not None:
-        execution["tool_doom_loop_threshold"] = _int_env("ENGINE_EXECUTION_TOOL_DOOM_LOOP_THRESHOLD")
+        execution["tool_doom_loop_threshold"] = _int_env(
+            "ENGINE_EXECUTION_TOOL_DOOM_LOOP_THRESHOLD"
+        )
     if os.environ.get("ENGINE_EXECUTION_MAX_ITERATIONS") is not None:
         execution["max_iterations"] = _int_env("ENGINE_EXECUTION_MAX_ITERATIONS")
     if os.environ.get("ENGINE_EXECUTION_MAX_HISTORY_TOKENS") is not None:
@@ -188,7 +190,13 @@ def get_agent_config(agent_name: str) -> dict[str, Any]:
         ("context_policy", env_prefix + "CONTEXT_POLICY"),
     ):
         if os.environ.get(env_name) is not None:
-            if key in {"max_tokens", "max_iterations", "max_tool_calls_per_turn", "max_retries_per_node", "max_history_tokens"}:
+            if key in {
+                "max_tokens",
+                "max_iterations",
+                "max_tool_calls_per_turn",
+                "max_retries_per_node",
+                "max_history_tokens",
+            }:
                 env_overrides[key] = _int_env(env_name)
             elif key == "cost_budget":
                 env_overrides[key] = _float_env(env_name)
@@ -208,12 +216,22 @@ def validate_engine_config() -> EngineConfigValidation:
         except json.JSONDecodeError as exc:
             return EngineConfigValidation(
                 valid=False,
-                errors=[f"Invalid JSON in {ENGINE_CONFIG_FILE}: {exc.msg} (line {exc.lineno}, column {exc.colno})"],
-            )
+                errors=[
+                    (
+                        f"Invalid JSON in {ENGINE_CONFIG_FILE}: "
+                        f"{exc.msg} "
+                        f"(line {exc.lineno}, column {exc.colno})"
+                    )
+                ],
+                )
         except OSError as exc:
-            return EngineConfigValidation(valid=False, errors=[f"Could not read {ENGINE_CONFIG_FILE}: {exc}"])
+            return EngineConfigValidation(
+                valid=False, errors=[f"Could not read {ENGINE_CONFIG_FILE}: {exc}"]
+            )
         if not isinstance(loaded, dict):
-            return EngineConfigValidation(valid=False, errors=["Top-level configuration must be an object"]) 
+            return EngineConfigValidation(
+                valid=False, errors=["Top-level configuration must be an object"]
+            )
         file_config = loaded
     else:
         file_config = {}
@@ -232,14 +250,26 @@ def validate_engine_config() -> EngineConfigValidation:
     hitl = merged.get("hitl", {}) if isinstance(merged.get("hitl"), dict) else {}
     pipeline = merged.get("pipeline", {}) if isinstance(merged.get("pipeline"), dict) else {}
 
-    if llm.get("max_tokens") is not None and (not isinstance(llm["max_tokens"], int) or llm["max_tokens"] <= 0):
+    if llm.get("max_tokens") is not None and (
+        not isinstance(llm["max_tokens"], int) or llm["max_tokens"] <= 0
+    ):
         errors.append("llm.max_tokens must be a positive integer")
-    for key in ("max_retries_per_node", "max_tool_calls_per_turn", "tool_doom_loop_threshold", "max_iterations", "max_history_tokens"):
+    for key in (
+        "max_retries_per_node",
+        "max_tool_calls_per_turn",
+        "tool_doom_loop_threshold",
+        "max_iterations",
+        "max_history_tokens",
+    ):
         if key in execution and (not isinstance(execution[key], int) or execution[key] < 0):
             errors.append(f"execution.{key} must be a non-negative integer")
-    if execution.get("cost_budget") is not None and not isinstance(execution["cost_budget"], (int, float)):
+    if execution.get("cost_budget") is not None and not isinstance(
+        execution["cost_budget"], (int, float)
+    ):
         errors.append("execution.cost_budget must be a number")
-    if execution.get("context_policy") is not None and not isinstance(execution["context_policy"], str):
+    if execution.get("context_policy") is not None and not isinstance(
+        execution["context_policy"], str
+    ):
         errors.append("execution.context_policy must be a string")
     for key in ("otel_export", "prompt_snapshot_storage", "guardrails_enabled"):
         if key in features and features[key] is not None and not isinstance(features[key], bool):
@@ -247,10 +277,16 @@ def validate_engine_config() -> EngineConfigValidation:
     for key in ("minimum_confidence", "maximum_financial_risk"):
         if key in hitl and not isinstance(hitl[key], (int, float)):
             errors.append(f"hitl.{key} must be a number")
-    if hitl.get("critical_flag_prefixes") is not None and not isinstance(hitl["critical_flag_prefixes"], list):
+    if hitl.get("critical_flag_prefixes") is not None and not isinstance(
+        hitl["critical_flag_prefixes"], list
+    ):
         errors.append("hitl.critical_flag_prefixes must be a list")
-    cost_guard = pipeline.get("cost_guard", {}) if isinstance(pipeline.get("cost_guard"), dict) else {}
-    if cost_guard.get("max_cost_per_request") is not None and not isinstance(cost_guard["max_cost_per_request"], (int, float)):
+    cost_guard = (
+        pipeline.get("cost_guard", {}) if isinstance(pipeline.get("cost_guard"), dict) else {}
+    )
+    if cost_guard.get("max_cost_per_request") is not None and not isinstance(
+        cost_guard["max_cost_per_request"], (int, float)
+    ):
         errors.append("pipeline.cost_guard.max_cost_per_request must be a number")
 
     agents = merged.get("agents", {}) if isinstance(merged.get("agents"), dict) else {}
@@ -259,12 +295,30 @@ def validate_engine_config() -> EngineConfigValidation:
             errors.append(f"agents.{agent_name} must be an object")
             continue
         for key in ("model", "context_policy"):
-            if key in agent_config and agent_config[key] is not None and not isinstance(agent_config[key], str):
+            if (
+                key in agent_config
+                and agent_config[key] is not None
+                and not isinstance(agent_config[key], str)
+            ):
                 errors.append(f"agents.{agent_name}.{key} must be a string")
-        for key in ("max_tokens", "max_iterations", "max_tool_calls_per_turn", "max_retries_per_node", "max_history_tokens"):
-            if key in agent_config and agent_config[key] is not None and not isinstance(agent_config[key], int):
+        for key in (
+            "max_tokens",
+            "max_iterations",
+            "max_tool_calls_per_turn",
+            "max_retries_per_node",
+            "max_history_tokens",
+        ):
+            if (
+                key in agent_config
+                and agent_config[key] is not None
+                and not isinstance(agent_config[key], int)
+            ):
                 errors.append(f"agents.{agent_name}.{key} must be an integer")
-        if "cost_budget" in agent_config and agent_config["cost_budget"] is not None and not isinstance(agent_config["cost_budget"], (int, float)):
+        if (
+            "cost_budget" in agent_config
+            and agent_config["cost_budget"] is not None
+            and not isinstance(agent_config["cost_budget"], (int, float))
+        ):
             errors.append(f"agents.{agent_name}.cost_budget must be a number")
 
     return EngineConfigValidation(valid=not errors, errors=errors, warnings=warnings)
@@ -307,43 +361,57 @@ def get_max_tokens(agent_name: str | None = None) -> int:
 
 
 def get_max_retries_per_node(agent_name: str | None = None) -> int:
-    config = get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    config = (
+        get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    )
     value = config.get("max_retries_per_node", 3) if isinstance(config, dict) else 3
     return value if isinstance(value, int) and value >= 0 else 3
 
 
 def get_max_tool_calls_per_turn(agent_name: str | None = None) -> int:
-    config = get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    config = (
+        get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    )
     value = config.get("max_tool_calls_per_turn", 30) if isinstance(config, dict) else 30
     return value if isinstance(value, int) and value >= 1 else 30
 
 
 def get_tool_doom_loop_threshold(agent_name: str | None = None) -> int:
-    config = get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    config = (
+        get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    )
     value = config.get("tool_doom_loop_threshold", 3) if isinstance(config, dict) else 3
     return value if isinstance(value, int) and value >= 1 else 3
 
 
 def get_max_iterations(agent_name: str | None = None) -> int:
-    config = get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    config = (
+        get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    )
     value = config.get("max_iterations", 50) if isinstance(config, dict) else 50
     return value if isinstance(value, int) and value >= 1 else 50
 
 
 def get_max_history_tokens(agent_name: str | None = None) -> int:
-    config = get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    config = (
+        get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    )
     value = config.get("max_history_tokens", 32000) if isinstance(config, dict) else 32000
     return value if isinstance(value, int) and value >= 1 else 32000
 
 
 def get_cost_budget(agent_name: str | None = None) -> float | None:
-    config = get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    config = (
+        get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    )
     value = config.get("cost_budget") if isinstance(config, dict) else None
     return float(value) if isinstance(value, (int, float)) else None
 
 
 def get_context_policy(agent_name: str | None = None) -> str | None:
-    config = get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    config = (
+        get_agent_config(agent_name) if agent_name else get_engine_config().get("execution", {})
+    )
     value = config.get("context_policy") if isinstance(config, dict) else None
     return value if isinstance(value, str) else None
 
@@ -405,7 +473,10 @@ def get_llm_extra_kwargs() -> dict[str, Any]:
     if llm.get("use_codex_subscription"):
         api_key = get_api_key()
         if api_key:
-            headers: dict[str, str] = {"Authorization": f"Bearer {api_key}", "User-Agent": "CodexBar"}
+            headers: dict[str, str] = {
+                "Authorization": f"Bearer {api_key}",
+                "User-Agent": "CodexBar",
+            }
             try:
                 from engine.runner.subscription_auth import get_codex_account_id
 

@@ -41,7 +41,9 @@ def run_monitor_tick(minutes: int | None = None) -> dict[str, Any]:
         "clear_incidents_json": json.dumps([item.to_dict() for item in clear]),
         "ambiguous_incidents_json": json.dumps([item.to_dict() for item in ambiguous]),
         "needs_llm_triage": bool(ambiguous),
-        "mock_mode": not all([cfg.grafana_url, cfg.grafana_token, cfg.grafana_datasource_uid]),
+        "mock_mode": not all(
+            [cfg.grafana_url, cfg.grafana_token, cfg.grafana_datasource_uid]
+        ),
         "tick_summary": (
             f"Fetched {len(entries)} logs, {len(new_incidents)} new incidents "
             f"({len(ambiguous)} ambiguous, {skipped} muted/skipped)"

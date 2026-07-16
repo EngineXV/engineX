@@ -5,7 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from engine.config import get_max_history_tokens, get_max_tool_calls_per_turn, get_tool_doom_loop_threshold
+from engine.config import (
+    get_max_history_tokens,
+    get_max_tool_calls_per_turn,
+    get_tool_doom_loop_threshold,
+)
 from engine.graph.conversation import ConversationStore
 
 

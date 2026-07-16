@@ -83,7 +83,9 @@ def send_slack_alert(
     return result
 
 
-def send_pagerduty_alert(severity: str, title: str, body: str, fingerprint: str) -> dict[str, Any]:
+def send_pagerduty_alert(
+    severity: str, title: str, body: str, fingerprint: str
+) -> dict[str, Any]:
     routing_key = os.environ.get("PAGERDUTY_ROUTING_KEY", "")
     if not routing_key:
         return {"ok": False, "skipped": True, "reason": "PAGERDUTY_ROUTING_KEY not set"}
@@ -120,7 +122,11 @@ def create_ticket(title: str, body: str, severity: str) -> dict[str, Any]:
     project = os.environ.get("JIRA_PROJECT_KEY", "")
 
     if not all([jira_url, jira_token, jira_email, project]):
-        return {"ok": False, "skipped": True, "reason": "Jira env vars not fully configured"}
+        return {
+            "ok": False,
+            "skipped": True,
+            "reason": "Jira env vars not fully configured",
+        }
 
     headers = {
         "Authorization": f"Basic {base64.b64encode(f'{jira_email}:{jira_token}'.encode()).decode('ascii')}",

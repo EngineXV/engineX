@@ -2,9 +2,9 @@
 """Minimal load‑test harness for EngineX agents."""
 
 import argparse
-import time
 import subprocess
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 

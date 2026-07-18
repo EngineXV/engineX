@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -104,6 +105,39 @@ class RunSummaryLog(BaseModel):
     execution_quality: str = ""  # "clean"|"degraded"|"failed"
     # OTel / trace context (from observability; empty if not set):
     trace_id: str = ""
+    execution_id: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Container models for file serialization
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Per-node transition events (transient execution tracking)
+# ---------------------------------------------------------------------------
+
+
+class NodeEventType(StrEnum):
+    """Types of per-node execution transitions"""
+
+    STARTED = "started"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    RETRY = "retry"
+    HITL_PAUSED = "hitl_paused"
+
+
+class NodeEventLog(BaseModel):
+    """A single node transition event — persisted for ops dashboard"""
+
+    node_id: str
+    node_name: str = ""
+    event_type: NodeEventType
+    timestamp: str = ""  # ISO 8601
+    duration_ms: int = 0  # 0 for started events, populated on completion
+    attempt: int = 1  # retry attempt number
+    error: str = ""  # populated on failure/retry
     execution_id: str = ""
 
 

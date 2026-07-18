@@ -78,6 +78,11 @@ class EventType(StrEnum):
     NODE_LOOP_COMPLETED = "node_loop_completed"
     NODE_ACTION_PLAN = "node_action_plan"
 
+    # Per-node execution transitions (ops dashboard)
+    NODE_STARTED = "node_started"
+    NODE_FAILED = "node_failed"
+    NODE_HITL_PAUSED = "node_hitl_paused"
+
     # LLM streaming observability
     LLM_TEXT_DELTA = "llm_text_delta"
     LLM_REASONING_DELTA = "llm_reasoning_delta"
@@ -478,6 +483,68 @@ class EventBus:
                 node_id=node_id,
                 execution_id=execution_id,
                 data={"iterations": iterations},
+            )
+        )
+
+    async def emit_node_started(
+        self,
+        stream_id: str,
+        node_id: str,
+        execution_id: str | None = None,
+        node_name: str = "",
+        attempt: int = 1,
+    ) -> None:
+        """Emit node started event"""
+        await self.publish(
+            AgentEvent(
+                type=EventType.NODE_STARTED,
+                stream_id=stream_id,
+                node_id=node_id,
+                execution_id=execution_id,
+                data={
+                    "node_name": node_name,
+                    "attempt": attempt,
+                },
+            )
+        )
+
+    async def emit_node_failed(
+        self,
+        stream_id: str,
+        node_id: str,
+        execution_id: str | None = None,
+        error: str = "",
+        attempt: int = 1,
+    ) -> None:
+        """Emit node failed event (after max retries exhausted)"""
+        await self.publish(
+            AgentEvent(
+                type=EventType.NODE_FAILED,
+                stream_id=stream_id,
+                node_id=node_id,
+                execution_id=execution_id,
+                data={
+                    "error": error,
+                    "attempt": attempt,
+                },
+            )
+        )
+
+    async def emit_node_hitl_paused(
+        self,
+        stream_id: str,
+        node_id: str,
+        execution_id: str | None = None,
+        reason: str = "",
+    ) -> None:
+        """Emit node HITL paused event"""
+        await self.publish(
+            AgentEvent(
+                type=EventType.NODE_HITL_PAUSED,
+                stream_id=stream_id,
+                node_id=node_id,
+                execution_id=execution_id,
+                data={"reason": reason},
             )
         )
 

@@ -967,6 +967,8 @@ class AgentRunner:
         # Check required tools are registered
         info = self.info()
         for tool_name in info.required_tools:
+            if tool_name in ("set_output", "ask_user"):
+                continue
             if not self._tool_registry.has_tool(tool_name):
                 missing_tools.append(tool_name)
 

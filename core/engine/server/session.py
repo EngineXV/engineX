@@ -14,6 +14,7 @@ from engine.credentials.models import CredentialError
 from engine.runner import AgentRunner
 from engine.runtime.event_bus import AgentEvent, EventBus, EventType
 from engine.runtime.execution_stream import ExecutionAlreadyRunningError
+from engine.runtime.runtime_log_store import RuntimeLogStore
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,13 @@ class Session:
     def event_bus(self) -> EventBus | None:
         runtime = self.runtime
         return runtime.event_bus if runtime is not None else None
+
+    @property
+    def runtime_log_store(self) -> RuntimeLogStore | None:
+        runtime = self.runtime
+        if runtime is not None:
+            return getattr(runtime, "_runtime_log_store", None)
+        return None
 
     def to_dict(self) -> dict[str, Any]:
         info = self.runner.info()

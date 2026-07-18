@@ -10,6 +10,7 @@ from pathlib import Path
 
 from engine.runtime.runtime_log_schemas import (
     NodeDetail,
+    NodeEventLog,
     NodeStepLog,
     RunDetailsLog,
     RunSummaryLog,
@@ -69,6 +70,18 @@ class RuntimeLogStore:
         """Read details.jsonl back into a list of NodeDetail. Sync"""
         path = self._get_run_dir(run_id) / "details.jsonl"
         return _read_jsonl_as_models(path, NodeDetail)
+
+    def append_node_event(self, run_id: str, event: NodeEventLog) -> None:
+        """Append one JSONL line to node_events.jsonl. Sync"""
+        path = self._get_run_dir(run_id) / "node_events.jsonl"
+        line = json.dumps(event.model_dump(), ensure_ascii=False) + "\n"
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(line)
+
+    def read_node_events_sync(self, run_id: str) -> list[NodeEventLog]:
+        """Read node_events.jsonl back into a list of NodeEventLog. Sync"""
+        path = self._get_run_dir(run_id) / "node_events.jsonl"
+        return _read_jsonl_as_models(path, NodeEventLog)
 
     # -------------------------------------------------------------------
     # Summary write (async — called from end_run)

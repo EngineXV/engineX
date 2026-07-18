@@ -14,6 +14,8 @@ import pytest
 from engine.observability import clear_trace_context, set_trace_context
 from engine.runtime.runtime_log_schemas import (
     NodeDetail,
+    NodeEventLog,
+    NodeEventType,
     NodeStepLog,
     RunSummaryLog,
     ToolCallLog,
@@ -1078,3 +1080,154 @@ class TestRuntimeLogger:
         node = loaded.nodes[0]
         assert node.exit_status == "guard_failure"
         assert node.success is False
+
+
+class TestNodeEventLog:
+    """Tests for per-node execution transition events (NodeEventLog)"""
+
+    @pytest.mark.asyncio
+    async def test_node_event_log_schema(self):
+        """NodeEventLog creates properly with all field types."""
+        event = NodeEventLog(
+            node_id="n1",
+            node_name="Search Node",
+            event_type=NodeEventType.STARTED,
+            timestamp="2025-01-01T00:00:00",
+            attempt=1,
+        )
+        assert event.node_id == "n1"
+        assert event.event_type == NodeEventType.STARTED
+        assert event.duration_ms == 0
+        assert event.error == ""
+
+        # Verify serialization
+        d = event.model_dump()
+        assert d["node_id"] == "n1"
+        assert d["event_type"] == "started"
+
+    @pytest.mark.asyncio
+    async def test_node_event_log_failed_event(self):
+        """NodeEventLog with FAILED type stores error information."""
+        event = NodeEventLog(
+            node_id="n1",
+            node_name="Failing Node",
+            event_type=NodeEventType.FAILED,
+            duration_ms=5000,
+            attempt=3,
+            error="Max retries exceeded: boom",
+        )
+        assert event.event_type == NodeEventType.FAILED
+        assert event.duration_ms == 5000
+        assert event.attempt == 3
+        assert "boom" in event.error
+
+    @pytest.mark.asyncio
+    async def test_store_append_and_read_node_events(self, tmp_path: Path):
+        """RuntimeLogStore can persist and retrieve NodeEventLog entries."""
+        store = RuntimeLogStore(tmp_path / "logs")
+        store.ensure_run_dir(_sid("nodeevt1"))
+
+        store.append_node_event(
+            _sid("nodeevt1"),
+            NodeEventLog(
+                node_id="n1",
+                node_name="Node A",
+                event_type=NodeEventType.STARTED,
+                timestamp="2025-01-01T00:00:00",
+                attempt=1,
+            ),
+        )
+        store.append_node_event(
+            _sid("nodeevt1"),
+            NodeEventLog(
+                node_id="n1",
+                node_name="Node A",
+                event_type=NodeEventType.COMPLETED,
+                timestamp="2025-01-01T00:00:01",
+                duration_ms=1000,
+                attempt=1,
+            ),
+        )
+        store.append_node_event(
+            _sid("nodeevt1"),
+            NodeEventLog(
+                node_id="n2",
+                node_name="Node B",
+                event_type=NodeEventType.FAILED,
+                timestamp="2025-01-01T00:00:02",
+                duration_ms=500,
+                attempt=3,
+                error="max retries exceeded",
+            ),
+        )
+
+        events = store.read_node_events_sync(_sid("nodeevt1"))
+        assert len(events) == 3
+        assert events[0].node_id == "n1"
+        assert events[0].event_type == NodeEventType.STARTED
+        assert events[1].node_id == "n1"
+        assert events[1].event_type == NodeEventType.COMPLETED
+        assert events[2].node_id == "n2"
+        assert events[2].event_type == NodeEventType.FAILED
+        assert "max retries" in events[2].error
+
+    @pytest.mark.asyncio
+    async def test_store_read_node_events_empty(self, tmp_path: Path):
+        """Reading node events from a run with no events returns empty list."""
+        store = RuntimeLogStore(tmp_path / "logs")
+        store.ensure_run_dir(_sid("noevts00"))
+        events = store.read_node_events_sync(_sid("noevts00"))
+        assert events == []
+
+    @pytest.mark.asyncio
+    async def test_store_read_node_events_missing_run(self, tmp_path: Path):
+        """Reading node events from a non-existent run returns empty list."""
+        store = RuntimeLogStore(tmp_path / "logs")
+        events = store.read_node_events_sync("nonexistent_session_run12345")
+        assert events == []
+
+    @pytest.mark.asyncio
+    async def test_runtime_logger_log_node_event(self, tmp_path: Path):
+        """RuntimeLogger.log_node_event persists to disk immediately."""
+        store = RuntimeLogStore(tmp_path / "logs")
+        rl = RuntimeLogger(store=store, agent_id="test-agent")
+        run_id = rl.start_run("goal-1")
+
+        rl.log_node_event(
+            node_id="n1",
+            node_name="Node A",
+            event_type=NodeEventType.STARTED,
+            attempt=1,
+        )
+        rl.log_node_event(
+            node_id="n1",
+            node_name="Node A",
+            event_type=NodeEventType.COMPLETED,
+            duration_ms=500,
+            attempt=1,
+        )
+        rl.log_node_event(
+            node_id="n1",
+            node_name="Node A",
+            event_type=NodeEventType.RETRY,
+            attempt=2,
+            error="temporary failure",
+        )
+
+        events = store.read_node_events_sync(run_id)
+        assert len(events) == 3
+        assert events[0].event_type == NodeEventType.STARTED
+        assert events[1].event_type == NodeEventType.COMPLETED
+        assert events[1].duration_ms == 500
+        assert events[2].event_type == NodeEventType.RETRY
+        assert events[2].attempt == 2
+        assert "temporary failure" in events[2].error
+
+    @pytest.mark.asyncio
+    async def test_node_event_enum_types(self):
+        """All NodeEventType enum values are accessible."""
+        assert NodeEventType.STARTED.value == "started"
+        assert NodeEventType.COMPLETED.value == "completed"
+        assert NodeEventType.FAILED.value == "failed"
+        assert NodeEventType.RETRY.value == "retry"
+        assert NodeEventType.HITL_PAUSED.value == "hitl_paused"

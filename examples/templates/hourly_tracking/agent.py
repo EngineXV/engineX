@@ -97,6 +97,14 @@ edges = [
         target="store_results",
         condition=EdgeCondition.CONDITIONAL,
         condition_expr="human_approved == True",
+        priority=2,
+    ),
+    EdgeSpec(
+        id="human-to-correct",
+        source="human_review",
+        target="correct_transactions",
+        condition=EdgeCondition.CONDITIONAL,
+        condition_expr="human_approved == False",
         priority=1,
     ),
 ]

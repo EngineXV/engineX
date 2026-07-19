@@ -10,6 +10,8 @@ Fetch → Process → Validate ──pass──► Store
                     ├── auto-fix loop ──► Correct → Validate
                     │
                     └── exception ──► Human Review (HITL) ──approved──► Store
+                                            │
+                                            └──rejected──► Correct → Validate
 ```
 
 ## Features
@@ -20,6 +22,7 @@ Fetch → Process → Validate ──pass──► Store
 - Deterministic financial validation
 - Auto-correction feedback loop
 - **Human review** (`pause_nodes=["human_review"]`) when auto-fix cannot resolve discrepancies
+- Rejected reviews route back to correction with the operator's `reviewer_notes`
 - Verified result storage
 
 ## Validation rule

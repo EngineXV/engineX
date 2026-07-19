@@ -254,22 +254,33 @@ async def test_executor_no_events_without_event_bus():
 
 class DummyRuntimeLogger:
     """Captures node event logs for testing."""
+
     def __init__(self):
         self.events = []
 
     def start_run(self, goal_id="", session_id=""):
         return session_id or "test-run"
 
-    def log_node_event(self, node_id="", node_name="", event_type=None, duration_ms=0,
-                       attempt=1, error="", execution_id=""):
-        self.events.append({
-            "node_id": node_id,
-            "node_name": node_name,
-            "event_type": event_type.value if event_type else None,
-            "duration_ms": duration_ms,
-            "attempt": attempt,
-            "error": error,
-        })
+    def log_node_event(
+        self,
+        node_id="",
+        node_name="",
+        event_type=None,
+        duration_ms=0,
+        attempt=1,
+        error="",
+        execution_id="",
+    ):
+        self.events.append(
+            {
+                "node_id": node_id,
+                "node_name": node_name,
+                "event_type": event_type.value if event_type else None,
+                "duration_ms": duration_ms,
+                "attempt": attempt,
+                "error": error,
+            }
+        )
 
     def ensure_node_logged(self, **kwargs):
         pass

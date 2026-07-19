@@ -855,6 +855,7 @@ class GraphExecutor:
                 # Persist node-started transition (all node types)
                 if self.runtime_logger:
                     from engine.runtime.runtime_log_schemas import NodeEventType
+
                     self.runtime_logger.log_node_event(
                         node_id=current_node_id,
                         node_name=node_spec.name,
@@ -925,6 +926,7 @@ class GraphExecutor:
                     # Persist node-completed transition
                     if self.runtime_logger:
                         from engine.runtime.runtime_log_schemas import NodeEventType
+
                         self.runtime_logger.log_node_event(
                             node_id=current_node_id,
                             node_name=node_spec.name,
@@ -1011,6 +1013,7 @@ class GraphExecutor:
                         # Persist retry transition
                         if self.runtime_logger:
                             from engine.runtime.runtime_log_schemas import NodeEventType
+
                             self.runtime_logger.log_node_event(
                                 node_id=current_node_id,
                                 node_name=node_spec.name,
@@ -1039,6 +1042,7 @@ class GraphExecutor:
                             )
                         if self.runtime_logger:
                             from engine.runtime.runtime_log_schemas import NodeEventType
+
                             self.runtime_logger.log_node_event(
                                 node_id=current_node_id,
                                 node_name=node_spec.name,
@@ -1139,6 +1143,7 @@ class GraphExecutor:
                     # Persist HITL-paused transition
                     if self.runtime_logger:
                         from engine.runtime.runtime_log_schemas import NodeEventType
+
                         self.runtime_logger.log_node_event(
                             node_id=node_spec.id,
                             node_name=node_spec.name,

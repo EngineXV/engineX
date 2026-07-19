@@ -113,6 +113,39 @@ def _estimate_tokens(model: str, messages: list[dict]) -> tuple[int, str]:
     return total_chars // 4, "estimate"
 
 
+def _extract_cost_usd(response: Any, model: str, input_tokens: int, output_tokens: int) -> float:
+    """Compute USD cost for a completed LLM call.
+
+    Priority order:
+    1. ``litellm.completion_cost(response)`` — uses litellm's price tables
+       plus any provider-embedded cost fields.
+    2. ``model_catalog.get_model_pricing(model)`` — curated fallback.
+    3. 0.0 — safe default; never disrupts execution.
+    """
+    # Attempt 1: litellm native cost computation
+    if litellm is not None and response is not None:
+        try:
+            cost = litellm.completion_cost(completion_response=response)
+            if isinstance(cost, int | float) and cost >= 0:
+                return float(cost)
+        except Exception:
+            pass
+
+    # Attempt 2: curated model catalog pricing
+    try:
+        from engine.llm.model_catalog import get_model_pricing
+
+        pricing = get_model_pricing(model)
+        if pricing and (input_tokens or output_tokens):
+            input_rate = pricing.get("input", 0.0)  # USD per 1M tokens
+            output_rate = pricing.get("output", 0.0)
+            return (input_tokens * input_rate + output_tokens * output_rate) / 1_000_000
+    except Exception:
+        pass
+
+    return 0.0
+
+
 def _dump_failed_request(
     model: str,
     kwargs: dict[str, Any],
@@ -447,6 +480,7 @@ class LiteLLMProvider(LLMProvider):
             output_tokens=output_tokens,
             stop_reason=response.choices[0].finish_reason or "",
             raw_response=response,
+            cost_usd=_extract_cost_usd(response, self.model, input_tokens, output_tokens),
         )
 
     # ------------------------------------------------------------------
@@ -623,6 +657,7 @@ class LiteLLMProvider(LLMProvider):
             output_tokens=output_tokens,
             stop_reason=response.choices[0].finish_reason or "",
             raw_response=response,
+            cost_usd=_extract_cost_usd(response, self.model, input_tokens, output_tokens),
         )
 
     def _tool_to_openai_format(self, tool: Tool) -> dict[str, Any]:
@@ -957,4 +992,5 @@ class LiteLLMProvider(LLMProvider):
             output_tokens=output_tokens,
             stop_reason=stop_reason,
             raw_response={"tool_calls": tool_calls} if tool_calls else None,
+            cost_usd=_extract_cost_usd(None, model, input_tokens, output_tokens),
         )

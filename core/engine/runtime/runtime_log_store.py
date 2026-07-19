@@ -8,6 +8,8 @@ import logging
 from datetime import UTC, datetime
 from pathlib import Path
 
+# CostEntry imported lazily to avoid circular-import issues with observability.
+from engine.observability.cost_attribution import CostEntry
 from engine.runtime.runtime_log_schemas import (
     NodeDetail,
     NodeStepLog,
@@ -65,6 +67,18 @@ class RuntimeLogStore:
         with open(path, "a", encoding="utf-8") as f:
             f.write(line)
 
+    def append_cost_entry(self, run_id: str, entry: CostEntry) -> None:
+        """Append one JSONL line to cost_attribution.jsonl. Sync.
+
+        One CostEntry is written per LLM call or tool call, immediately after
+        the call completes. Each retry attempt of a node produces separate
+        entries with distinct ``attempt`` values (issue #45).
+        """
+        path = self._get_run_dir(run_id) / "cost_attribution.jsonl"
+        line = json.dumps(entry.model_dump(), ensure_ascii=False) + "\n"
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(line)
+
     def read_node_details_sync(self, run_id: str) -> list[NodeDetail]:
         """Read details.jsonl back into a list of NodeDetail. Sync"""
         path = self._get_run_dir(run_id) / "details.jsonl"
@@ -110,6 +124,19 @@ class RuntimeLogStore:
                 return None
             steps = _read_jsonl_as_models(path, NodeStepLog)
             return RunToolLogs(run_id=run_id, steps=steps)
+
+        return await asyncio.to_thread(_read)
+
+    async def load_cost_entries(self, run_id: str) -> list[CostEntry]:
+        """Load cost_attribution.jsonl for a specific run.
+
+        Returns an empty list if the file does not exist (e.g. old sessions
+        recorded before cost attribution was added).
+        """
+        path = self._get_run_dir(run_id) / "cost_attribution.jsonl"
+
+        def _read() -> list[CostEntry]:
+            return _read_jsonl_as_models(path, CostEntry)
 
         return await asyncio.to_thread(_read)
 

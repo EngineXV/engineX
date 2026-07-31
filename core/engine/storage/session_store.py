@@ -51,19 +51,24 @@ class SessionStore:
         """Read state.json for a session"""
 
         def _read():
-            state_path = self.get_state_path(session_id)
-            if not state_path.exists():
-                return None
-
-            import json
-
-            from engine.storage.migrate import migrate_session_state
-
-            raw = json.loads(state_path.read_text(encoding="utf-8"))
-            migrated = migrate_session_state(raw)
-            return SessionState.model_validate(migrated)
+            return self.read_state_sync(session_id)
 
         return await asyncio.to_thread(_read)
+
+    def read_state_sync(self, session_id: str) -> SessionState | None:
+        """Synchronously read state.json for a session (worker init paths)"""
+
+        state_path = self.get_state_path(session_id)
+        if not state_path.exists():
+            return None
+
+        import json
+
+        from engine.storage.migrate import migrate_session_state
+
+        raw = json.loads(state_path.read_text(encoding="utf-8"))
+        migrated = migrate_session_state(raw)
+        return SessionState.model_validate(migrated)
 
     async def list_sessions(
         self,

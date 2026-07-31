@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import threading
 import time
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -42,13 +43,20 @@ class StateChange:
 class SharedStateManager:
     """Manages shared state across concurrent executions"""
 
-    def __init__(self):
+    def __init__(
+        self,
+        session_store=None,
+        session_id: str | None = None,
+    ):
         # State storage at each level
         self._global_state: dict[str, Any] = {}
         self._stream_state: dict[str, dict[str, Any]] = {}  # stream_id -> {key: value}
         self._execution_state: dict[str, dict[str, Any]] = {}  # execution_id -> {key: value}
 
-        # Locks for synchronized access
+        # Locks for synchronized access.
+        # NOTE: asyncio.Lock objects cannot be persisted. They coordinate
+        # in-process concurrent writes only; cross-worker consistency will be
+        # handled by a claim-based mechanism (see docs/stateless_workers_audit.md).
         self._global_lock = asyncio.Lock()
         self._stream_locks: dict[str, asyncio.Lock] = {}
         self._key_locks: dict[str, asyncio.Lock] = {}
@@ -59,6 +67,184 @@ class SharedStateManager:
 
         # Version tracking
         self._version = 0
+
+        # Optional persistence to the session store
+        self._session_store = session_store
+        self._session_id = session_id
+        self._persist_queue: asyncio.Queue | None = None
+        self._persist_thread: threading.Thread | None = None
+        self._persist_loop: asyncio.AbstractEventLoop | None = None
+        self._persist_worker_task: asyncio.Future | None = None
+        self._persist_worker: asyncio.Task | None = None  # strong ref on the persist loop
+        self._persist_seq = 0  # last enqueued snapshot id
+        self._persist_written = 0  # last snapshot id written to disk
+        if self._session_store is not None and self._session_id is not None:
+            self._restore()
+
+    # === PERSISTENCE ===
+
+    def _restore(self) -> None:
+        """Load persisted shared state from the session store (if any)."""
+        if self._session_store is None or self._session_id is None:
+            return
+
+        # Attempt a synchronous load; if a loop is running, fall back to the
+        # async path and wait for it (used when constructed inside a task).
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            state = self._session_store.read_state_sync(self._session_id)
+        else:
+            state = self._run_async(self._session_store.read_state(self._session_id))
+        if state is None:
+            return
+
+        persisted = state.shared_state or {}
+        self._global_state = dict(persisted.get("global", {}))
+        self._stream_state = {
+            k: dict(v) for k, v in persisted.get("streams", {}).items()
+        }
+        self._execution_state = {
+            k: dict(v) for k, v in persisted.get("executions", {}).items()
+        }
+        self._version = persisted.get("version", 0)
+        logger.debug(
+            "Restored shared state for session %s "
+            "(global=%d, streams=%d, executions=%d)",
+            self._session_id,
+            len(self._global_state),
+            len(self._stream_state),
+            len(self._execution_state),
+        )
+
+    def _serialize(self) -> dict[str, Any]:
+        """Snapshot current in-memory state into a persistable dict."""
+        return {
+            "global": dict(self._global_state),
+            "streams": {
+                sid: dict(s) for sid, s in self._stream_state.items()
+            },
+            "executions": {
+                eid: dict(e) for eid, e in self._execution_state.items()
+            },
+            "version": self._version,
+        }
+
+    def _persist(self) -> None:
+        """Queue a snapshot of current shared state for the session store.
+
+        Writes are serialized through a single worker (coalescing redundant
+        snapshots) and use read-modify-write on ``state.shared_state`` so
+        concurrent writers (e.g. the executor writing session output) are not
+        clobbered. asyncio.Lock objects are intentionally excluded — they are
+        process-local and cannot be persisted.
+        """
+        if self._session_store is None or self._session_id is None:
+            return
+
+        snapshot = self._serialize()
+        self._persist_seq += 1
+        snapshot["_seq"] = self._persist_seq
+        if self._persist_queue is None:
+            # No running loop: spin up a dedicated loop + worker thread.
+            self._persist_loop = asyncio.new_event_loop()
+            self._persist_queue = asyncio.Queue()
+            self._persist_thread = threading.Thread(
+                target=self._persist_loop.run_forever,
+                name=f"shared-state-persist-{self._session_id}",
+                daemon=True,
+            )
+            self._persist_thread.start()
+            self._persist_worker_task = asyncio.run_coroutine_threadsafe(
+                self._ensure_persist_worker(), self._persist_loop
+            )
+
+        asyncio.run_coroutine_threadsafe(
+            self._persist_queue.put(snapshot), self._persist_loop
+        )
+
+    async def _ensure_persist_worker(self) -> None:
+        """Start the serialized writer task on the persist loop (idempotent)."""
+        if self._persist_worker is None:
+            self._persist_worker = asyncio.create_task(self._persist_worker_loop())
+
+    async def _persist_worker_loop(self) -> None:
+        """Serialized writer: persist one snapshot at a time (latest wins)."""
+        while True:
+            snapshot = await self._persist_queue.get()
+            # Coalesce: skip stale queued snapshots, keep the newest.
+            while not self._persist_queue.empty():
+                try:
+                    snapshot = self._persist_queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    break
+            await self._write_snapshot(snapshot)
+            self._persist_written = snapshot.get("_seq", self._persist_written)
+            self._persist_queue.task_done()
+
+    async def _write_snapshot(self, snapshot: dict[str, Any]) -> None:
+        """Read-modify-write one snapshot into the session's state.json."""
+        payload = {k: v for k, v in snapshot.items() if k != "_seq"}
+        state = await self._session_store.read_state(self._session_id)
+        if state is None:
+            return
+        state.shared_state = payload
+        await self._session_store.write_state(self._session_id, state)
+
+    async def flush(self) -> None:
+        """Wait until all queued snapshots have been persisted (for shutdown/tests)."""
+        if self._persist_queue is None or self._persist_loop is None:
+            return
+        # Poll until the worker has written the newest enqueued snapshot.
+        # (Queue.join cannot be used cross-loop: its waiter can register after
+        # the final task_done, hanging forever.)
+        deadline = asyncio.get_running_loop().time() + 10
+        while self._persist_written < self._persist_seq:
+            if asyncio.get_running_loop().time() > deadline:
+                raise TimeoutError("timed out waiting for shared state to persist")
+            await asyncio.sleep(0.01)
+
+    def close(self) -> None:
+        """Stop the persistence worker and its background loop (for shutdown)."""
+        if self._persist_loop is None or self._persist_thread is None:
+            return
+        loop = self._persist_loop
+        worker = self._persist_worker
+        if worker is not None and not worker.done():
+            loop.call_soon_threadsafe(worker.cancel)
+            # Run the loop until the cancelled worker has fully finished.
+            import time as _time
+
+            deadline = _time.monotonic() + 5
+            while not worker.done():
+                if _time.monotonic() > deadline:
+                    break
+                try:
+                    asyncio.run_coroutine_threadsafe(
+                        asyncio.sleep(0.01), loop
+                    ).result(timeout=1)
+                except Exception:
+                    break
+        loop.call_soon_threadsafe(loop.stop)
+        self._persist_thread.join(timeout=5)
+        self._persist_thread = None
+        self._persist_loop = None
+        self._persist_queue = None
+        self._persist_worker_task = None
+        self._persist_worker = None
+
+    @staticmethod
+    def _run_async(coro) -> Any:
+        """Run a coroutine to completion when no loop is running (init path)."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+        # A loop is running but we must block: run in a worker thread.
+        import concurrent.futures
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(asyncio.run, coro).result()
 
     def create_memory(
         self,
@@ -86,12 +272,14 @@ class SharedStateManager:
     def cleanup_execution(self, execution_id: str) -> None:
         """Clean up state for a completed execution"""
         self._execution_state.pop(execution_id, None)
+        self._persist()
         logger.debug(f"Cleaned up state for execution: {execution_id}")
 
     def cleanup_stream(self, stream_id: str) -> None:
         """Clean up state for a closed stream"""
         self._stream_state.pop(stream_id, None)
         self._stream_locks.pop(stream_id, None)
+        self._persist()
         logger.debug(f"Cleaned up state for stream: {stream_id}")
 
     # === LOW-LEVEL STATE OPERATIONS ===
@@ -179,6 +367,7 @@ class SharedStateManager:
             self._global_state[key] = value
 
         self._version += 1
+        self._persist()
 
     async def _write_with_lock(
         self,
@@ -385,6 +574,7 @@ class StreamMemory:
 
         self._manager._execution_state[self._execution_id][key] = value
         self._manager._version += 1
+        self._manager._persist()
 
     def read_all_sync(self) -> dict[str, Any]:
         """Synchronous read all"""

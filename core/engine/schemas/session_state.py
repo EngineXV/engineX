@@ -108,6 +108,9 @@ class SessionState(BaseModel):
     # Memory (for resumability)
     memory: dict[str, Any] = Field(default_factory=dict)
 
+    # Shared state across workers (from SharedStateManager)
+    shared_state: dict[str, Any] = Field(default_factory=dict)
+
     # Metrics
     metrics: SessionMetrics = Field(default_factory=SessionMetrics)
 

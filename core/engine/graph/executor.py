@@ -1471,14 +1471,14 @@ class GraphExecutor:
             output = memory.read_all()
 
             self.logger.info(
-                    f"   OK: Success "
-                    f"(model={result.model_name}, "
-                    f"input_tokens={result.input_tokens}, "
-                    f"output_tokens={result.output_tokens}, "
-                    f"tokens={result.tokens_used}, "
-                    f"cost=${result.estimated_cost_usd:.6f}, "
-                    f"latency={result.latency_ms}ms)"
-                )
+                f"   OK: Success "
+                f"(model={result.model_name}, "
+                f"input_tokens={result.input_tokens}, "
+                f"output_tokens={result.output_tokens}, "
+                f"tokens={result.tokens_used}, "
+                f"cost=${result.estimated_cost_usd:.6f}, "
+                f"latency={result.latency_ms}ms)"
+            )
 
             # Calculate execution quality metrics
             total_retries_count = sum(node_retry_counts.values())

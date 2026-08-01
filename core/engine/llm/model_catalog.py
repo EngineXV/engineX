@@ -262,9 +262,7 @@ def get_pricing_table() -> dict[str, dict[str, float]]:
             if pricing is None:
                 continue
             model_id = str(model["id"])
-            table[f"{provider_id}/{model_id}"] = {
-                key: float(rate) for key, rate in pricing.items()
-            }
+            table[f"{provider_id}/{model_id}"] = {key: float(rate) for key, rate in pricing.items()}
     return table
 
 

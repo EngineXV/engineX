@@ -11,12 +11,7 @@ from engine.observability import run_history
 def test_collect_run_history_includes_cost_and_token_totals(tmp_path, monkeypatch):
     home = tmp_path / "home"
     session_dir = (
-        home
-        / ".engine"
-        / "agents"
-        / "agent-a"
-        / "sessions"
-        / "session_20250101_000000_abcd1234"
+        home / ".engine" / "agents" / "agent-a" / "sessions" / "session_20250101_000000_abcd1234"
     )
     logs_dir = session_dir / "logs"
     logs_dir.mkdir(parents=True)

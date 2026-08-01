@@ -8,11 +8,11 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from engine.observability import get_trace_context
 from engine.llm.model_catalog import estimate_cost_usd
+from engine.observability import get_trace_context
 from engine.runtime.runtime_log_schemas import (
-    NodeDetail,
     NodeCostLog,
+    NodeDetail,
     NodeStepLog,
     RunSummaryLog,
     ToolCallLog,
@@ -26,16 +26,15 @@ def _set_gauge_with_labels(name: str, value: float, labels: dict[str, str] | Non
     try:
         from engine.observability import metrics as metrics_module
 
-        setter = getattr(metrics_module, "set_gauge")
         try:
             if labels:
-                setter(name, value, labels=labels)
+                metrics_module.set_gauge(name, value, labels=labels)
             else:
-                setter(name, value)
+                metrics_module.set_gauge(name, value)
         except TypeError:
             if labels:
                 logger.debug("Gauge labels not supported for %s; storing aggregate only", name)
-            setter(name, value)
+            metrics_module.set_gauge(name, value)
     except Exception:
         logger.debug("Failed to publish metric %s", name, exc_info=True)
 
@@ -309,7 +308,11 @@ class RuntimeLogger:
             )
 
             await self._store.save_summary(self._run_id, summary)
-            _set_gauge_with_labels("enginex_run_cost_usd", total_cost_usd, labels={"run_id": self._run_id})
+            _set_gauge_with_labels(
+                "enginex_run_cost_usd",
+                total_cost_usd,
+                labels={"run_id": self._run_id},
+            )
             for node_cost in node_costs:
                 _set_gauge_with_labels(
                     "enginex_node_tokens",

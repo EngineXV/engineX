@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { AgentEvent } from "./api";
+import type { AgentEvent } from "../api";
 
 export function useSSE(
   sessionId: string | null,

@@ -43,11 +43,16 @@ export default function ChartBlock({ kind, spec }: ChartBlockProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const chartContainer: HTMLDivElement = container;
 
     let disposed = false;
-    let chart: { resize: () => void; dispose: () => void } | null = null;
+    let chart: {
+      setOption: (option: unknown) => void;
+      resize: () => void;
+      dispose: () => void;
+    } | null = null;
 
     async function renderChart() {
       if (kind === "echarts") {
@@ -56,7 +61,7 @@ export default function ChartBlock({ kind, spec }: ChartBlockProps) {
           "engine-echarts",
         );
         if (disposed || !window.echarts) return;
-        chart = window.echarts.init(el);
+        chart = window.echarts.init(chartContainer);
         chart.setOption(typeof spec === "string" ? JSON.parse(spec) : spec);
         return;
       }
@@ -69,12 +74,12 @@ export default function ChartBlock({ kind, spec }: ChartBlockProps) {
       window.mermaid.initialize({ startOnLoad: false, theme: "dark" });
       const text = typeof spec === "string" ? spec : String(spec.diagram || "");
       const { svg } = await window.mermaid.render(`mmd-${Date.now()}`, text);
-      if (!disposed) el.innerHTML = svg;
+      if (!disposed) chartContainer.innerHTML = svg;
     }
 
     renderChart().catch(() => {
-      if (!disposed && el) {
-        el.textContent = "Unable to render chart.";
+      if (!disposed) {
+        chartContainer.textContent = "Unable to render chart.";
       }
     });
 

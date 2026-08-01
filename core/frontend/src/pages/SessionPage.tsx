@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import ChatPanel, { type ChatLine } from "../components/ChatPanel";
-import ChartBlock, { parseChartPayload } from "../components/ChartBlock";
+import { parseChartPayload } from "../components/ChartBlock";
 import DashboardHeader from "../components/DashboardHeader";
 import GraphView from "../components/GraphView";
 import CheckpointPanel from "../components/CheckpointPanel";

@@ -10,7 +10,6 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from engine.llm.provider import LLMProvider, Tool
-from engine.llm.model_catalog import estimate_cost_usd
 from engine.runtime.core import Runtime
 
 logger = logging.getLogger(__name__)

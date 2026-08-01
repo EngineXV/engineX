@@ -252,6 +252,49 @@ def get_model_pricing(model_id: str) -> dict[str, float] | None:
     return None
 
 
+@lru_cache(maxsize=1)
+def get_pricing_table() -> dict[str, dict[str, float]]:
+    """Return a cached provider/model -> pricing table."""
+    table: dict[str, dict[str, float]] = {}
+    for provider_id, provider_info in load_model_catalog()["providers"].items():
+        for model in provider_info["models"]:
+            pricing = model.get("pricing_usd_per_mtok")
+            if pricing is None:
+                continue
+            model_id = str(model["id"])
+            table[f"{provider_id}/{model_id}"] = {
+                key: float(rate) for key, rate in pricing.items()
+            }
+    return table
+
+
+def estimate_cost_usd(model_id: str, input_tokens: int, output_tokens: int) -> float | None:
+    """Estimate USD cost for one model request from cached pricing."""
+    if not model_id:
+        return None
+
+    pricing = get_pricing_table().get(model_id)
+    if pricing is None:
+        if "/" in model_id:
+            bare_model_id = model_id.split("/", 1)[1]
+            pricing = get_pricing_table().get(bare_model_id)
+        if pricing is None:
+            suffix_matches = [
+                rate for key, rate in get_pricing_table().items() if key.endswith(f"/{model_id}")
+            ]
+            if len(suffix_matches) == 1:
+                pricing = suffix_matches[0]
+    if pricing is None:
+        return None
+
+    input_rate = pricing.get("input")
+    output_rate = pricing.get("output")
+    if input_rate is None or output_rate is None:
+        return None
+
+    return ((input_tokens * input_rate) + (output_tokens * output_rate)) / 1_000_000.0
+
+
 def model_supports_vision(model_id: str) -> bool:
     """Return whether *model_id* supports image inputs per the curated catalog.
 

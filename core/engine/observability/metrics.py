@@ -16,6 +16,8 @@ _counters: dict[str, float] = {
 }
 _gauges: dict[str, float] = {
     "engine_uptime_seconds": 0.0,
+    "enginex_run_cost_usd": 0.0,
+    "enginex_node_tokens": 0.0,
 }
 _start_time = time.time()
 
@@ -25,8 +27,12 @@ def inc(name: str, amount: float = 1.0) -> None:
         _counters[name] = _counters.get(name, 0.0) + amount
 
 
-def set_gauge(name: str, value: float) -> None:
+def set_gauge(name: str, value: float, labels: dict[str, str] | None = None) -> None:
     with _lock:
+        if labels:
+            label_key = ",".join(f"{key}={value}" for key, value in sorted(labels.items()))
+            _gauges[f"{name}{{{label_key}}}"] = value
+            return
         _gauges[name] = value
 
 

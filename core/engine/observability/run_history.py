@@ -38,6 +38,34 @@ def collect_run_history(repo_root: Path, *, limit: int = 50) -> list[dict[str, A
             summary = _read_json(summary_path)
             state = _read_json(state_path)
             checkpoint_index = _read_json(session_dir / "checkpoints" / "index.json")
+            metrics = (summary or {}).get("metrics") if isinstance(summary, dict) else None
+            state_metrics = (state or {}).get("metrics") if isinstance(state, dict) else None
+            progress = (state or {}).get("progress") if isinstance(state, dict) else None
+
+            total_tokens = (
+                (summary or {}).get("total_tokens")
+                or (metrics or {}).get("total_tokens")
+                or (progress or {}).get("total_tokens")
+                or 0
+            )
+            estimated_cost_usd = (
+                (summary or {}).get("estimated_cost_usd")
+                or (metrics or {}).get("estimated_cost_usd")
+                or (state_metrics or {}).get("estimated_cost_usd")
+                or 0.0
+            )
+            total_input_tokens = (
+                (summary or {}).get("total_input_tokens")
+                or (metrics or {}).get("total_input_tokens")
+                or (state_metrics or {}).get("total_input_tokens")
+                or 0
+            )
+            total_output_tokens = (
+                (summary or {}).get("total_output_tokens")
+                or (metrics or {}).get("total_output_tokens")
+                or (state_metrics or {}).get("total_output_tokens")
+                or 0
+            )
             status = "unknown"
             if summary and summary.get("success") is True:
                 status = "completed"
@@ -53,6 +81,10 @@ def collect_run_history(repo_root: Path, *, limit: int = 50) -> list[dict[str, A
                     "started_at": (summary or state or {}).get("started_at")
                     or (summary or state or {}).get("created_at"),
                     "ended_at": (summary or {}).get("ended_at"),
+                    "total_tokens": total_tokens,
+                    "total_input_tokens": total_input_tokens,
+                    "total_output_tokens": total_output_tokens,
+                    "estimated_cost_usd": estimated_cost_usd,
                     "checkpoint_count": (checkpoint_index or {}).get("total_checkpoints", 0),
                     "latest_checkpoint_id": (checkpoint_index or {}).get("latest_checkpoint_id"),
                     "error": (summary or state or {}).get("error"),

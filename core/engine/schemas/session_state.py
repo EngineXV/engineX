@@ -69,6 +69,8 @@ class SessionMetrics(BaseModel):
 
     decision_count: int = 0
     problem_count: int = 0
+    total_tokens: int = 0
+    estimated_cost_usd: float = 0.0
     total_input_tokens: int = 0
     total_output_tokens: int = 0
     nodes_executed: list[str] = Field(default_factory=list)
@@ -211,6 +213,12 @@ class SessionState(BaseModel):
                 execution_quality=result.execution_quality,
                 node_visit_counts=result.node_visit_counts,
             ),
+            metrics=SessionMetrics(
+                total_tokens=result.total_tokens,
+                estimated_cost_usd=getattr(result, "estimated_cost_usd", 0.0),
+                total_input_tokens=getattr(result, "total_input_tokens", 0),
+                total_output_tokens=getattr(result, "total_output_tokens", 0),
+            ),
             result=SessionResult(
                 success=result.success,
                 error=result.error,
@@ -233,6 +241,7 @@ class SessionState(BaseModel):
             "paused_at": resume_from,
             "resume_from": resume_from,
             "memory": self.memory,
+            "metrics": self.metrics.model_dump(),
             "execution_path": self.progress.path,
             "node_visit_counts": self.progress.node_visit_counts,
         }

@@ -10,6 +10,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from engine.llm.provider import LLMProvider, Tool
+from engine.llm.model_catalog import estimate_cost_usd
 from engine.runtime.core import Runtime
 
 logger = logging.getLogger(__name__)
@@ -468,6 +469,11 @@ class NodeResult:
     tokens_used: int = 0
     latency_ms: int = 0
 
+    # FinOps metadata
+    input_tokens: int = 0
+    output_tokens: int = 0
+    model_name: str = ""
+    estimated_cost_usd: float = 0.0
     # Pydantic validation errors (if any)
     validation_errors: list[str] = field(default_factory=list)
 

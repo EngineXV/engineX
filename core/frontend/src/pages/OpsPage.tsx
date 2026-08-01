@@ -73,6 +73,8 @@ export default function OpsPage() {
                   <th>Agent</th>
                   <th>Execution</th>
                   <th>Status</th>
+                  <th>Tokens</th>
+                  <th>Cost</th>
                   <th>Checkpoints</th>
                   <th>Started</th>
                 </tr>
@@ -83,6 +85,8 @@ export default function OpsPage() {
                     <td>{run.agent}</td>
                     <td><code>{run.execution_id.slice(0, 14)}…</code></td>
                     <td><span className={`status-chip status-${run.status}`}>{run.status}</span></td>
+                    <td>{run.total_tokens.toLocaleString()}</td>
+                    <td>{run.estimated_cost_usd ? `$${run.estimated_cost_usd.toFixed(4)}` : "—"}</td>
                     <td>{run.checkpoint_count}</td>
                     <td>{run.started_at || "—"}</td>
                   </tr>

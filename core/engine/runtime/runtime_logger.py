@@ -9,8 +9,10 @@ from datetime import UTC, datetime
 from typing import Any
 
 from engine.observability import get_trace_context
+from engine.llm.model_catalog import estimate_cost_usd
 from engine.runtime.runtime_log_schemas import (
     NodeDetail,
+    NodeCostLog,
     NodeStepLog,
     RunSummaryLog,
     ToolCallLog,
@@ -18,6 +20,24 @@ from engine.runtime.runtime_log_schemas import (
 from engine.runtime.runtime_log_store import RuntimeLogStore
 
 logger = logging.getLogger(__name__)
+
+
+def _set_gauge_with_labels(name: str, value: float, labels: dict[str, str] | None = None) -> None:
+    try:
+        from engine.observability import metrics as metrics_module
+
+        setter = getattr(metrics_module, "set_gauge")
+        try:
+            if labels:
+                setter(name, value, labels=labels)
+            else:
+                setter(name, value)
+        except TypeError:
+            if labels:
+                logger.debug("Gauge labels not supported for %s; storing aggregate only", name)
+            setter(name, value)
+    except Exception:
+        logger.debug("Failed to publish metric %s", name, exc_info=True)
 
 
 class RuntimeLogger:
@@ -129,8 +149,14 @@ class RuntimeLogger:
         retry_count: int = 0,
         escalate_count: int = 0,
         continue_count: int = 0,
+        model_name: str = "",
+        estimated_cost_usd: float | None = None,
     ) -> None:
         """Record completion of a node"""
+        if estimated_cost_usd is None and model_name:
+            estimated_cost_usd = estimate_cost_usd(model_name, input_tokens, output_tokens)
+        estimated_cost_usd = float(estimated_cost_usd or 0.0)
+
         needs_attention = not success
         attention_reasons: list[str] = []
         if not success and error:
@@ -173,6 +199,8 @@ class RuntimeLogger:
             tokens_used=tokens_used,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
+            model_name=model_name,
+            estimated_cost_usd=estimated_cost_usd,
             latency_ms=latency_ms,
             attempt=attempt,
             exit_status=exit_status,
@@ -232,6 +260,22 @@ class RuntimeLogger:
 
             total_input = sum(nd.input_tokens for nd in node_details)
             total_output = sum(nd.output_tokens for nd in node_details)
+            total_tokens = sum(nd.tokens_used for nd in node_details)
+            total_cost_usd = sum(nd.estimated_cost_usd for nd in node_details)
+
+            node_costs = [
+                NodeCostLog(
+                    node_id=nd.node_id,
+                    node_name=nd.node_name,
+                    node_type=nd.node_type,
+                    model_name=nd.model_name,
+                    tokens_used=nd.tokens_used,
+                    input_tokens=nd.input_tokens,
+                    output_tokens=nd.output_tokens,
+                    estimated_cost_usd=nd.estimated_cost_usd,
+                ).model_dump()
+                for nd in node_details
+            ]
 
             needs_attention = any(nd.needs_attention for nd in node_details)
             attention_reasons: list[str] = []
@@ -250,8 +294,11 @@ class RuntimeLogger:
                 status=status,
                 total_nodes_executed=len(node_details),
                 node_path=node_path or [],
+                total_tokens=total_tokens,
                 total_input_tokens=total_input,
                 total_output_tokens=total_output,
+                estimated_cost_usd=total_cost_usd,
+                node_costs=node_costs,
                 needs_attention=needs_attention,
                 attention_reasons=attention_reasons,
                 started_at=self._started_at,
@@ -262,11 +309,20 @@ class RuntimeLogger:
             )
 
             await self._store.save_summary(self._run_id, summary)
+            _set_gauge_with_labels("enginex_run_cost_usd", total_cost_usd, labels={"run_id": self._run_id})
+            for node_cost in node_costs:
+                _set_gauge_with_labels(
+                    "enginex_node_tokens",
+                    float(node_cost.get("tokens_used", 0)),
+                    labels={"run_id": self._run_id, "node_id": str(node_cost.get("node_id", ""))},
+                )
             logger.info(
-                "Runtime logs saved: run_id=%s status=%s nodes=%d",
+                "Runtime logs saved: run_id=%s status=%s nodes=%d tokens=%d cost=$%.4f",
                 self._run_id,
                 status,
                 len(node_details),
+                total_tokens,
+                total_cost_usd,
             )
         except Exception:
             logger.exception(

@@ -57,7 +57,7 @@ class CostGuardStage(PipelineStage):
                     "Rejecting run cost %.4f over run budget %.4f",
                     run_estimated,
                     self._run_budget,
-            )
+                )
             return PipelineResult(
                 action="reject",
                 rejection_reason=(

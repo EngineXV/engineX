@@ -8,7 +8,6 @@ from engine.config import get_engine_config
 from engine.pipeline.registry import register
 from engine.pipeline.stage import PipelineContext, PipelineResult, PipelineStage
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -48,11 +47,16 @@ class CostGuardStage(PipelineStage):
                     f"Estimated cost ${estimated:.4f} exceeds budget ${self._budget:.4f}"
                 ),
             )
-        if self._run_budget is not None and run_estimated is not None and run_estimated > self._run_budget:
-            logger.warning(
-                "Rejecting run cost %.4f over run budget %.4f",
-                run_estimated,
-                self._run_budget,
+            run_over_budget = (
+                self._run_budget is not None
+                and run_estimated is not None
+                and run_estimated > self._run_budget
+            )
+            if run_over_budget:
+                logger.warning(
+                    "Rejecting run cost %.4f over run budget %.4f",
+                    run_estimated,
+                    self._run_budget,
             )
             return PipelineResult(
                 action="reject",

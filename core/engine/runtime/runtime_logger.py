@@ -13,6 +13,8 @@ from engine.observability import get_trace_context
 from engine.runtime.runtime_log_schemas import (
     NodeCostLog,
     NodeDetail,
+    NodeEventLog,
+    NodeEventType,
     NodeStepLog,
     RunSummaryLog,
     ToolCallLog,
@@ -216,6 +218,30 @@ class RuntimeLogger:
         with self._lock:
             self._store.append_node_detail(self._run_id, detail)
             self._logged_node_ids.add(node_id)
+
+    def log_node_event(
+        self,
+        node_id: str,
+        node_name: str,
+        event_type: NodeEventType,
+        duration_ms: int = 0,
+        attempt: int = 1,
+        error: str = "",
+        execution_id: str = "",
+    ) -> None:
+        """Record a per-node transition event"""
+        event = NodeEventLog(
+            node_id=node_id,
+            node_name=node_name,
+            event_type=event_type,
+            timestamp=datetime.now(UTC).isoformat(),
+            duration_ms=duration_ms,
+            attempt=attempt,
+            error=error,
+            execution_id=execution_id,
+        )
+        with self._lock:
+            self._store.append_node_event(self._run_id, event)
 
     def ensure_node_logged(
         self,

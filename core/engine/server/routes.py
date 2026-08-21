@@ -34,6 +34,9 @@ DEFAULT_EVENT_TYPES = [
     EventType.NODE_LOOP_STARTED,
     EventType.NODE_LOOP_ITERATION,
     EventType.NODE_LOOP_COMPLETED,
+    EventType.NODE_STARTED,
+    EventType.NODE_FAILED,
+    EventType.NODE_HITL_PAUSED,
     EventType.LLM_TURN_COMPLETE,
     EventType.NODE_ACTION_PLAN,
     EventType.GOAL_PROGRESS,
@@ -287,6 +290,30 @@ async def handle_events(request: web.Request) -> web.StreamResponse:
     return sse.response  # type: ignore[return-value]
 
 
+async def handle_session_node_events(request: web.Request) -> web.Response:
+    """Return all persisted node transition events for a session"""
+    session, err = resolve_session(request)
+    if err:
+        return err
+    assert session is not None
+
+    store = session.runtime_log_store
+    if store is None:
+        return web.json_response({"node_events": []})
+
+    try:
+        events = store.read_node_events_sync(session.id)
+        return web.json_response(
+            {
+                "session_id": session.id,
+                "node_events": [e.model_dump() for e in events],
+            }
+        )
+    except Exception as exc:
+        logger.warning("Failed to read node events for session %s: %s", session.id, exc)
+        return web.json_response({"node_events": []})
+
+
 def register_routes(app: web.Application) -> None:
     app.router.add_get("/api/health", handle_health)
     app.router.add_get("/api/config", handle_config)
@@ -299,4 +326,5 @@ def register_routes(app: web.Application) -> None:
     app.router.add_post("/api/sessions/{session_id}/pause", handle_pause_session)
     app.router.add_post("/api/sessions/{session_id}/resume", handle_resume_session)
     app.router.add_get("/api/sessions/{session_id}/events", handle_events)
+    app.router.add_get("/api/sessions/{session_id}/node-events", handle_session_node_events)
     app.router.add_get("/api/metrics", handle_metrics)

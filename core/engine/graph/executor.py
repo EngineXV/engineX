@@ -875,6 +875,17 @@ class GraphExecutor:
                         execution_id=self._execution_id,
                     )
 
+                # Persist node-started transition (all node types)
+                if self.runtime_logger:
+                    from engine.runtime.runtime_log_schemas import NodeEventType
+
+                    self.runtime_logger.log_node_event(
+                        node_id=current_node_id,
+                        node_name=node_spec.name,
+                        event_type=NodeEventType.STARTED,
+                        attempt=node_retry_counts.get(current_node_id, 0) + 1,
+                    )
+
                 # Execute node
                 self.logger.info("   Executing...")
                 result = await node_impl.execute(ctx)
@@ -934,6 +945,18 @@ class GraphExecutor:
                         f"   OK: Success (tokens: {result.tokens_used}, "
                         f"latency: {result.latency_ms}ms)"
                     )
+
+                    # Persist node-completed transition
+                    if self.runtime_logger:
+                        from engine.runtime.runtime_log_schemas import NodeEventType
+
+                        self.runtime_logger.log_node_event(
+                            node_id=current_node_id,
+                            node_name=node_spec.name,
+                            event_type=NodeEventType.COMPLETED,
+                            duration_ms=result.latency_ms,
+                            attempt=node_retry_counts.get(current_node_id, 0) + 1,
+                        )
 
                     # Generate and log human-readable summary
                     summary = result.to_summary(node_spec)
@@ -1021,6 +1044,18 @@ class GraphExecutor:
                                 execution_id=self._execution_id,
                             )
 
+                        # Persist retry transition
+                        if self.runtime_logger:
+                            from engine.runtime.runtime_log_schemas import NodeEventType
+
+                            self.runtime_logger.log_node_event(
+                                node_id=current_node_id,
+                                node_name=node_spec.name,
+                                event_type=NodeEventType.RETRY,
+                                attempt=retry_count + 1,
+                                error=result.error or "",
+                            )
+
                         _is_retry = True
                         continue
                     else:
@@ -1029,6 +1064,27 @@ class GraphExecutor:
                             f"   FAIL: Max retries ({max_retries}) exceeded "
                             f"for node {current_node_id}"
                         )
+
+                        # Emit node-failed event and persist transition
+                        if self._event_bus:
+                            await self._event_bus.emit_node_failed(
+                                stream_id=self._stream_id,
+                                node_id=current_node_id,
+                                execution_id=self._execution_id,
+                                error=result.error or "",
+                                attempt=node_retry_counts.get(current_node_id, 0) + 1,
+                            )
+                        if self.runtime_logger:
+                            from engine.runtime.runtime_log_schemas import NodeEventType
+
+                            self.runtime_logger.log_node_event(
+                                node_id=current_node_id,
+                                node_name=node_spec.name,
+                                event_type=NodeEventType.FAILED,
+                                duration_ms=result.latency_ms,
+                                attempt=node_retry_counts.get(current_node_id, 0) + 1,
+                                error=result.error or "",
+                            )
 
                         # Check if there's an ON_FAILURE edge to follow
                         next_node = await self._follow_edges(
@@ -1120,6 +1176,17 @@ class GraphExecutor:
                             node_id=node_spec.id,
                             reason="HITL pause node",
                             execution_id=self._execution_id,
+                        )
+
+                    # Persist HITL-paused transition
+                    if self.runtime_logger:
+                        from engine.runtime.runtime_log_schemas import NodeEventType
+
+                        self.runtime_logger.log_node_event(
+                            node_id=node_spec.id,
+                            node_name=node_spec.name,
+                            event_type=NodeEventType.HITL_PAUSED,
+                            attempt=node_retry_counts.get(node_spec.id, 0) + 1,
                         )
 
                     saved_memory = memory.read_all()

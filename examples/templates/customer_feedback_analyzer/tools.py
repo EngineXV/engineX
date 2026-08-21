@@ -1,11 +1,15 @@
 """Tools for Customer Feedback Analyzer agent."""
 
-from engine.tools import Tool, ToolResult
+from __future__ import annotations
+
+from typing import Any
+
+from engine.runner.tool_registry import tool
 
 
-def categorize_issue_tool(feedback: str) -> ToolResult:
+@tool(description="Categorize the customer feedback into predefined buckets.")
+def categorize_issue(feedback: str) -> dict[str, Any]:
     """Categorize the customer feedback into predefined buckets."""
-    # Dummy implementation for demonstration
     lower_feedback = feedback.lower()
     if "bug" in lower_feedback or "error" in lower_feedback or "broken" in lower_feedback:
         category = "Technical Support"
@@ -15,26 +19,8 @@ def categorize_issue_tool(feedback: str) -> ToolResult:
         category = "Feature Request"
     else:
         category = "General Feedback"
-        
-    return ToolResult(
-        output=f"Categorized as: {category}",
-        metadata={"category": category}
-    )
 
-tools = [
-    Tool(
-        name="categorize_issue",
-        description="Categorize the customer feedback into predefined buckets.",
-        func=categorize_issue_tool,
-        input_schema={
-            "type": "object",
-            "properties": {
-                "feedback": {
-                    "type": "string",
-                    "description": "The customer feedback text to categorize."
-                }
-            },
-            "required": ["feedback"]
-        }
-    )
-]
+    return {
+        "output": f"Categorized as: {category}",
+        "category": category,
+    }

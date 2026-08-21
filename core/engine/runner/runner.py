@@ -993,7 +993,10 @@ class AgentRunner:
 
         # Check required tools are registered
         info = self.info()
+        builtin_node_tools = frozenset({"set_output", "ask_user"})
         for tool_name in info.required_tools:
+            if tool_name in builtin_node_tools:
+                continue
             if not self._tool_registry.has_tool(tool_name):
                 missing_tools.append(tool_name)
 

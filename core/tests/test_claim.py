@@ -1,10 +1,13 @@
-import pytest
-import time
 import threading
-from pathlib import Path
+import time
 from datetime import datetime
-from engine.storage.session_store import SessionStore
+from pathlib import Path
+
+import pytest
+
 from engine.schemas.session_state import SessionState, SessionTimestamps
+from engine.storage.session_store import SessionStore
+
 
 @pytest.fixture
 def store(tmp_path: Path) -> SessionStore:

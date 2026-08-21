@@ -1,6 +1,7 @@
 """Claim manager for stateless workers."""
 from engine.storage.session_store import SessionStore
 
+
 class ClaimManager:
     def __init__(self, session_store: SessionStore):
         self._store = session_store

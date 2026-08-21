@@ -2,7 +2,7 @@
 
 from supervisor_factory import build_supervisor_exports
 
-from .config import default_config, metadata
+from .config import metadata
 
 _exports = build_supervisor_exports(metadata)
 

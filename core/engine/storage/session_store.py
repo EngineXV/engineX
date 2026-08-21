@@ -141,7 +141,7 @@ class SessionStore:
     def try_claim_session(self, session_id: str, worker_id: str, ttl_seconds: int = 60) -> bool:
         """Atomically claim a session for a worker."""
         import fcntl
-        from datetime import datetime, timedelta
+        from datetime import datetime
         state_path = self.get_state_path(session_id)
         lock_path = state_path.with_suffix(state_path.suffix + ".lock")
         with open(lock_path, "w") as lock_file:

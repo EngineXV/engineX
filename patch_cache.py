@@ -1,4 +1,3 @@
-import sys
 
 filepath = 'core/engine/llm/litellm.py'
 with open(filepath) as f:

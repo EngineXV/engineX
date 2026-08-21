@@ -5,7 +5,6 @@ instances bound to the same session id must share state through the
 session store.
 """
 
-import asyncio
 import json
 from datetime import datetime
 from pathlib import Path

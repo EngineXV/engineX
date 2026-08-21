@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 
+from engine.config import get_max_retries_per_node
 from engine.graph import Goal
 from engine.graph.edge import AsyncEntryPointSpec, EdgeCondition, EdgeSpec, GraphSpec
 from engine.graph.goal import Constraint, SuccessCriterion
@@ -115,7 +116,7 @@ def load_agent_export(data: str | dict) -> tuple[GraphSpec, Goal]:
         nodes=nodes,
         edges=edges,
         max_steps=graph_data.get("max_steps", 100),
-        max_retries_per_node=graph_data.get("max_retries_per_node", 3),
+        max_retries_per_node=graph_data.get("max_retries_per_node", get_max_retries_per_node()),
         description=graph_data.get("description", ""),
     )
 

@@ -5,6 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from engine.config import (
+    get_max_history_tokens,
+    get_max_tool_calls_per_turn,
+    get_tool_doom_loop_threshold,
+)
 from engine.graph.conversation import ConversationStore
 
 
@@ -13,10 +18,10 @@ class LoopConfig:
     """Configuration for the event loop"""
 
     max_iterations: int = 50
-    max_tool_calls_per_turn: int = 30
+    max_tool_calls_per_turn: int = field(default_factory=get_max_tool_calls_per_turn)
     judge_every_n_turns: int = 1
     stall_detection_threshold: int = 3
-    max_history_tokens: int = 32_000
+    max_history_tokens: int = field(default_factory=get_max_history_tokens)
     store_prefix: str = ""
 
     tool_call_overflow_margin: float = 0.5
@@ -28,7 +33,7 @@ class LoopConfig:
     stream_retry_backoff_base: float = 2.0
     stream_retry_max_delay: float = 60.0
 
-    tool_doom_loop_threshold: int = 3
+    tool_doom_loop_threshold: int = field(default_factory=get_tool_doom_loop_threshold)
     cf_grace_turns: int = 1
     tool_doom_loop_enabled: bool = True
 

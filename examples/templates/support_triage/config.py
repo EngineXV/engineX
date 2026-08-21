@@ -15,7 +15,9 @@ class AgentMetadata:
         "Triage inbound support messages, classify urgency, and draft a reply "
         "with human approval before sending."
     )
-    intro_message: str = "Paste a customer message and I'll classify it and draft a response."
+    intro_message: str = (
+        "Paste a customer message and I'll classify it and draft a response."
+    )
     skills: list[str] = field(default_factory=list)
 
 

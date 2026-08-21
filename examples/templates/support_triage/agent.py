@@ -23,9 +23,27 @@ goal = Goal(
 
 nodes = [intake_node, classify_node, review_node, finalize_node]
 edges = [
-    EdgeSpec(id="e1", source="intake", target="classify", condition=EdgeCondition.ON_SUCCESS, priority=1),
-    EdgeSpec(id="e2", source="classify", target="review", condition=EdgeCondition.ON_SUCCESS, priority=1),
-    EdgeSpec(id="e3", source="review", target="finalize", condition=EdgeCondition.ON_SUCCESS, priority=1),
+    EdgeSpec(
+        id="e1",
+        source="intake",
+        target="classify",
+        condition=EdgeCondition.ON_SUCCESS,
+        priority=1,
+    ),
+    EdgeSpec(
+        id="e2",
+        source="classify",
+        target="review",
+        condition=EdgeCondition.ON_SUCCESS,
+        priority=1,
+    ),
+    EdgeSpec(
+        id="e3",
+        source="review",
+        target="finalize",
+        condition=EdgeCondition.ON_SUCCESS,
+        priority=1,
+    ),
 ]
 
 graph = GraphSpec(

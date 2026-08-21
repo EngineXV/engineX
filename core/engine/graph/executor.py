@@ -7,6 +7,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from engine.config import (
+    get_feature_flag,
+    get_max_history_tokens,
+    get_max_tool_calls_per_turn,
+    get_tool_doom_loop_threshold,
+)
 from engine.graph.checkpoint_config import CheckpointConfig
 from engine.graph.constants import LEGACY_RUN_ID
 from engine.graph.edge import EdgeCondition, EdgeSpec, GraphSpec
@@ -38,7 +44,11 @@ class ExecutionResult:
     error: str | None = None
     steps_executed: int = 0
     total_tokens: int = 0
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
     total_latency_ms: int = 0
+    estimated_cost_usd: float = 0.0
+    node_costs: dict[str, dict[str, Any]] = field(default_factory=dict)
     path: list[str] = field(default_factory=list)  # Node IDs traversed
     paused_at: str | None = None  # Node ID where execution paused for HITL
     session_state: dict[str, Any] = field(default_factory=dict)  # State to resume from
@@ -392,6 +402,12 @@ class GraphExecutor:
         cumulative_tools: list = []  # Tools accumulate, never removed
         cumulative_tool_names: set[str] = set()
         cumulative_output_keys: list[str] = []  # Output keys from all visited nodes
+        total_tokens = 0
+        total_input_tokens = 0
+        total_output_tokens = 0
+        total_latency = 0
+        total_cost = 0.0
+        node_costs: dict[str, dict[str, Any]] = {}
 
         # Build node registry for subagent lookup
         node_registry: dict[str, NodeSpec] = {node.id: node for node in graph.nodes}
@@ -692,6 +708,13 @@ class GraphExecutor:
                     return ExecutionResult(
                         success=False,
                         output=saved_memory,
+                        steps_executed=steps,
+                        total_tokens=total_tokens,
+                        total_input_tokens=total_input_tokens,
+                        total_output_tokens=total_output_tokens,
+                        total_latency_ms=total_latency,
+                        estimated_cost_usd=total_cost,
+                        node_costs=dict(node_costs),
                         path=path,
                         paused_at=current_node_id,
                         error="Execution paused by user request",
@@ -935,7 +958,18 @@ class GraphExecutor:
                     self.logger.error(f"   FAIL: Failed: {result.error}")
 
                 total_tokens += result.tokens_used
+                total_input_tokens += result.input_tokens
+                total_output_tokens += result.output_tokens
                 total_latency += result.latency_ms
+                total_cost += result.estimated_cost_usd
+
+                node_costs[node_spec.id] = {
+                    "model": result.model_name,
+                    "input_tokens": result.input_tokens,
+                    "output_tokens": result.output_tokens,
+                    "tokens": result.tokens_used,
+                    "estimated_cost_usd": result.estimated_cost_usd,
+                }
 
                 # Handle failure
                 if not result.success:
@@ -1059,7 +1093,11 @@ class GraphExecutor:
                                 output=saved_memory,
                                 steps_executed=steps,
                                 total_tokens=total_tokens,
+                                total_input_tokens=total_input_tokens,
+                                total_output_tokens=total_output_tokens,
                                 total_latency_ms=total_latency,
+                                estimated_cost_usd=total_cost,
+                                node_costs=dict(node_costs),
                                 path=path,
                                 total_retries=total_retries_count,
                                 nodes_with_failures=nodes_failed,
@@ -1118,7 +1156,11 @@ class GraphExecutor:
                         output=saved_memory,
                         steps_executed=steps,
                         total_tokens=total_tokens,
+                        total_input_tokens=total_input_tokens,
+                        total_output_tokens=total_output_tokens,
                         total_latency_ms=total_latency,
+                        estimated_cost_usd=total_cost,
+                        node_costs=dict(node_costs),
                         path=path,
                         paused_at=node_spec.id,
                         session_state=session_state_out,
@@ -1428,11 +1470,15 @@ class GraphExecutor:
             # Collect output
             output = memory.read_all()
 
-            self.logger.info("\nOK: Execution complete!")
-            self.logger.info(f"   Steps: {steps}")
-            self.logger.info(f"   Path: {' → '.join(path)}")
-            self.logger.info(f"   Total tokens: {total_tokens}")
-            self.logger.info(f"   Total latency: {total_latency}ms")
+            self.logger.info(
+                f"   OK: Success "
+                f"(model={result.model_name}, "
+                f"input_tokens={result.input_tokens}, "
+                f"output_tokens={result.output_tokens}, "
+                f"tokens={result.tokens_used}, "
+                f"cost=${result.estimated_cost_usd:.6f}, "
+                f"latency={result.latency_ms}ms)"
+            )
 
             # Calculate execution quality metrics
             total_retries_count = sum(node_retry_counts.values())
@@ -1644,6 +1690,12 @@ class GraphExecutor:
                 error=str(e),
                 output=saved_memory,
                 steps_executed=steps,
+                total_tokens=total_tokens,
+                total_input_tokens=total_input_tokens,
+                total_output_tokens=total_output_tokens,
+                total_latency_ms=total_latency,
+                estimated_cost_usd=total_cost,
+                node_costs=dict(node_costs),
                 path=path,
                 total_retries=total_retries_count,
                 nodes_with_failures=nodes_failed,
@@ -1778,7 +1830,7 @@ class GraphExecutor:
 
             # Create a FileConversationStore if a storage path is available
             conv_store = None
-            if self._storage_path:
+            if self._storage_path and get_feature_flag("prompt_snapshot_storage"):
                 from engine.storage.conversation_store import FileConversationStore
 
                 store_path = self._storage_path / "conversations"
@@ -1801,11 +1853,16 @@ class GraphExecutor:
                 judge=None,  # implicit judge: accept when output_keys are filled
                 config=LoopConfig(
                     max_iterations=lc.get("max_iterations", default_max_iter),
-                    max_tool_calls_per_turn=lc.get("max_tool_calls_per_turn", 30),
+                    max_tool_calls_per_turn=lc.get(
+                        "max_tool_calls_per_turn", get_max_tool_calls_per_turn()
+                    ),
                     tool_call_overflow_margin=lc.get("tool_call_overflow_margin", 0.5),
                     stall_detection_threshold=lc.get("stall_detection_threshold", 3),
-                    max_history_tokens=lc.get("max_history_tokens", 32000),
+                    max_history_tokens=lc.get("max_history_tokens", get_max_history_tokens()),
                     max_tool_result_chars=lc.get("max_tool_result_chars", 30_000),
+                    tool_doom_loop_threshold=lc.get(
+                        "tool_doom_loop_threshold", get_tool_doom_loop_threshold()
+                    ),
                     spillover_dir=spillover,
                 ),
                 tool_executor=self.tool_executor,

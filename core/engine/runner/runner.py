@@ -6,7 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from engine.config import get_engine_config, get_preferred_model
+from engine.config import get_agent_config, get_engine_config, get_preferred_model
 from engine.credentials.validation import (
     ensure_credential_key_env as _ensure_credential_key_env,
 )
@@ -188,11 +188,16 @@ class AgentRunner:
 
             # Read model and max_tokens from agent's config if not explicitly provided
             agent_config = getattr(agent_module, "default_config", None)
+            config_override = get_agent_config(agent_path.name)
             if model is None:
-                if agent_config and hasattr(agent_config, "model"):
+                if config_override.get("model"):
+                    model = config_override["model"]
+                elif agent_config and hasattr(agent_config, "model"):
                     model = agent_config.model
 
-            if agent_config and hasattr(agent_config, "max_tokens"):
+            if config_override.get("max_tokens"):
+                max_tokens = config_override["max_tokens"]
+            elif agent_config and hasattr(agent_config, "max_tokens"):
                 max_tokens = agent_config.max_tokens
             else:
                 engine_config = get_engine_config()
@@ -216,8 +221,25 @@ class AgentRunner:
                 "pause_nodes": getattr(agent_module, "pause_nodes", []),
                 "nodes": nodes,
                 "edges": edges,
+                "default_model": model or get_preferred_model(),
                 "max_tokens": max_tokens,
-                "loop_config": getattr(agent_module, "loop_config", {}),
+                "max_retries_per_node": config_override.get("max_retries_per_node", 3),
+                "loop_config": {
+                    **getattr(agent_module, "loop_config", {}),
+                    **{
+                        k: v
+                        for k, v in config_override.items()
+                        if k
+                        in {
+                            "max_iterations",
+                            "max_tool_calls_per_turn",
+                            "max_history_tokens",
+                            "cost_budget",
+                            "context_policy",
+                        }
+                        and v is not None
+                    },
+                },
             }
             # Only pass optional fields if explicitly defined by the agent module
             conversation_mode = getattr(agent_module, "conversation_mode", None)
@@ -228,6 +250,11 @@ class AgentRunner:
                 graph_kwargs["identity_prompt"] = identity_prompt
 
             graph = GraphSpec(**graph_kwargs)
+
+            if config_override.get("max_retries_per_node"):
+                for node in graph.nodes:
+                    if getattr(node, "max_retries", 3) == 3:
+                        node.max_retries = config_override["max_retries_per_node"]
 
             # Read runtime config (webhook settings, etc.) if defined
             agent_runtime_config = getattr(agent_module, "runtime_config", None)

@@ -1,0 +1,5 @@
+"hitl": {
+  "minimum_confidence": 0.75,
+  "maximum_financial_risk": 0.8,
+  "critical_flag_prefixes": ["critical", "fatal", "deny"]
+}

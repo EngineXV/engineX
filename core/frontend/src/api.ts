@@ -83,6 +83,10 @@ export interface OpsRun {
   status: string;
   started_at?: string;
   ended_at?: string;
+  total_tokens: number;
+  total_input_tokens?: number;
+  total_output_tokens?: number;
+  estimated_cost_usd: number;
   checkpoint_count: number;
   latest_checkpoint_id?: string | null;
   error?: string;

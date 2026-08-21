@@ -1,12 +1,12 @@
 """Configuration metadata for Medical Billing Auditor agent."""
 
 from dataclasses import dataclass
-from engine.config import RuntimeConfig   # <-- Add this
+from engine.config import RuntimeConfig  # <-- Add this
 
-default_config = RuntimeConfig()          # <-- Add this
+default_config = RuntimeConfig()  # <-- Add this
 
 # Optional env-based credentials; validated at tool runtime.
-skip_credential_validation = True         # <-- Add this
+skip_credential_validation = True  # <-- Add this
 
 
 @dataclass

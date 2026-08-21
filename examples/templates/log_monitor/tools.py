@@ -19,7 +19,9 @@ def _is_daemon_mode() -> bool:
     return os.environ.get("LOG_MONITOR_DAEMON", "").lower() in {"1", "true", "yes"}
 
 
-@tool(description="Validate production config and integration health before monitoring.")
+@tool(
+    description="Validate production config and integration health before monitoring."
+)
 def preflight_check(require_live: bool = False) -> dict[str, Any]:
     errors = validate_production_config(require_live=require_live)
     health = check_all(ping_slack=False)
@@ -31,18 +33,24 @@ def preflight_check(require_live: bool = False) -> dict[str, Any]:
     }
 
 
-@tool(description="Run one monitoring tick: Grafana fetch, dedup, and rule-based scoring.")
+@tool(
+    description="Run one monitoring tick: Grafana fetch, dedup, and rule-based scoring."
+)
 def run_log_monitor_pipeline() -> dict[str, Any]:
     return run_monitor_tick()
 
 
 @tool(description="Send a Slack alert for an incident.")
-def notify_slack(severity: str, title: str, body: str, fingerprint: str = "") -> dict[str, Any]:
+def notify_slack(
+    severity: str, title: str, body: str, fingerprint: str = ""
+) -> dict[str, Any]:
     return send_slack_alert(severity, title, body, fingerprint=fingerprint)
 
 
 @tool(description="Trigger PagerDuty for SEVERE incidents.")
-def notify_pagerduty(severity: str, title: str, body: str, fingerprint: str) -> dict[str, Any]:
+def notify_pagerduty(
+    severity: str, title: str, body: str, fingerprint: str
+) -> dict[str, Any]:
     return send_pagerduty_alert(severity, title, body, fingerprint)
 
 

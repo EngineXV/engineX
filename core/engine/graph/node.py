@@ -468,6 +468,11 @@ class NodeResult:
     tokens_used: int = 0
     latency_ms: int = 0
 
+    # FinOps metadata
+    input_tokens: int = 0
+    output_tokens: int = 0
+    model_name: str = ""
+    estimated_cost_usd: float = 0.0
     # Pydantic validation errors (if any)
     validation_errors: list[str] = field(default_factory=list)
 

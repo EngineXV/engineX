@@ -12,6 +12,19 @@ from engine.runner.server_cli import cmd_open, cmd_serve
 def register_commands(subparsers: argparse._SubParsersAction) -> None:
     """Register runner commands with the main CLI"""
 
+    config_parser = subparsers.add_parser(
+        "config",
+        help="Inspect and validate ~/.engine/configuration.json",
+        description="Inspect, validate, and manage Engine configuration.",
+    )
+    config_subparsers = config_parser.add_subparsers(dest="config_command", required=True)
+    config_validate = config_subparsers.add_parser(
+        "validate",
+        help="Validate ~/.engine/configuration.json",
+        description="Validate the shared Engine configuration file before runtime uses it.",
+    )
+    config_validate.set_defaults(func=cmd_config_validate)
+
     # run command
     run_parser = subparsers.add_parser(
         "run",
@@ -774,6 +787,23 @@ def cmd_validate(args: argparse.Namespace) -> int:
         print("\nTo fix: Create tools.py in the agent folder or register tools programmatically")
 
     runner.cleanup()
+    return 0 if validation.valid else 1
+
+
+def cmd_config_validate(args: argparse.Namespace) -> int:
+    from engine.config import validate_engine_config
+
+    validation = validate_engine_config()
+    if validation.valid:
+        print("OK: Configuration is valid")
+    else:
+        print("FAIL: Configuration has errors:")
+        for error in validation.errors:
+            print(f"  ERROR: {error}")
+    if validation.warnings:
+        print("\nWarnings:")
+        for warning in validation.warnings:
+            print(f"  WARNING: {warning}")
     return 0 if validation.valid else 1
 
 

@@ -62,10 +62,7 @@ def _parse_loki_response(payload: dict[str, Any]) -> list[LogEntry]:
     for stream in payload.get("data", {}).get("result", []):
         labels = stream.get("stream", {})
         service = (
-            labels.get("service")
-            or labels.get("app")
-            or labels.get("job")
-            or "unknown"
+            labels.get("service") or labels.get("app") or labels.get("job") or "unknown"
         )
         level = labels.get("level") or labels.get("severity") or "error"
         for value_pair in stream.get("values", []):

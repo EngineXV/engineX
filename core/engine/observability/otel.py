@@ -6,6 +6,8 @@ import logging
 import os
 from typing import Any
 
+from engine.config import get_feature_flag
+
 logger = logging.getLogger(__name__)
 
 _configured = False
@@ -14,6 +16,8 @@ _configured = False
 def configure_otel_if_enabled() -> dict[str, Any]:
     """Configure OTLP export when OTEL_EXPORTER_OTLP_ENDPOINT is set."""
     global _configured
+    if not get_feature_flag("otel_export"):
+        return {"enabled": False, "reason": "otel_export disabled in config"}
     endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
     if not endpoint:
         return {"enabled": False, "reason": "OTEL_EXPORTER_OTLP_ENDPOINT not set"}

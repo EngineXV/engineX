@@ -66,6 +66,8 @@ class NodeDetail(BaseModel):
     tokens_used: int = 0  # combined input+output from NodeResult
     input_tokens: int = 0
     output_tokens: int = 0
+    model_name: str = ""
+    estimated_cost_usd: float = 0.0
     latency_ms: int = 0
     attempt: int = 1  # retry attempt number
     # EventLoopNode-specific:
@@ -79,6 +81,19 @@ class NodeDetail(BaseModel):
     # OTel / trace context (from observability; empty if not set):
     trace_id: str = ""
     span_id: str = ""  # Optional node-level span for hierarchy
+
+
+class NodeCostLog(BaseModel):
+    """Structured per-node token and cost breakdown."""
+
+    node_id: str
+    node_name: str = ""
+    node_type: str = ""
+    model_name: str = ""
+    tokens_used: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    estimated_cost_usd: float = 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -95,8 +110,11 @@ class RunSummaryLog(BaseModel):
     status: str = ""  # "success"|"failure"|"degraded"
     total_nodes_executed: int = 0
     node_path: list[str] = Field(default_factory=list)
+    total_tokens: int = 0
     total_input_tokens: int = 0
     total_output_tokens: int = 0
+    estimated_cost_usd: float = 0.0
+    node_costs: list[NodeCostLog] = Field(default_factory=list)
     needs_attention: bool = False
     attention_reasons: list[str] = Field(default_factory=list)
     started_at: str = ""  # ISO timestamp

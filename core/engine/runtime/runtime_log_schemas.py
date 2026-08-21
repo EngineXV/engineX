@@ -35,6 +35,10 @@ class NodeStepLog(BaseModel):
     input_tokens: int = 0
     output_tokens: int = 0
     latency_ms: int = 0
+    # Cost attribution (issue #45):
+    cost_usd: float = 0.0  # USD cost for this step's LLM call(s)
+    attempt: int = 1  # 1-based retry attempt number; each retry is a separate log entry
+    model: str = ""  # LLM model used for this step
     # EventLoopNode only:
     verdict: str = ""  # "ACCEPT"|"RETRY"|"ESCALATE"|"CONTINUE"
     verdict_feedback: str = ""
@@ -71,6 +75,8 @@ class NodeDetail(BaseModel):
     estimated_cost_usd: float = 0.0
     latency_ms: int = 0
     attempt: int = 1  # retry attempt number
+    # Cost attribution (issue #45):
+    cost_usd: float = 0.0  # total USD cost for this node across all steps
     # EventLoopNode-specific:
     exit_status: str = ""  # "success"|"failure"|"stalled"|"escalated"|"paused"|"guard_failure"
     accept_count: int = 0
@@ -116,6 +122,8 @@ class RunSummaryLog(BaseModel):
     total_output_tokens: int = 0
     estimated_cost_usd: float = 0.0
     node_costs: list[NodeCostLog] = Field(default_factory=list)
+    # Cost attribution (issue #45):
+    total_cost_usd: float = 0.0  # total USD spend for this run
     needs_attention: bool = False
     attention_reasons: list[str] = Field(default_factory=list)
     started_at: str = ""  # ISO timestamp

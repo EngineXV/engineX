@@ -5,6 +5,7 @@ import asyncio
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 from engine.runner.server_cli import cmd_open, cmd_serve
 
@@ -249,6 +250,41 @@ def register_commands(subparsers: argparse._SubParsersAction) -> None:
     open_parser.add_argument("--model", "-m", type=str, default=None)
     open_parser.add_argument("--debug", action="store_true")
     open_parser.set_defaults(func=cmd_open)
+
+    # cost-tree command (issue #45)
+    cost_tree_parser = subparsers.add_parser(
+        "cost-tree",
+        help="Print cost attribution waterfall for a session",
+        description=(
+            "Surface hidden retry and nested call costs for a single session.\n"
+            "Reads persisted log files — no agent or LLM calls are made."
+        ),
+    )
+    cost_tree_parser.add_argument(
+        "session_id",
+        type=str,
+        help="Session ID to inspect (e.g. session_20260719_115000_abc12345)",
+    )
+    cost_tree_parser.add_argument(
+        "--agent",
+        "-a",
+        type=str,
+        default=None,
+        help="Agent name or path (optional; auto-discovered if omitted)",
+    )
+    cost_tree_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output cost tree as JSON instead of the human-readable waterfall",
+    )
+    cost_tree_parser.add_argument(
+        "--top",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Show only the top N most expensive nodes",
+    )
+    cost_tree_parser.set_defaults(func=cmd_cost_tree)
 
 
 def _load_resume_state(
@@ -649,7 +685,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                             print(value)
                             shown = True
                             break
-                        elif isinstance(value, (dict, list)):
+                        elif isinstance(value, dict | list):
                             print(json.dumps(value, indent=2, default=str))
                             shown = True
                             break
@@ -664,7 +700,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                             "user_profile",
                             "recent_context",
                         ]:
-                            if isinstance(value, (dict, list)):
+                            if isinstance(value, dict | list):
                                 print(f"\n{key}:")
                                 value_str = json.dumps(value, indent=2, default=str)
                                 if len(value_str) > 300:
@@ -884,7 +920,7 @@ def _interactive_approval(request):
         print("\n--- Content to be sent ---")
         for key, value in request.context.items():
             print(f"\n[{key}]:")
-            if isinstance(value, (dict, list)):
+            if isinstance(value, dict | list):
                 import json
 
                 value_str = json.dumps(value, indent=2, default=str)
@@ -1568,3 +1604,115 @@ def cmd_setup_credentials(args: argparse.Namespace) -> int:
 
     result = session.run_interactive()
     return 0 if result.success else 1
+
+
+def _find_session_log_store(
+    session_id: str, agent_hint: str | None = None
+) -> "tuple[str, Any] | None":
+    """Locate the RuntimeLogStore for *session_id*.
+
+    Searches ``~/.engine/agents/`` for a matching session directory.
+    If *agent_hint* is provided it is tried first.
+    Returns ``(agent_id, RuntimeLogStore)`` or ``None`` if not found.
+    """
+    from engine.runtime.runtime_log_store import RuntimeLogStore
+
+    engine_home = Path.home() / ".engine" / "agents"
+    if not engine_home.is_dir():
+        return None
+
+    candidates: list[Path] = []
+    if agent_hint:
+        # Try explicit agent name first
+        agent_path = Path(agent_hint)
+        if not agent_path.is_absolute():
+            agent_path = engine_home / agent_hint
+        if agent_path.is_dir():
+            candidates.insert(0, agent_path)
+
+    # Then scan all agent dirs
+    for agent_dir in sorted(engine_home.iterdir()):
+        if agent_dir.is_dir() and agent_dir not in candidates:
+            candidates.append(agent_dir)
+
+    for agent_dir in candidates:
+        session_dir = agent_dir / "sessions" / session_id
+        if session_dir.is_dir() and (session_dir / "logs").is_dir():
+            store = RuntimeLogStore(agent_dir)
+            return agent_dir.name, store
+
+    return None
+
+
+def cmd_cost_tree(args: argparse.Namespace) -> int:
+    """Print a cost attribution waterfall for a session (issue #45).
+
+    Usage::
+
+        engine cost-tree session_20260719_115000_abc12345
+        engine cost-tree session_20260719_115000_abc12345 --json
+        engine cost-tree session_20260719_115000_abc12345 --agent my-agent --top 5
+    """
+    import asyncio
+
+    from engine.observability.cost_alerts import CostAlertStore
+    from engine.observability.cost_attribution import build_cost_tree, format_cost_waterfall
+
+    session_id = args.session_id
+    agent_hint = getattr(args, "agent", None)
+    as_json = getattr(args, "json", False)
+    top_n = getattr(args, "top", None)
+
+    # --- Locate log store ---
+    found = _find_session_log_store(session_id, agent_hint)
+    if found is None:
+        print(
+            f"Error: session '{session_id}' not found under ~/.engine/agents/.\n"
+            "Tip: pass --agent <agent_name> if the agent lives in a custom location.",
+            file=sys.stderr,
+        )
+        return 1
+
+    agent_id, log_store = found
+
+    # --- Build cost tree ---
+    try:
+        tree = asyncio.run(build_cost_tree(session_id, log_store))
+    except Exception as exc:
+        print(f"Error building cost tree: {exc}", file=sys.stderr)
+        return 1
+
+    tree.agent_id = tree.agent_id or agent_id
+
+    # --- Alert check ---
+    alert = None
+    if tree.total_cost_usd > 0:
+        try:
+            alert_store = CostAlertStore(agent_id=agent_id)
+            alert = alert_store.check_alert(
+                session_id=session_id,
+                cost_usd=tree.total_cost_usd,
+                flags=tree.flags,
+            )
+        except Exception:
+            pass  # Alert check is best-effort
+
+    # --- Output ---
+    if as_json:
+        data = tree.model_dump()
+        if alert:
+            data["alert"] = alert.model_dump()
+        print(json.dumps(data, indent=2, default=str))
+    else:
+        print(format_cost_waterfall(tree, top_n=top_n))
+        if alert:
+            print()
+            print("=" * 65)
+            print(f"⚠  COST ALERT: {alert.summary}")
+            print(
+                f"   Threshold: {alert.threshold:.0f}× median  "
+                f"(median=${alert.median_cost_usd:.6f})"
+            )
+            print("=" * 65)
+
+    return 0

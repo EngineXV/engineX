@@ -10,6 +10,7 @@ from typing import Any
 
 from engine.llm.model_catalog import estimate_cost_usd
 from engine.observability import get_trace_context
+from engine.observability.cost_attribution import CostEntry, _compute_cost_usd
 from engine.runtime.runtime_log_schemas import (
     NodeCostLog,
     NodeDetail,
@@ -83,6 +84,10 @@ class RuntimeLogger:
         error: str = "",
         stacktrace: str = "",
         is_partial: bool = False,
+        # Cost attribution (issue #45):
+        cost_usd: float = 0.0,
+        attempt: int = 1,
+        model: str = "",
     ) -> None:
         """Record data for one step within a node"""
         if tool_calls is None:
@@ -117,6 +122,9 @@ class RuntimeLogger:
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             latency_ms=latency_ms,
+            cost_usd=cost_usd,
+            attempt=attempt,
+            model=model,
             verdict=verdict,
             verdict_feedback=verdict_feedback,
             error=error,
@@ -129,6 +137,40 @@ class RuntimeLogger:
 
         with self._lock:
             self._store.append_step(self._run_id, step_log)
+
+            # --- Write CostEntry for the LLM invocation ---
+            if input_tokens or output_tokens or cost_usd:
+                llm_cost = cost_usd or _compute_cost_usd(
+                    model=model, input_tokens=input_tokens, output_tokens=output_tokens
+                )
+                llm_entry = CostEntry(
+                    session_id=self._run_id,
+                    node_id=node_id,
+                    attempt=attempt,
+                    step_index=step_index,
+                    invocation_type="llm",
+                    model=model,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    cost_usd=llm_cost,
+                    duration_s=latency_ms / 1000.0,
+                )
+                self._store.append_cost_entry(self._run_id, llm_entry)
+
+            # --- Write CostEntry for each tool call ---
+            for tc in tool_calls:
+                tool_entry = CostEntry(
+                    session_id=self._run_id,
+                    node_id=node_id,
+                    attempt=attempt,
+                    step_index=step_index,
+                    invocation_type="tool",
+                    model="",
+                    tool_name=tc.get("tool_name", ""),
+                    cost_usd=0.0,
+                    duration_s=tc.get("duration_s", 0.0),
+                )
+                self._store.append_cost_entry(self._run_id, tool_entry)
 
     def log_node_complete(
         self,
@@ -152,11 +194,17 @@ class RuntimeLogger:
         continue_count: int = 0,
         model_name: str = "",
         estimated_cost_usd: float | None = None,
+        # Cost attribution (issue #45):
+        cost_usd: float = 0.0,
     ) -> None:
         """Record completion of a node"""
         if estimated_cost_usd is None and model_name:
             estimated_cost_usd = estimate_cost_usd(model_name, input_tokens, output_tokens)
         estimated_cost_usd = float(estimated_cost_usd or 0.0)
+        if not cost_usd and estimated_cost_usd:
+            cost_usd = estimated_cost_usd
+        elif cost_usd and not estimated_cost_usd:
+            estimated_cost_usd = float(cost_usd)
 
         needs_attention = not success
         attention_reasons: list[str] = []
@@ -204,6 +252,7 @@ class RuntimeLogger:
             estimated_cost_usd=estimated_cost_usd,
             latency_ms=latency_ms,
             attempt=attempt,
+            cost_usd=cost_usd,
             exit_status=exit_status,
             accept_count=accept_count,
             retry_count=retry_count,
@@ -277,8 +326,12 @@ class RuntimeLogger:
         duration_ms: int,
         node_path: list[str] | None = None,
         execution_quality: str = "",
+        agent_id: str = "",
     ) -> None:
-        """Read L2 from disk, aggregate into L1, write summary.json"""
+        """Read L2 from disk, aggregate into L1, write summary.json.
+
+        Also evaluates the 3× median cost alert rule (issue #45).
+        """
         try:
             # Read L2 back from disk to aggregate into L1
             node_details = self._store.read_node_details_sync(self._run_id)
@@ -286,7 +339,10 @@ class RuntimeLogger:
             total_input = sum(nd.input_tokens for nd in node_details)
             total_output = sum(nd.output_tokens for nd in node_details)
             total_tokens = sum(nd.tokens_used for nd in node_details)
-            total_cost_usd = sum(nd.estimated_cost_usd for nd in node_details)
+            total_cost_usd = sum(
+                (nd.cost_usd or nd.estimated_cost_usd) for nd in node_details
+            )
+            total_cost = total_cost_usd
 
             node_costs = [
                 NodeCostLog(
@@ -297,7 +353,7 @@ class RuntimeLogger:
                     tokens_used=nd.tokens_used,
                     input_tokens=nd.input_tokens,
                     output_tokens=nd.output_tokens,
-                    estimated_cost_usd=nd.estimated_cost_usd,
+                    estimated_cost_usd=nd.estimated_cost_usd or nd.cost_usd,
                 ).model_dump()
                 for nd in node_details
             ]
@@ -314,7 +370,7 @@ class RuntimeLogger:
 
             summary = RunSummaryLog(
                 run_id=self._run_id,
-                agent_id=self._agent_id,
+                agent_id=agent_id or self._agent_id,
                 goal_id=self._goal_id,
                 status=status,
                 total_nodes_executed=len(node_details),
@@ -324,6 +380,7 @@ class RuntimeLogger:
                 total_output_tokens=total_output,
                 estimated_cost_usd=total_cost_usd,
                 node_costs=node_costs,
+                total_cost_usd=total_cost,
                 needs_attention=needs_attention,
                 attention_reasons=attention_reasons,
                 started_at=self._started_at,
@@ -346,13 +403,31 @@ class RuntimeLogger:
                     labels={"run_id": self._run_id, "node_id": str(node_cost.get("node_id", ""))},
                 )
             logger.info(
-                "Runtime logs saved: run_id=%s status=%s nodes=%d tokens=%d cost=$%.4f",
+                "Runtime logs saved: run_id=%s status=%s nodes=%d tokens=%d cost=$%.6f",
                 self._run_id,
                 status,
                 len(node_details),
                 total_tokens,
                 total_cost_usd,
             )
+
+            # --- 3× median cost alert rule (issue #45) ---
+            _effective_agent_id = agent_id or self._agent_id
+            if _effective_agent_id and total_cost > 0:
+                try:
+                    from engine.observability.cost_alerts import CostAlertStore
+
+                    alert_store = CostAlertStore(agent_id=_effective_agent_id)
+                    alert_store.record_run_cost(session_id=self._run_id, cost_usd=total_cost)
+                    alert = alert_store.check_alert(session_id=self._run_id, cost_usd=total_cost)
+                    if alert:
+                        logger.warning(
+                            "COST ALERT: %s",
+                            alert.summary,
+                        )
+                except Exception:
+                    logger.debug("Cost alert evaluation skipped", exc_info=True)
+
         except Exception:
             logger.exception(
                 "Failed to save runtime logs for run_id=%s (non-fatal)",

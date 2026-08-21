@@ -137,3 +137,44 @@ class SessionStore:
             return self.get_state_path(session_id).exists()
 
         return await asyncio.to_thread(_check)
+
+    def try_claim_session(self, session_id: str, worker_id: str, ttl_seconds: int = 60) -> bool:
+        """Atomically claim a session for a worker."""
+        import fcntl
+        from datetime import datetime, timedelta
+        state_path = self.get_state_path(session_id)
+        lock_path = state_path.with_suffix(state_path.suffix + ".lock")
+        with open(lock_path, "w") as lock_file:
+            try:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                return False
+            state = self.read_state_sync(session_id)
+            if state is None:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                return False
+            if state.claimed_by and state.claimed_at:
+                elapsed = datetime.utcnow() - state.claimed_at
+                if elapsed.total_seconds() < ttl_seconds:
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                    return False
+            state.claimed_by = worker_id
+            state.claimed_at = datetime.utcnow()
+            self.write_state_sync(session_id, state)
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            return True
+
+    def release_claim(self, session_id: str, worker_id: str) -> bool:
+        """Release a claim if held by this worker."""
+        state = self.read_state_sync(session_id)
+        if state is None or state.claimed_by != worker_id:
+            return False
+        state.claimed_by = None
+        state.claimed_at = None
+        self.write_state_sync(session_id, state)
+        return True
+
+    def write_state_sync(self, session_id: str, state: SessionState) -> None:
+        """Synchronous wrapper around async write_state."""
+        import asyncio
+        asyncio.run(self.write_state(session_id, state))

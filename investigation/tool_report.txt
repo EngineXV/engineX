@@ -1,0 +1,918 @@
+========== TOOL DECORATORS ==========
+core/tests/test_conversation_judge.py:29:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/tests/test_conversation_judge.py:30:from engine.llm.stream_events import FinishEvent, TextDeltaEvent, ToolCallEvent
+core/tests/test_conversation_judge.py:52:        tools: list[Tool] | None = None,
+core/tests/test_conversation_judge.py:75:        ToolCallEvent(
+core/tests/test_conversation_judge.py:87:        ToolCallEvent(
+examples/templates/deep_research/tools.py:1:"""Tools for Deep Research agent — search, scrape, and report file helpers."""
+examples/templates/deep_research/tools.py:14:from engine.runner.tool_registry import tool
+examples/templates/deep_research/tools.py:70:@tool(
+examples/templates/deep_research/tools.py:126:@tool(description="Fetch a URL and return extracted page text.")
+examples/templates/deep_research/tools.py:170:@tool(description="Save text content to a file in the agent data directory.")
+examples/templates/deep_research/tools.py:190:@tool(description="Append text to a file in the agent data directory.")
+examples/templates/deep_research/tools.py:211:@tool(description="Load a slice of a file from the agent data directory.")
+examples/templates/deep_research/tools.py:243:@tool(description="List files in the agent data directory.")
+examples/templates/deep_research/tools.py:261:@tool(description="Return a file URI for the user (optionally open in browser).")
+core/tests/test_node_conversation.py:818:        """Tool errors persist and restore with ERROR: prefix in LLM output."""
+core/tests/test_node_conversation.py:1178:class TestExtractToolCallHistory:
+core/tests/test_node_conversation.py:1443:        """Tool history should only be appended at depth 0."""
+core/tests/test_node_conversation.py:1462:class TestRepairOrphanedToolCalls:
+core/tests/test_node_conversation.py:1466:        """Tool result with no matching tool_use should be dropped."""
+core/tests/test_node_conversation.py:1479:        """Tool result with matching tool_use should be kept."""
+core/tests/test_node_conversation.py:1494:        """Tool use with no following tool result gets a synthetic error stub."""
+core/tests/test_event_loop_node.py:25:from engine.llm.provider import LLMProvider, LLMResponse, Tool, ToolResult, ToolUse
+core/tests/test_event_loop_node.py:30:    ToolCallEvent,
+core/tests/test_event_loop_node.py:57:        tools: list[Tool] | None = None,
+core/tests/test_event_loop_node.py:98:        ToolCallEvent(tool_use_id=tool_use_id, tool_name=tool_name, tool_input=tool_input)
+core/tests/test_event_loop_node.py:655:                    ToolCallEvent(
+core/tests/test_event_loop_node.py:658:                    ToolCallEvent(tool_use_id="ask_1", tool_name="ask_user", tool_input={}),
+core/tests/test_event_loop_node.py:667:        def my_executor(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_node.py:668:            return ToolResult(tool_use_id=tool_use.id, content="result", is_error=False)
+core/tests/test_event_loop_node.py:675:            runtime, spec, memory, llm, tools=[Tool(name="search", description="", parameters={})]
+core/tests/test_event_loop_node.py:838:        def my_executor(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_node.py:839:            return ToolResult(tool_use_id=tool_use.id, content="saved", is_error=False)
+core/tests/test_event_loop_node.py:856:                # Tool calls reset _cf_expecting_work -> should auto-block
+core/tests/test_event_loop_node.py:876:            tools=[Tool(name="save_data", description="save", parameters={})],
+core/tests/test_event_loop_node.py:910:        def my_executor(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_node.py:911:            return ToolResult(tool_use_id=tool_use.id, content="saved", is_error=False)
+core/tests/test_event_loop_node.py:948:            tools=[Tool(name="save_data", description="save", parameters={})],
+core/tests/test_event_loop_node.py:966:# Tool execution
+core/tests/test_event_loop_node.py:970:class TestToolExecution:
+core/tests/test_event_loop_node.py:973:        """Tool call -> result fed back to conversation via stream loop."""
+core/tests/test_event_loop_node.py:976:        def my_tool_executor(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_node.py:977:            return ToolResult(
+core/tests/test_event_loop_node.py:997:            tools=[Tool(name="search", description="Search", parameters={})],
+core/tests/test_event_loop_node.py:1520:# Tool doom loop detection (ITEM 1)
+core/tests/test_event_loop_node.py:1524:class TestFingerprintToolCalls:
+core/tests/test_event_loop_node.py:1558:class TestIsToolDoomLoop:
+core/tests/test_event_loop_node.py:1596:class ToolRepeatLLM(LLMProvider):
+core/tests/test_event_loop_node.py:1624:            yield ToolCallEvent(
+core/tests/test_event_loop_node.py:1654:class TestToolDoomLoopIntegration:
+core/tests/test_event_loop_node.py:1657:    Uses ToolRepeatLLM: returns tool calls for first N calls, then text.
+core/tests/test_event_loop_node.py:1684:        llm = ToolRepeatLLM("search", {"q": "hello"}, tool_turns=3)
+core/tests/test_event_loop_node.py:1686:        def tool_exec(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_node.py:1687:            return ToolResult(
+core/tests/test_event_loop_node.py:1698:            tools=[Tool(name="search", description="s", parameters={})],
+core/tests/test_event_loop_node.py:1732:        llm = ToolRepeatLLM("search", {"q": "hello"}, tool_turns=3)
+core/tests/test_event_loop_node.py:1740:        def tool_exec(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_node.py:1741:            return ToolResult(
+core/tests/test_event_loop_node.py:1752:            tools=[Tool(name="search", description="s", parameters={})],
+core/tests/test_event_loop_node.py:1789:        llm = ToolRepeatLLM("search", {"q": "hello"}, tool_turns=4)
+core/tests/test_event_loop_node.py:1791:        def tool_exec(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_node.py:1792:            return ToolResult(
+core/tests/test_event_loop_node.py:1803:            tools=[Tool(name="search", description="s", parameters={})],
+core/tests/test_event_loop_node.py:1846:                    yield ToolCallEvent(
+core/tests/test_event_loop_node.py:1879:        def tool_exec(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_node.py:1880:            return ToolResult(
+core/tests/test_event_loop_node.py:1891:            tools=[Tool(name="search", description="s", parameters={})],
+core/tests/test_event_loop_node.py:1932:        llm = ToolRepeatLLM("failing_tool", {}, tool_turns=4)
+core/tests/test_event_loop_node.py:1940:        def tool_exec(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_node.py:1941:            return ToolResult(
+core/tests/test_event_loop_node.py:1952:            tools=[Tool(name="failing_tool", description="s", parameters={})],
+examples/templates/supervisors/supervisor_factory.py:42:**Tools — action plan**
+examples/templates/supervisors/supervisor_factory.py:47:**Tools — worker**
+core/tests/test_litellm_streaming.py:23:from engine.llm.provider import Tool
+core/tests/test_litellm_streaming.py:29:    ToolCallEvent,
+core/tests/test_litellm_streaming.py:78:WEATHER_TOOL = Tool(
+core/tests/test_litellm_streaming.py:93:SEARCH_TOOL = Tool(
+core/tests/test_litellm_streaming.py:112:CALCULATOR_TOOL = Tool(
+core/tests/test_litellm_streaming.py:209:class TestRealAPIToolCallStreaming:
+core/tests/test_litellm_streaming.py:240:        tool_calls = [e for e in events if isinstance(e, ToolCallEvent)]
+core/tests/test_litellm_streaming.py:241:        assert len(tool_calls) >= 1, "No ToolCallEvent received"
+core/tests/test_litellm_streaming.py:287:        tool_calls = [e for e in events if isinstance(e, ToolCallEvent)]
+core/tests/test_litellm_streaming.py:289:            f"Expected 2+ ToolCallEvents for parallel requests, got {len(tool_calls)}"
+core/tests/test_litellm_streaming.py:343:            # Tool call streaming
+core/tests/test_continuous_conversation.py:8:  - Tools accumulate across nodes in continuous mode
+core/tests/test_continuous_conversation.py:30:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/tests/test_continuous_conversation.py:31:from engine.llm.stream_events import FinishEvent, TextDeltaEvent, ToolCallEvent
+core/tests/test_continuous_conversation.py:51:        tools: list[Tool] | None = None,
+core/tests/test_continuous_conversation.py:74:        ToolCallEvent(
+core/tests/test_continuous_conversation.py:87:        ToolCallEvent(
+core/tests/test_continuous_conversation.py:119:def _make_tool(name: str) -> Tool:
+core/tests/test_continuous_conversation.py:120:    return Tool(
+core/tests/test_continuous_conversation.py:122:        description=f"Tool {name}",
+core/tests/test_continuous_conversation.py:381:class TestCumulativeTools:
+core/tests/test_litellm_provider.py:23:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/tests/test_litellm_provider.py:137:            Tool(
+core/tests/test_litellm_provider.py:157:class TestToolConversion:
+core/tests/test_litellm_provider.py:161:        """Test converting Tool to OpenAI format."""
+core/tests/test_litellm_provider.py:164:        tool = Tool(
+core/tests/test_tool_registry.py:1:"""Tests for ToolRegistry JSON handling when tools return invalid JSON.
+core/tests/test_tool_registry.py:5:ToolResult instances. Historically, invalid JSON in ToolResult.content
+core/tests/test_tool_registry.py:12:from engine.runner.tool_registry import ToolRegistry
+core/tests/test_tool_registry.py:23:    """ToolRegistry should not crash when tool_executor returns invalid JSON."""
+core/tests/test_tool_registry.py:25:        from engine.llm.provider import Tool, ToolUse, ToolResult
+core/tests/test_tool_registry.py:28:            "bad_tool": Tool(
+core/tests/test_tool_registry.py:35:        def tool_executor(tool_use: ToolUse) -> ToolResult:
+core/tests/test_tool_registry.py:37:            return ToolResult(
+core/tests/test_tool_registry.py:45:    registry = ToolRegistry()
+core/tests/test_tool_registry.py:62:    """ToolRegistry should handle empty ToolResult.content gracefully."""
+core/tests/test_tool_registry.py:64:        from engine.llm.provider import Tool, ToolUse, ToolResult
+core/tests/test_tool_registry.py:67:            "empty_tool": Tool(
+core/tests/test_tool_registry.py:74:        def tool_executor(tool_use: ToolUse) -> ToolResult:
+core/tests/test_tool_registry.py:75:            return ToolResult(
+core/tests/test_tool_registry.py:83:    registry = ToolRegistry()
+core/tests/test_execution_stream.py:11:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/tests/test_execution_stream.py:12:from engine.llm.stream_events import FinishEvent, StreamEvent, TextDeltaEvent, ToolCallEvent
+core/tests/test_execution_stream.py:33:        tools: list[Tool] | None = None,
+core/tests/test_execution_stream.py:45:        tools: list[Tool] | None = None,
+core/tests/test_execution_stream.py:55:            yield ToolCallEvent(
+examples/templates/hourly_tracking/tools.py:1:"""Tools for Hourly Tracking Agent."""
+examples/templates/hourly_tracking/tools.py:7:from engine.runner.tool_registry import tool
+examples/templates/hourly_tracking/tools.py:12:@tool(description="Fetch broker transactions from last hour.")
+examples/templates/hourly_tracking/tools.py:28:@tool(description="Fetch investor logs from last hour.")
+examples/templates/hourly_tracking/tools.py:44:@tool(description="Normalize raw transaction data.")
+examples/templates/hourly_tracking/tools.py:60:@tool(description="Validate transaction reconciliation.")
+examples/templates/hourly_tracking/tools.py:101:@tool(description="Correct transaction discrepancies.")
+examples/templates/hourly_tracking/tools.py:123:@tool(description="Store verified transaction results.")
+core/tests/test_phase_compaction.py:190:        """Tool results in the current phase should not be pruned."""
+core/tests/test_event_loop_integration.py:34:from engine.llm.provider import LLMProvider, LLMResponse, Tool, ToolResult, ToolUse
+core/tests/test_event_loop_integration.py:39:    ToolCallEvent,
+core/tests/test_event_loop_integration.py:62:    - tool_calls -> yields ToolCallEvent(s) + FinishEvent (node executes tools, calls stream again)
+core/tests/test_event_loop_integration.py:85:        tools: list[Tool] | None = None,
+core/tests/test_event_loop_integration.py:102:        tools: list[Tool] | None = None,
+core/tests/test_event_loop_integration.py:117:                yield ToolCallEvent(
+core/tests/test_event_loop_integration.py:228:    def executor(tool_use: ToolUse) -> ToolResult:
+core/tests/test_event_loop_integration.py:230:        return ToolResult(
+core/tests/test_event_loop_integration.py:247:    available_tools: list[Tool] | None = None,
+core/tests/test_event_loop_integration.py:440:    search_tool = Tool(
+core/tests/test_runtime_logger.py:19:    ToolCallLog,
+core/tests/test_runtime_logger.py:109:                ToolCallLog(
+core/tests/test_runtime_logger.py:488:        # Verify Level 3: Tool logs
+examples/templates/log_monitor/tools.py:9:from engine.runner.tool_registry import tool
+examples/templates/log_monitor/tools.py:22:@tool(description="Validate production config and integration health before monitoring.")
+examples/templates/log_monitor/tools.py:34:@tool(description="Run one monitoring tick: Grafana fetch, dedup, and rule-based scoring.")
+examples/templates/log_monitor/tools.py:39:@tool(description="Send a Slack alert for an incident.")
+examples/templates/log_monitor/tools.py:44:@tool(description="Trigger PagerDuty for SEVERE incidents.")
+examples/templates/log_monitor/tools.py:49:@tool(description="Create a Jira ticket for an incident.")
+examples/templates/log_monitor/tools.py:54:@tool(description="Record learning outcome for fingerprint tuning and mute window.")
+examples/templates/log_monitor/tools.py:66:@tool(description="Parse incidents JSON and return dispatch plan with alert targets.")
+examples/templates/supervised_agreement_analysis/nodes/__init__.py:21:**Tools — action plan**
+examples/templates/supervised_agreement_analysis/nodes/__init__.py:26:**Tools — worker**
+examples/templates/medical_billing_auditor/README.md:101:### Secure MCP Tools
+core/engine/runtime/event_bus.py:86:    # Tool lifecycle
+core/engine/tools/supervisor_runtime.py:308:        runner.register_tool(fn.__name__, fn)
+core/engine/graph/node.py:12:from engine.llm.provider import LLMProvider, Tool
+core/engine/graph/node.py:162:    tools: list[str] = Field(default_factory=list, description="Tool names this node can use")
+core/engine/graph/node.py:393:    available_tools: list[Tool] = field(default_factory=list)
+core/engine/graph/node.py:442:    all_tools: list[Tool] = field(default_factory=list)
+core/engine/graph/node.py:452:    dynamic_tools_provider: Any = None  # Callable[[], list[Tool]] | None
+core/engine/credentials/setup.py:56:    """Tools that require this credential"""
+core/engine/runtime/agent_runtime.py:25:    from engine.llm.provider import LLMProvider, Tool
+core/engine/runtime/agent_runtime.py:65:        tools: list["Tool"] | None = None,
+core/engine/runtime/agent_runtime.py:1412:    tools: list["Tool"] | None = None,
+core/engine/skills/runtime_tools.py:12:def register_skill_tools(tool_registry: Any, *, repo_root: Path | None = None) -> None:
+core/engine/skills/runtime_tools.py:31:    tool_registry.register_function(
+core/engine/graph/event_loop/node.py:28:from engine.llm.provider import Tool, ToolResult, ToolUse
+core/engine/graph/event_loop/node.py:33:    ToolCallEvent,
+core/engine/graph/event_loop/node.py:49:        tool_executor: Callable[[ToolUse], ToolResult | Awaitable[ToolResult]] | None = None,
+core/engine/graph/event_loop/node.py:272:            "[%s] Tools available (%d): %s | client_facing=%s | judge=%s",
+core/engine/graph/event_loop/node.py:736:            # 6f'. Tool doom loop detection
+core/engine/graph/event_loop/node.py:1320:        tools: list[Tool],
+core/engine/graph/event_loop/node.py:1368:            tool_calls: list[ToolCallEvent] = []
+core/engine/graph/event_loop/node.py:1376:                _tc: list[ToolCallEvent] = tool_calls,  # noqa: B006
+core/engine/graph/event_loop/node.py:1397:                    elif isinstance(event, ToolCallEvent):
+core/engine/graph/event_loop/node.py:1497:            results_by_id: dict[str, ToolResult] = {}
+core/engine/graph/event_loop/node.py:1501:            pending_real: list[ToolCallEvent] = []
+core/engine/graph/event_loop/node.py:1502:            pending_subagent: list[ToolCallEvent] = []
+core/engine/graph/event_loop/node.py:1531:                    result = ToolResult(
+core/engine/graph/event_loop/node.py:1591:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1620:                    result = ToolResult(
+core/engine/graph/event_loop/node.py:1668:                    result = ToolResult(
+core/engine/graph/event_loop/node.py:1678:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1681:                                f"Tool call to '{tc.tool_name}' failed: your arguments "
+core/engine/graph/event_loop/node.py:1700:                    _tc: ToolCallEvent,
+core/engine/graph/event_loop/node.py:1701:                ) -> tuple[ToolResult | BaseException, str, float]:
+core/engine/graph/event_loop/node.py:1734:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1736:                            content=f"Tool '{tc.tool_name}' raised: {raw}",
+core/engine/graph/event_loop/node.py:1748:                    _tc: ToolCallEvent,
+core/engine/graph/event_loop/node.py:1750:                ) -> tuple[ToolResult | BaseException, str, float]:
+core/engine/graph/event_loop/node.py:1781:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1794:                        result = ToolResult(
+core/engine/graph/event_loop/node.py:1865:                    f"Tool call discarded: hard limit of {hard_limit} tool calls "
+core/engine/graph/event_loop/node.py:1942:            # Tool calls processed -- loop back to stream with updated conversation
+core/engine/graph/event_loop/node.py:1948:    def _build_ask_user_tool(self) -> Tool:
+core/engine/graph/event_loop/node.py:1950:        return Tool(
+core/engine/graph/event_loop/node.py:1998:    def _build_set_output_tool(self, output_keys: list[str] | None) -> Tool | None:
+core/engine/graph/event_loop/node.py:2018:        return Tool(
+core/engine/graph/event_loop/node.py:2033:    ) -> Tool | None:
+core/engine/graph/event_loop/node.py:2047:        return Tool(
+core/engine/graph/event_loop/node.py:2076:    def _build_report_to_parent_tool(self) -> Tool:
+core/engine/graph/event_loop/node.py:2078:        return Tool(
+core/engine/graph/event_loop/node.py:2127:    ) -> ToolResult:
+core/engine/graph/event_loop/node.py:2128:        """Handle set_output tool call. Returns ToolResult (sync)"""
+core/engine/graph/event_loop/node.py:2172:            return ToolResult(
+core/engine/graph/event_loop/node.py:2178:        return ToolResult(
+core/engine/graph/event_loop/node.py:2359:        # Tool calls were made -- continue loop
+core/engine/graph/event_loop/node.py:2503:    async def _execute_tool(self, tc: ToolCallEvent) -> ToolResult:
+core/engine/graph/event_loop/node.py:2506:            return ToolResult(
+core/engine/graph/event_loop/node.py:2511:        tool_use = ToolUse(id=tc.tool_use_id, name=tc.tool_name, input=tc.tool_input)
+core/engine/graph/event_loop/node.py:2581:        result: ToolResult,
+core/engine/graph/event_loop/node.py:2583:    ) -> ToolResult:
+core/engine/graph/event_loop/node.py:2611:            return ToolResult(
+core/engine/graph/event_loop/node.py:2646:                    "Tool result spilled to file: %s (%d chars → %s)",
+core/engine/graph/event_loop/node.py:2655:                    "Tool result saved to file: %s (%d chars → %s)",
+core/engine/graph/event_loop/node.py:2661:            return ToolResult(
+core/engine/graph/event_loop/node.py:2677:                "Tool result truncated in-place: %s (%d → %d chars)",
+core/engine/graph/event_loop/node.py:2682:            return ToolResult(
+core/engine/graph/event_loop/node.py:3087:        # 6. Tool call history (prevent re-calling tools)
+core/engine/graph/event_loop/node.py:3277:                f"Tools available: {tool_names}\n"
+core/engine/graph/event_loop/node.py:3467:    ) -> ToolResult:
+core/engine/graph/event_loop/node.py:3468:        """Execute a subagent and return the result as a ToolResult"""
+core/engine/graph/event_loop/node.py:3486:            return ToolResult(
+core/engine/graph/event_loop/node.py:3610:            "   - Tools available (%d): %s\n"
+core/engine/graph/event_loop/node.py:3734:            return ToolResult(
+core/engine/graph/event_loop/node.py:3755:            return ToolResult(
+core/engine/runtime/runtime_logger.py:16:    ToolCallLog,
+core/engine/runtime/runtime_logger.py:73:                ToolCallLog(
+core/engine/runtime/runtime_log_store.py:16:    RunToolLogs,
+core/engine/runtime/runtime_log_store.py:104:    async def load_tool_logs(self, run_id: str) -> RunToolLogs | None:
+core/engine/runtime/runtime_log_store.py:108:        def _read() -> RunToolLogs | None:
+core/engine/runtime/runtime_log_store.py:112:            return RunToolLogs(run_id=run_id, steps=steps)
+core/engine/graph/executor.py:23:from engine.llm.provider import LLMProvider, Tool
+core/engine/graph/executor.py:103:        tools: list[Tool] | None = None,
+core/engine/graph/executor.py:375:            self.logger.error("ERROR: Tool validation failed:")
+core/engine/graph/executor.py:382:                    "Register tools via ToolRegistry or remove tool declarations from nodes."
+core/engine/graph/executor.py:392:        cumulative_tools: list = []  # Tools accumulate, never removed
+core/engine/graph/executor.py:644:            from engine.runner.tool_registry import ToolRegistry
+core/engine/graph/executor.py:646:            _ctx_token = ToolRegistry.set_execution_context(
+core/engine/graph/executor.py:1659:                from engine.runner.tool_registry import ToolRegistry
+core/engine/graph/executor.py:1661:                ToolRegistry.reset_execution_context(_ctx_token)
+core/engine/runtime/runtime_log_schemas.py:10:# Level 3: Tool logs (most granular) — per step within any node
+core/engine/runtime/runtime_log_schemas.py:14:class ToolCallLog(BaseModel):
+core/engine/runtime/runtime_log_schemas.py:33:    tool_calls: list[ToolCallLog] = Field(default_factory=list)
+core/engine/runtime/runtime_log_schemas.py:122:class RunToolLogs(BaseModel):
+core/engine/graph/conversation_judge.py:108:                content = "Tool calls:\n" + "\n".join(tc_parts)
+core/engine/runtime/execution_stream.py:22:    from engine.llm.provider import LLMProvider, Tool
+core/engine/runtime/execution_stream.py:128:        tools: list["Tool"] | None = None,
+core/engine/graph/conversation.py:437:                            "content": "ERROR: Tool execution was interrupted.",
+core/engine/graph/conversation.py:600:        # Tool-role messages reference a tool_use from the preceding
+core/engine/tui/screens/agent_picker.py:102:            # Tool count: use whichever source gave us nodes, but agent.json
+core/engine/runner/__init__.py:11:from engine.runner.tool_registry import ToolRegistry, tool
+core/engine/runner/__init__.py:17:    "ToolRegistry",
+core/engine/runner/runner.py:19:from engine.llm.provider import LLMProvider, Tool
+core/engine/runner/runner.py:27:from engine.runner.tool_registry import ToolRegistry
+core/engine/runner/runner.py:95:        self._tool_registry = ToolRegistry()
+core/engine/runner/runner.py:114:            self._tool_registry.discover_from_module(tools_path)
+core/engine/runner/runner.py:290:    def register_tool(
+core/engine/runner/runner.py:293:        tool_or_func: Tool | Callable,
+core/engine/runner/runner.py:297:        if isinstance(tool_or_func, Tool):
+core/engine/runner/runner.py:299:                raise ValueError("executor required when registering a Tool object")
+core/engine/runner/runner.py:300:            self._tool_registry.register(name, tool_or_func, executor)
+core/engine/runner/runner.py:302:            # It's a function, auto-generate Tool
+core/engine/runner/runner.py:303:            self._tool_registry.register_function(tool_or_func, name=name)
+core/engine/runner/runner.py:305:    def register_tools_from_module(self, module_path: Path) -> int:
+core/engine/runner/runner.py:307:        return self._tool_registry.discover_from_module(module_path)
+core/engine/runner/runner.py:321:        return self._tool_registry.register_mcp_server(server_config)
+core/engine/runner/runner.py:325:        self._tool_registry.load_mcp_config(config_path)
+core/engine/runner/runner.py:344:        self._tool_registry.set_session_context(
+core/engine/runner/runner.py:476:            files_tool_names = self._tool_registry.get_server_tool_names(FILES_MCP_SERVER_NAME)
+core/engine/runner/runner.py:482:                self._tool_registry.register_mcp_server(files_config)
+core/engine/runner/runner.py:483:                files_tool_names = self._tool_registry.get_server_tool_names(FILES_MCP_SERVER_NAME)
+core/engine/runner/runner.py:496:            register_skill_tools(self._tool_registry, repo_root=_repo_root)
+core/engine/runner/runner.py:502:        tools = list(self._tool_registry.get_tools().values())
+core/engine/runner/runner.py:503:        tool_executor = self._tool_registry.get_executor()
+core/engine/runner/runner.py:970:            if not self._tool_registry.has_tool(tool_name):
+core/engine/runner/runner.py:1069:        self._tool_registry.cleanup()
+core/engine/llm/stream_events.py:27:class ToolCallEvent:
+core/engine/llm/stream_events.py:37:class ToolResultEvent:
+core/engine/llm/stream_events.py:85:    | ToolCallEvent
+core/engine/llm/stream_events.py:86:    | ToolResultEvent
+core/engine/llm/provider.py:24:class Tool:
+core/engine/llm/provider.py:33:class ToolUse:
+core/engine/llm/provider.py:42:class ToolResult:
+core/engine/llm/provider.py:58:        tools: list[Tool] | None = None,
+core/engine/llm/provider.py:71:        tools: list["Tool"] | None = None,
+core/engine/llm/provider.py:97:        tools: list[Tool] | None = None,
+core/engine/runner/mcp_client.py:36:class MCPTool:
+core/engine/runner/mcp_client.py:56:        self._tools: dict[str, MCPTool] = {}
+core/engine/runner/mcp_client.py:258:                tool = MCPTool(
+core/engine/runner/mcp_client.py:321:    def list_tools(self) -> list[MCPTool]:
+core/engine/runner/mcp_client.py:394:                raise RuntimeError(f"Tool execution error: {data['error']}")
+core/engine/llm/mock.py:8:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/engine/llm/mock.py:77:        tools: list[Tool] | None = None,
+core/engine/llm/mock.py:98:        tools: list[Tool] | None = None,
+core/engine/llm/mock.py:119:        tools: list[Tool] | None = None,
+core/engine/runner/tool_registry.py:1:"""Tool discovery and registration for agent runner"""
+core/engine/runner/tool_registry.py:15:from engine.llm.provider import Tool, ToolResult, ToolUse
+core/engine/runner/tool_registry.py:28:class RegisteredTool:
+core/engine/runner/tool_registry.py:31:    tool: Tool
+core/engine/runner/tool_registry.py:35:class ToolRegistry:
+core/engine/runner/tool_registry.py:47:        self._tools: dict[str, RegisteredTool] = {}
+core/engine/runner/tool_registry.py:53:        self._mcp_tool_names: set[str] = set()  # Tool names registered from MCP
+core/engine/runner/tool_registry.py:62:        tool: Tool,
+core/engine/runner/tool_registry.py:66:        self._tools[name] = RegisteredTool(tool=tool, executor=executor)
+core/engine/runner/tool_registry.py:74:        """Register a function as a tool, auto-generating the Tool definition"""
+core/engine/runner/tool_registry.py:105:        tool = Tool(
+core/engine/runner/tool_registry.py:145:                            tool_use = ToolUse(
+core/engine/runner/tool_registry.py:151:                            if isinstance(result, ToolResult):
+core/engine/runner/tool_registry.py:152:                                # ToolResult.content is expected to be JSON, but tools may
+core/engine/runner/tool_registry.py:161:                                        "Tool '%s' returned invalid JSON: %s",
+core/engine/runner/tool_registry.py:182:        # Check for @tool decorated functions
+core/engine/runner/tool_registry.py:196:    def get_tools(self) -> dict[str, Tool]:
+core/engine/runner/tool_registry.py:197:        """Get all registered Tool objects"""
+core/engine/runner/tool_registry.py:200:    def get_executor(self) -> Callable[[ToolUse], ToolResult]:
+core/engine/runner/tool_registry.py:203:        def _wrap_result(tool_use_id: str, result: Any) -> ToolResult:
+core/engine/runner/tool_registry.py:204:            if isinstance(result, ToolResult):
+core/engine/runner/tool_registry.py:206:            return ToolResult(
+core/engine/runner/tool_registry.py:212:        def executor(tool_use: ToolUse) -> ToolResult:
+core/engine/runner/tool_registry.py:214:                return ToolResult(
+core/engine/runner/tool_registry.py:232:                            return ToolResult(
+core/engine/runner/tool_registry.py:242:                return ToolResult(
+core/engine/runner/tool_registry.py:364:                # Convert MCP tool to framework Tool (strips context params from LLM schema)
+core/engine/runner/tool_registry.py:425:    def _convert_mcp_tool_to_framework_tool(self, mcp_tool: Any) -> Tool:
+core/engine/runner/tool_registry.py:426:        """Convert an MCP tool to a framework Tool"""
+core/engine/runner/tool_registry.py:437:        # Convert to framework Tool format
+core/engine/runner/tool_registry.py:438:        tool = Tool(
+core/engine/runner/tool_registry.py:470:    def get_by_provider(self, provider: str) -> dict[str, Tool]:
+core/engine/runner/cli.py:730:        print(f"Required Tools ({len(info.required_tools)}):")
+core/engine/runner/cli.py:732:            status = "ok" if runner._tool_registry.has_tool(tool) else "fail"
+core/engine/runner/cli.py:736:        print(f"Tools Module: {tools_module}")
+core/engine/runner/cli.py:828:            print(f"    Nodes: {agent['nodes']}, Tools: {agent['tools']}")
+core/engine/tui/widgets/log_pane.py:57:        return f"Tool call: {data.get('tool_name', 'unknown')}"
+core/engine/tui/widgets/log_pane.py:62:            return f"Tool error: {name} - {preview}"
+core/engine/tui/widgets/log_pane.py:63:        return f"Tool done: {name}"
+core/engine/llm/__init__.py:12:    ToolCallEvent,
+core/engine/llm/__init__.py:13:    ToolResultEvent,
+core/engine/llm/__init__.py:22:    "ToolCallEvent",
+core/engine/llm/__init__.py:23:    "ToolResultEvent",
+core/engine/llm/anthropic.py:7:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/engine/llm/anthropic.py:50:        tools: list[Tool] | None = None,
+core/engine/llm/anthropic.py:71:        tools: list[Tool] | None = None,
+core/engine/tui/widgets/chat_repl.py:1290:            # Suppress the generic "Tool: ask_user" line.
+core/engine/tui/widgets/chat_repl.py:1299:        line = f"[dim]Tool: {tool_name}[/dim]"
+core/engine/tui/widgets/chat_repl.py:1314:            line = f"[dim red]Tool {tool_name} error: {preview}[/dim red]"
+core/engine/tui/widgets/chat_repl.py:1316:            line = f"[dim]Tool {tool_name} result: {preview}[/dim]"
+core/engine/llm/litellm.py:19:from engine.llm.provider import LLMProvider, LLMResponse, Tool
+core/engine/llm/litellm.py:368:        tools: list[Tool] | None = None,
+core/engine/llm/litellm.py:564:        tools: list[Tool] | None = None,
+core/engine/llm/litellm.py:628:    def _tool_to_openai_format(self, tool: Tool) -> dict[str, Any]:
+core/engine/llm/litellm.py:629:        """Convert Tool to OpenAI function calling format"""
+core/engine/llm/litellm.py:647:        tools: list[Tool] | None = None,
+core/engine/llm/litellm.py:658:            ToolCallEvent,
+core/engine/llm/litellm.py:713:            # Post-stream events (ToolCall, TextEnd, Finish) are buffered
+core/engine/llm/litellm.py:742:                    # --- Tool calls (accumulate across chunks) ---
+core/engine/llm/litellm.py:744:                    # index=0 on every ChatCompletionToolCallChunk, even for
+core/engine/llm/litellm.py:792:                                ToolCallEvent(
+core/engine/llm/litellm.py:922:            ToolCallEvent,
+core/engine/llm/litellm.py:935:            elif isinstance(event, ToolCallEvent):
+
+========== SUPERVISOR TOOLS ==========
+"""Supervisor lifecycle tools — worker spawn + session action plans."""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+from engine.tasks.models import TaskStatus
+from engine.tasks.scoping import supervisor_session_task_list_id
+from engine.tasks.store import get_task_store
+from engine.tasks.supervisor import (
+    emit_supervisor_tasks_updated,
+    format_tasks_for_tool,
+    parse_task_specs,
+)
+
+if TYPE_CHECKING:
+    from engine.runner import AgentRunner
+
+logger = logging.getLogger(__name__)
+
+WORKER_GRAPH_ID = "worker"
+
+
+@dataclass
+class SessionSupervisor:
+    """Tracks supervisor ↔ worker state and the session action plan."""
+
+    runner: AgentRunner
+    session_id: str = ""
+    department: str | None = None
+    worker_graph_id: str = WORKER_GRAPH_ID
+    worker_entry_point: str = "default"
+    mode: str = "staging"  # staging | running
+    worker_exec_id: str | None = None
+    active_task_id: int | None = None
+    _task_store: object = field(default_factory=get_task_store, repr=False)
+
+    @property
+    def runtime(self):
+        rt = self.runner._agent_runtime  # noqa: SLF001
+        if rt is None:
+            raise RuntimeError("Agent runtime is not initialized")
+        return rt
+
+    @property
+    def task_list_id(self) -> str:
+        if not self.session_id:
+            raise RuntimeError("Supervisor session_id is not set")
+        return supervisor_session_task_list_id(self.session_id)
+
+    def is_worker_active(self) -> bool:
+        """Return True when the worker graph is running or waiting for input."""
+        waiting = self.runtime.get_waiting_nodes()
+        if any(w.get("graph_id") == self.worker_graph_id for w in waiting):
+            return True
+        active = self.runtime.get_active_streams()
+        return any(s.get("graph_id") == self.worker_graph_id for s in active)
+
+    async def _refresh_task_event(self) -> None:
+        tasks = await self._task_store.list_tasks(self.task_list_id)  # type: ignore[union-attr]
+        await emit_supervisor_tasks_updated(
+            self.runtime.event_bus,
+            session_id=self.session_id,
+            tasks=tasks,
+        )
+
+    async def on_worker_execution_finished(self, *, success: bool) -> None:
+        """Update supervisor state when a worker execution ends."""
+        self.mode = "staging"
+        self.worker_exec_id = None
+        if self.active_task_id is None:
+            return
+        status = TaskStatus.COMPLETED if success else TaskStatus.PENDING
+        await self._task_store.update_task(  # type: ignore[union-attr]
+            self.task_list_id,
+            self.active_task_id,
+            status=status,
+        )
+        self.active_task_id = None
+        await self._refresh_task_event()
+
+    async def _spawn_worker_impl(self, task: str, task_id: int | None = None) -> str:
+        task = (task or "").strip()
+        if not task:
+            return "Error: task cannot be empty."
+
+        if self.is_worker_active():
+            return (
+                "Error: a worker execution is already active. "
+                "Call get_worker_status(), inject_worker_message(), or stop_worker() first."
+            )
+
+        if task_id is not None:
+            await self._task_store.update_task(  # type: ignore[union-attr]
+                self.task_list_id,
+                task_id,
+                status=TaskStatus.IN_PROGRESS,
+            )
+            self.active_task_id = task_id
+            await self._refresh_task_event()
+
+        session_state = {"session_id": self.session_id} if self.session_id else None
+        exec_id = await self.runtime.trigger(
+            self.worker_entry_point,
+            input_data={},
+            graph_id=self.worker_graph_id,
+            session_state=session_state,
+        )
+        self.worker_exec_id = exec_id
+        self.mode = "running"
+
+        entry = self.runtime.get_entry_points(graph_id=self.worker_graph_id)
+        entry_node = entry[0].entry_node if entry else "intake"
+        for _ in range(100):
+            if await self.runtime.inject_input(
+                entry_node,
+                task,
+                graph_id=self.worker_graph_id,
+                is_client_input=True,
+            ):
+                break
+            await asyncio.sleep(0.1)
+
+        task_note = f" (plan item #{task_id})" if task_id else ""
+        exec_short = (exec_id or "unknown")[:12]
+        return (
+            f"Spawned worker{task_note} with task: {task[:120]}{'…' if len(task) > 120 else ''}. "
+            f"Execution id: {exec_short}. Monitoring progress."
+        )
+
+
+def register_supervisor_tools(
+    runner: AgentRunner,
+    supervisor: SessionSupervisor,
+    *,
+    session_id: str = "",
+    department: str | None = None,
+) -> None:
+    """Register supervisor lifecycle + action-plan tools on the runner."""
+    if session_id:
+        supervisor.session_id = session_id
+    if department:
+        supervisor.department = department
+
+    async def create_action_plan(tasks: str) -> str:
+        """Add plan items. Pass newline-separated subjects or a JSON list."""
+        try:
+            specs = parse_task_specs(tasks)
+            if not specs:
+                return "Error: provide at least one task subject."
+            await supervisor._task_store.ensure_task_list(supervisor.task_list_id)  # type: ignore[union-attr]
+            created = await supervisor._task_store.create_tasks_batch(  # type: ignore[union-attr]
+                supervisor.task_list_id,
+                specs,
+            )
+            await supervisor._refresh_task_event()
+            ids = ", ".join(f"#{r.id}" for r in created)
+            return f"Added {len(created)} plan item(s): {ids}."
+        except Exception as exc:
+            logger.exception("create_action_plan failed")
+            return f"Failed to update action plan: {exc}"
+
+    async def list_action_plan() -> str:
+        """List the current supervisor action plan with statuses."""
+        try:
+            records = await supervisor._task_store.list_tasks(supervisor.task_list_id)  # type: ignore[union-attr]
+            return format_tasks_for_tool(records)
+        except Exception as exc:
+            return f"Could not read action plan: {exc}"
+
+    async def update_action_plan_task(task_id: int, status: str) -> str:
+        """Update a plan item status: pending, in_progress, or completed."""
+        try:
+            normalized = status.strip().lower()
+            if normalized not in {s.value for s in TaskStatus}:
+                return f"Invalid status '{status}'. Use pending, in_progress, or completed."
+            updated = await supervisor._task_store.update_task(  # type: ignore[union-attr]
+                supervisor.task_list_id,
+                int(task_id),
+                status=TaskStatus(normalized),
+            )
+            if updated is None:
+                return f"Task #{task_id} not found."
+            await supervisor._refresh_task_event()
+            return f"Updated task #{task_id} to {normalized}."
+        except Exception as exc:
+            return f"Failed to update task: {exc}"
+
+    async def spawn_worker(task: str, task_id: int | None = None) -> str:
+        """Spawn the worker agent with the given task text. Optionally link to plan item task_id."""
+        try:
+            return await supervisor._spawn_worker_impl(task, task_id)
+        except Exception as exc:
+            logger.exception("spawn_worker failed")
+            return f"Failed to spawn worker: {exc}"
+
+    async def start_worker(task: str) -> str:
+        """Legacy alias for spawn_worker(task)."""
+        return await spawn_worker(task)
+
+    async def get_worker_status() -> str:
+        """Return whether the worker graph is running and recent activity (read-only)."""
+        try:
+            waiting = supervisor.runtime.get_waiting_nodes()
+            worker_waiting = [w for w in waiting if w.get("graph_id") == supervisor.worker_graph_id]
+            if worker_waiting:
+                node = worker_waiting[0]
+                return (
+                    f"Worker waiting for input at node '{node.get('node_id', '?')}'. "
+                    "The operator may need to reply in the dashboard."
+                )
+            active = supervisor.runtime.get_active_streams()
+            worker_active = [s for s in active if s.get("graph_id") == supervisor.worker_graph_id]
+            if worker_active:
+                supervisor.mode = "running"
+                ids = worker_active[0].get("active_execution_ids", [])
+                if ids:
+                    supervisor.worker_exec_id = ids[0]
+                plan = ""
+                if supervisor.active_task_id is not None:
+                    plan = f" Linked plan item #{supervisor.active_task_id}."
+                worker_id = supervisor.worker_exec_id or "unknown"
+                return f"Worker execution in progress (id {worker_id[:12]}…).{plan}"
+            supervisor.mode = "staging"
+            supervisor.worker_exec_id = None
+            if supervisor.active_task_id is not None:
+                return (
+                    "Worker is idle with plan item "
+                    f"#{supervisor.active_task_id} still in progress. "
+                    "It will update when the worker execution completes."
+                )
+            return "Worker is idle. Use spawn_worker(task) or list_action_plan()."
+        except Exception as exc:
+            return f"Could not read worker status: {exc}"
+
+    async def inject_worker_message(message: str) -> str:
+        """Send a message into the running worker (e.g. agreement text or approval)."""
+        message = (message or "").strip()
+        if not message:
+            return "Error: message cannot be empty."
+        waiting = supervisor.runtime.get_waiting_nodes()
+        for w in waiting:
+            if w.get("graph_id") == supervisor.worker_graph_id:
+                node_id = w.get("node_id")
+                if node_id and await supervisor.runtime.inject_input(
+                    node_id,
+                    message,
+                    graph_id=supervisor.worker_graph_id,
+                    is_client_input=True,
+                ):
+                    return f"Delivered message to worker node '{node_id}'."
+        entry = supervisor.runtime.get_entry_points(graph_id=supervisor.worker_graph_id)
+        if entry:
+            node_id = entry[0].entry_node
+            if await supervisor.runtime.inject_input(
+                node_id,
+                message,
+
+========== TOOL REGISTRY ==========
+"""Tool discovery and registration for agent runner"""
+
+import asyncio
+import contextvars
+import importlib.util
+import inspect
+import json
+import logging
+import os
+from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from engine.llm.provider import Tool, ToolResult, ToolUse
+
+logger = logging.getLogger(__name__)
+
+# Per-execution context overrides.  Each asyncio task (and thus each
+# concurrent graph execution) gets its own copy, so there are no races
+# when multiple ExecutionStreams run in parallel.
+_execution_context: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
+    "_execution_context", default=None
+)
+
+
+@dataclass
+class RegisteredTool:
+    """A tool with its executor function"""
+
+    tool: Tool
+    executor: Callable[[dict], Any]
+
+
+class ToolRegistry:
+    """Manages tool discovery and registration"""
+
+    # Framework-internal context keys injected into tool calls.
+    # Stripped from LLM-facing schemas (the LLM doesn't know these values)
+    # and auto-injected at call time for tools that accept them.
+    CONTEXT_PARAMS = frozenset({"workspace_id", "agent_id", "session_id", "data_dir"})
+
+    # Credential directory used for change detection
+    _CREDENTIAL_DIR = Path("~/.engine/credentials/credentials").expanduser()
+
+    def __init__(self):
+        self._tools: dict[str, RegisteredTool] = {}
+        self._mcp_clients: list[Any] = []  # List of MCPClient instances
+        self._session_context: dict[str, Any] = {}  # Auto-injected context for tools
+        self._provider_index: dict[str, set[str]] = {}  # provider -> tool names
+        # MCP resync tracking
+        self._mcp_config_path: Path | None = None  # Path used for initial load
+        self._mcp_tool_names: set[str] = set()  # Tool names registered from MCP
+        self._mcp_cred_snapshot: set[str] = set()  # Credential filenames at MCP load time
+        # ENGINE_OAUTH_API_KEY value at MCP load time
+        self._mcp_engine_sync_key_snapshot: str | None = None
+        self._mcp_server_tools: dict[str, set[str]] = {}  # server name -> tool names
+
+    def register(
+        self,
+        name: str,
+        tool: Tool,
+        executor: Callable[[dict], Any],
+    ) -> None:
+        """Register a single tool with its executor"""
+        self._tools[name] = RegisteredTool(tool=tool, executor=executor)
+
+    def register_function(
+        self,
+        func: Callable,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> None:
+        """Register a function as a tool, auto-generating the Tool definition"""
+        tool_name = name or func.__name__
+        tool_desc = description or func.__doc__ or f"Execute {tool_name}"
+
+        # Generate parameters from function signature
+        sig = inspect.signature(func)
+        properties = {}
+        required = []
+
+        for param_name, param in sig.parameters.items():
+            if param_name in ("self", "cls"):
+                continue
+
+            param_type = "string"  # Default
+            if param.annotation != inspect.Parameter.empty:
+                if param.annotation is int:
+                    param_type = "integer"
+                elif param.annotation is float:
+                    param_type = "number"
+                elif param.annotation is bool:
+                    param_type = "boolean"
+                elif param.annotation is dict:
+                    param_type = "object"
+                elif param.annotation is list:
+                    param_type = "array"
+
+            properties[param_name] = {"type": param_type}
+
+            if param.default == inspect.Parameter.empty:
+                required.append(param_name)
+
+        tool = Tool(
+            name=tool_name,
+            description=tool_desc,
+            parameters={
+                "type": "object",
+                "properties": properties,
+                "required": required,
+            },
+        )
+
+        def executor(inputs: dict) -> Any:
+            return func(**inputs)
+
+        self.register(tool_name, tool, executor)
+
+    def discover_from_module(self, module_path: Path) -> int:
+        """Load tools from a Python module file"""
+        if not module_path.exists():
+            return 0
+
+        # Load the module dynamically
+        spec = importlib.util.spec_from_file_location("agent_tools", module_path)
+        if spec is None or spec.loader is None:
+            return 0
+
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        count = 0
+
+        # Check for TOOLS dict
+        if hasattr(module, "TOOLS"):
+            tools_dict = module.TOOLS
+            executor_func = getattr(module, "tool_executor", None)
+
+            for name, tool in tools_dict.items():
+                if executor_func:
+                    # Use unified executor
+                    def make_executor(tool_name: str):
+                        def executor(inputs: dict) -> Any:
+                            tool_use = ToolUse(
+                                id=f"call_{tool_name}",
+                                name=tool_name,
+                                input=inputs,
+                            )
+                            result = executor_func(tool_use)
+                            if isinstance(result, ToolResult):
+                                # ToolResult.content is expected to be JSON, but tools may
+                                # sometimes return invalid JSON. Guard against crashes here
+                                # and surface a structured error instead.
+                                if not result.content:
+                                    return {}
+                                try:
+                                    return json.loads(result.content)
+                                except json.JSONDecodeError as e:
+                                    logger.warning(
+                                        "Tool '%s' returned invalid JSON: %s",
+                                        tool_name,
+                                        str(e),
+                                    )
+                                    return {
+                                        "error": (
+                                            f"Invalid JSON response from tool '{tool_name}': "
+                                            f"{str(e)}"
+                                        ),
+                                        "raw_content": result.content,
+                                    }
+                            return result
+
+                        return executor
+
+                    self.register(name, tool, make_executor(name))
+                else:
+                    # Register tool without executor (will use mock)
+                    self.register(name, tool, lambda inputs: {"mock": True, "inputs": inputs})
+                count += 1
+
+        # Check for @tool decorated functions
+        for name in dir(module):
+            obj = getattr(module, name)
+            if callable(obj) and hasattr(obj, "_tool_metadata"):
+                metadata = obj._tool_metadata
+                self.register_function(
+                    obj,
+                    name=metadata.get("name", name),
+                    description=metadata.get("description"),
+                )
+                count += 1
+
+        return count
+
+    def get_tools(self) -> dict[str, Tool]:
+        """Get all registered Tool objects"""
+        return {name: rt.tool for name, rt in self._tools.items()}
+
+    def get_executor(self) -> Callable[[ToolUse], ToolResult]:
+        """Get unified tool executor function"""
+
+        def _wrap_result(tool_use_id: str, result: Any) -> ToolResult:
+            if isinstance(result, ToolResult):
+                return result
+            return ToolResult(
+                tool_use_id=tool_use_id,
+                content=json.dumps(result) if not isinstance(result, str) else result,
+                is_error=False,
+            )
+
+        def executor(tool_use: ToolUse) -> ToolResult:
+            if tool_use.name not in self._tools:
+                return ToolResult(
+                    tool_use_id=tool_use.id,
+                    content=json.dumps({"error": f"Unknown tool: {tool_use.name}"}),
+                    is_error=True,
+                )
+
+            registered = self._tools[tool_use.name]
+            try:
+                result = registered.executor(tool_use.input)
+
+                # Async tool: wrap the awaitable so the caller can await it
+                if asyncio.iscoroutine(result) or asyncio.isfuture(result):
+
+                    async def _await_and_wrap():
+                        try:
+                            r = await result
+                            return _wrap_result(tool_use.id, r)
+                        except Exception as exc:
+                            return ToolResult(
+                                tool_use_id=tool_use.id,
+                                content=json.dumps({"error": str(exc)}),
+                                is_error=True,
+                            )
+
+                    return _await_and_wrap()
+
+                return _wrap_result(tool_use.id, result)
+            except Exception as e:
+                return ToolResult(
+                    tool_use_id=tool_use.id,
+                    content=json.dumps({"error": str(e)}),
+                    is_error=True,
+                )
+
+        return executor
+
+    def get_registered_names(self) -> list[str]:
+        """Get list of registered tool names"""
+        return list(self._tools.keys())
+
+    def has_tool(self, name: str) -> bool:
+        """Check if a tool is registered"""
+        return name in self._tools
+
+    def get_server_tool_names(self, server_name: str) -> set[str]:
+        """Return tool names registered from a specific MCP server"""
+        return set(self._mcp_server_tools.get(server_name, set()))
+
+========== RUNTIME TOOLS ==========
+"""Runtime skill loading for event-loop agents."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from engine.skills.context import get_skill_filter
+from engine.skills.discovery import read_skill_body
+
+
+def register_skill_tools(tool_registry: Any, *, repo_root: Path | None = None) -> None:
+    """Register load_skill for agents with event-loop nodes."""
+
+    def load_skill(name: str) -> dict[str, Any]:
+        """Load a skill document by name from ~/.engine/skills or bundled examples."""
+        found = read_skill_body(name, repo_root, allowed_names=get_skill_filter())
+        if found is None:
+            return {"ok": False, "error": f"Skill not found: {name}"}
+        entry, body, files = found
+        return {
+            "ok": True,
+            "name": entry.name,
+            "description": entry.description,
+            "scope": entry.scope,
+            "path": entry.path,
+            "body": body,
+            "files": files,
+        }
+
+    tool_registry.register_function(
+        load_skill,
+        description="Load a skill SKILL.md body by name for guidance during this task.",
+    )

@@ -66,7 +66,10 @@ class EncryptedFileStorage(CredentialStorage):
                 "Install with: uv pip install cryptography"
             ) from e
 
-        self.base_path = Path(base_path or self.DEFAULT_PATH).expanduser()
+        if base_path is None:
+            engine_home = os.environ.get("ENGINE_HOME")
+            base_path = Path(engine_home) / "credentials" if engine_home else Path(self.DEFAULT_PATH).expanduser()
+        self.base_path = Path(base_path).expanduser()
         self._ensure_dirs()
         self._key_env_var = key_env_var
 

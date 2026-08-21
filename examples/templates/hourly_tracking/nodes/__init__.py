@@ -122,12 +122,16 @@ correct_transactions_node = NodeSpec(
     input_keys=[
         "structured_transactions_json",
         "discrepancies_json",
+        "reviewer_notes",
     ],
     output_keys=[
         "structured_transactions_json",
     ],
     system_prompt="""\
 Call correct_transactions().
+
+If reviewer_notes is present, apply the operator's
+requested fixes to the transactions.
 
 Replace structured_transactions_json
 with corrected output.

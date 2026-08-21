@@ -101,16 +101,11 @@ class SharedStateManager:
 
         persisted = state.shared_state or {}
         self._global_state = dict(persisted.get("global", {}))
-        self._stream_state = {
-            k: dict(v) for k, v in persisted.get("streams", {}).items()
-        }
-        self._execution_state = {
-            k: dict(v) for k, v in persisted.get("executions", {}).items()
-        }
+        self._stream_state = {k: dict(v) for k, v in persisted.get("streams", {}).items()}
+        self._execution_state = {k: dict(v) for k, v in persisted.get("executions", {}).items()}
         self._version = persisted.get("version", 0)
         logger.debug(
-            "Restored shared state for session %s "
-            "(global=%d, streams=%d, executions=%d)",
+            "Restored shared state for session %s (global=%d, streams=%d, executions=%d)",
             self._session_id,
             len(self._global_state),
             len(self._stream_state),
@@ -121,12 +116,8 @@ class SharedStateManager:
         """Snapshot current in-memory state into a persistable dict."""
         return {
             "global": dict(self._global_state),
-            "streams": {
-                sid: dict(s) for sid, s in self._stream_state.items()
-            },
-            "executions": {
-                eid: dict(e) for eid, e in self._execution_state.items()
-            },
+            "streams": {sid: dict(s) for sid, s in self._stream_state.items()},
+            "executions": {eid: dict(e) for eid, e in self._execution_state.items()},
             "version": self._version,
         }
 
@@ -159,9 +150,7 @@ class SharedStateManager:
                 self._ensure_persist_worker(), self._persist_loop
             )
 
-        asyncio.run_coroutine_threadsafe(
-            self._persist_queue.put(snapshot), self._persist_loop
-        )
+        asyncio.run_coroutine_threadsafe(self._persist_queue.put(snapshot), self._persist_loop)
 
     async def _ensure_persist_worker(self) -> None:
         """Start the serialized writer task on the persist loop (idempotent)."""
@@ -220,9 +209,7 @@ class SharedStateManager:
                 if _time.monotonic() > deadline:
                     break
                 try:
-                    asyncio.run_coroutine_threadsafe(
-                        asyncio.sleep(0.01), loop
-                    ).result(timeout=1)
+                    asyncio.run_coroutine_threadsafe(asyncio.sleep(0.01), loop).result(timeout=1)
                 except Exception:
                     break
         loop.call_soon_threadsafe(loop.stop)

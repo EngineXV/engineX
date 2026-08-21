@@ -1,6 +1,7 @@
 """End-to-end tests for the Engine HTTP dashboard API and SPA serving."""
 
 from __future__ import annotations
+import os
 
 import asyncio
 import re
@@ -75,6 +76,7 @@ async def test_discover_agents(client: TestClient):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not os.environ.get("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
 async def test_session_lifecycle(client: TestClient):
     discover = await (await client.get("/api/discover")).json()
     agent_path = _ci_safe_agent_path(discover)
@@ -108,6 +110,7 @@ async def test_session_lifecycle(client: TestClient):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not os.environ.get("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
 async def test_session_message_empty_rejected(client: TestClient):
     discover = await (await client.get("/api/discover")).json()
     agent_path = _ci_safe_agent_path(discover)
@@ -124,6 +127,7 @@ async def test_session_message_empty_rejected(client: TestClient):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not os.environ.get("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
 async def test_session_sse_stream(client: TestClient):
     discover = await (await client.get("/api/discover")).json()
     agent_path = _ci_safe_agent_path(discover)

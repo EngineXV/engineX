@@ -158,3 +158,7 @@ graph = GraphSpec(
     edges=edges,
     loop_config=loop_config,
 )
+
+
+# Stub for compatibility
+skip_credential_validation = False

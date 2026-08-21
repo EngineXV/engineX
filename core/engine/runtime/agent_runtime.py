@@ -104,7 +104,10 @@ class AgentRuntime:
         self._session_store = SessionStore(storage_path_obj)
 
         # Initialize shared components
-        self._state_manager = SharedStateManager()
+        self._state_manager = SharedStateManager(
+            session_store=self._session_store,
+            session_id=self._graph_id,
+        )
         self._event_bus = event_bus or EventBus(max_history=self._config.max_history)
         self._outcome_aggregator = OutcomeAggregator(goal, self._event_bus)
 

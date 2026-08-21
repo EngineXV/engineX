@@ -110,6 +110,17 @@ class SessionState(BaseModel):
     # Memory (for resumability)
     memory: dict[str, Any] = Field(default_factory=dict)
 
+    # Shared state across workers (from SharedStateManager)
+    shared_state: dict[str, Any] = Field(default_factory=dict)
+    claimed_by: str | None = Field(
+        default=None,
+        description="Worker ID that has claimed this session",
+    )
+    claimed_at: datetime | None = Field(
+        default=None,
+        description="Timestamp when the claim was made",
+    )
+
     # Metrics
     metrics: SessionMetrics = Field(default_factory=SessionMetrics)
 

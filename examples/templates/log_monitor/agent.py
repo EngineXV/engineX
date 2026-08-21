@@ -2,7 +2,7 @@
 
 from engine.graph import Constraint, EdgeCondition, EdgeSpec, Goal, SuccessCriterion
 from engine.graph.edge import AsyncEntryPointSpec, GraphSpec
-from .config import metadata 
+from .config import metadata
 from .nodes import (
     dispatch_node,
     fetch_enrich_node,
@@ -157,3 +157,7 @@ graph = GraphSpec(
     edges=edges,
     loop_config=loop_config,
 )
+
+
+# Stub for compatibility
+skip_credential_validation = False

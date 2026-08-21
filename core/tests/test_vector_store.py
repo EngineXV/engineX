@@ -5,9 +5,9 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
-from chromadb.api.types import EmbeddingFunction
 
-pytest.importorskip("chromadb")
+chromadb = pytest.importorskip("chromadb")
+from chromadb.api.types import EmbeddingFunction
 
 from engine.tools.vector_search import vector_search
 from engine.vector.chroma import ChromaVectorStore

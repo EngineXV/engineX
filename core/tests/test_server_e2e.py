@@ -1,9 +1,9 @@
 """End-to-end tests for the Engine HTTP dashboard API and SPA serving."""
 
 from __future__ import annotations
-import os
 
 import asyncio
+import os
 import re
 from pathlib import Path
 

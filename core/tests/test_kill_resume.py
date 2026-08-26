@@ -17,7 +17,6 @@ import pytest
 from engine.graph.edge import EdgeSpec, GraphSpec
 from engine.graph.goal import Constraint, Goal, SuccessCriterion
 from engine.graph.node import NodeSpec
-from engine.runtime.agent_runtime import AgentRuntime
 from engine.runner.runner import AgentRunner
 from engine.storage.checkpoint_store import CheckpointStore
 from engine.storage.session_store import SessionStore

@@ -49,6 +49,7 @@ def create_test_graph() -> GraphSpec:
         terminal_nodes=["step3"],
     )
 
+
 def create_test_goal() -> Goal:
     return Goal(
         id="test_goal",
@@ -63,6 +64,7 @@ def create_test_goal() -> Goal:
                        description="Must finish within 60 seconds")
         ],
     )
+
 
 async def get_latest_checkpoint(checkpoint_store, session_id):
     for name in ["get_latest_checkpoint", "load_latest", "get_latest", "load_checkpoint"]:
@@ -86,21 +88,14 @@ async def get_latest_checkpoint(checkpoint_store, session_id):
 def run_worker(session_id, storage_path, worker_id, crash_after_seconds=20.0):
     asyncio.run(_run_worker_async(session_id, storage_path, worker_id, crash_after_seconds))
 
+
 async def _run_worker_async(session_id, storage_path, worker_id, crash_after_seconds):
     session_store = SessionStore(base_path=Path(storage_path))
-    checkpoint_store = CheckpointStore(base_path=Path(storage_path))
 
     graph = create_test_graph()
     goal = create_test_goal()
 
-    # Create runtime and runner correctly
-    runtime = AgentRuntime(
-        graph=graph,
-        goal=goal,
-        storage_path=storage_path,
-    )
-    # AgentRunner signature: agent_path, graph, goal, storage_path, ...
-    # agent_path is the base directory for the runner (same as storage_path)
+    # AgentRunner expects: agent_path, graph, goal, storage_path, ...
     runner = AgentRunner(
         agent_path=Path(storage_path),
         graph=graph,
@@ -112,7 +107,7 @@ async def _run_worker_async(session_id, storage_path, worker_id, crash_after_sec
     if not claim_mgr.try_claim(session_id, worker_id, ttl_seconds=120):
         raise RuntimeError(f"Worker {worker_id} could not claim")
 
-    task = asyncio.create_task(runner.run(session_id=session_id))
+    _ = asyncio.create_task(runner.run(session_id=session_id))
     await asyncio.sleep(crash_after_seconds)
     raise RuntimeError(f"💥 Worker {worker_id} CRASHED")
 
@@ -145,7 +140,10 @@ async def test_kill_and_resume():
 
         # If no checkpoint, skip the rest and mark as xfail (known limitation)
         if latest is None:
-            pytest.xfail("No checkpoint found after worker crash – checkpointing may not be implemented yet.")
+            pytest.xfail(
+                "No checkpoint found after worker crash – "
+                "checkpointing may not be implemented yet."
+            )
 
         # Worker 2 claims and resumes
         released = session_store.release_claim(session_id, worker1_id)
@@ -160,11 +158,6 @@ async def test_kill_and_resume():
 
         graph = create_test_graph()
         goal = create_test_goal()
-        runtime2 = AgentRuntime(
-            graph=graph,
-            goal=goal,
-            storage_path=storage_path,
-        )
         runner2 = AgentRunner(
             agent_path=Path(storage_path),
             graph=graph,
@@ -175,7 +168,7 @@ async def test_kill_and_resume():
         claimed = claim_mgr2.try_claim(session_id, worker2_id, ttl_seconds=60)
         assert claimed is True, "Worker 2 should claim the session"
 
-        result = await runner2.run(session_id=session_id)
+        _ = await runner2.run(session_id=session_id)
 
         # Verify completion
         final_checkpoint = await get_latest_checkpoint(checkpoint_store, session_id)
